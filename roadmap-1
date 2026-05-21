@@ -1,0 +1,95 @@
+# Roadmap: Kutenga ERP
+
+Baseado nos documentos `kutenga-brd.pdf` e `kutenga - Requisitos Funcionais.pdf`, este roadmap detalha as fases de desenvolvimento para transformar a visão do projeto em um MVP funcional e expansível.
+
+---
+
+## 🏗️ Fase 1: Infraestrutura e Módulo Core (Fundação)
+*Objetivo: Estabelecer a base multi-empresa e o sistema de acesso.*
+
+- [ ] **Setup do Projeto**: Laravel + Inertia.js (Vue 3) + MySQL.
+- [ ] **Arquitetura Multi-Tenant**: Implementação de `tenant_id`, `company_id` e `branch_id` nas entidades centrais.
+- [ ] **Gestão de Identidade (Auth)**:
+    - Autenticação segura.
+    - Sistema de Permissões (Roles & Permissions) por módulo e ação.
+- [ ] **Módulo Core**:
+    - Cadastro de Empresas e Filiais (com dados fiscais e logotipos).
+    - Gestão de Usuários e Perfis.
+    - Auditoria de Sistema (Logs de quem criou/editou o quê).
+- [ ] **Layout Base**: Desenvolvimento de layouts persistentes, navegação SPA e componentes UI reutilizáveis (modais, tabelas, formulários).
+
+---
+
+## 📦 Fase 2: Gestão de Dados Mestres (Catalog)
+*Objetivo: Permitir o cadastro de itens e regras comerciais.*
+
+- [ ] **Produtos e Serviços**:
+    - Cadastro com suporte a variantes (cor, tamanho, etc.).
+    - Gestão de SKUs e Códigos de Barras.
+    - Upload de múltiplas imagens (Drag-and-drop).
+- [ ] **Estrutura Comercial**:
+    - Categorias hierárquicas.
+    - Unidades de medida (UN, KG, LT, etc.).
+- [ ] **Regras Financeiras**:
+    - Configuração de Impostos (IVA, ISPC).
+    - Múltiplas Listas de Preços e Preços Promocionais.
+
+---
+
+## 📥 Fase 3: Motor de Inventário (Inventory)
+*Objetivo: Controlar o fluxo físico de mercadorias.*
+
+- [ ] **Gestão de Espaço**: Cadastro de Armazéns (Warehouses) e Localizações internas.
+- [ ] **Movimentações**:
+    - Entradas, Saídas, Transferências entre armazéns e Ajustes manuais.
+    - Lógica de saldo derivado exclusivamente de movimentos.
+    - Estratégia de cache para performance de consulta de saldo.
+- [ ] **Rastreabilidade**:
+    - Controle de Lotes e Validade (Batches).
+    - Controle por Números de Série.
+- [ ] **UX**: Filtros por armazém e indicadores visuais de estoque baixo em tempo real.
+
+---
+
+## 📄 Fase 4: Faturação e Vendas (Billing)
+*Objetivo: Emitir documentos fiscais e gerenciar contas a receber.*
+
+- [ ] **Gestão de Clientes**: Cadastro completo de clientes (múltiplos contatos, NUIT).
+- [ ] **Emissão de Documentos**:
+    - Faturas (FT), Faturas-Recibo (FR), Cotações (CT), Notas de Crédito/Débito (NC/ND).
+    - Geração de numeração automática e séries documentais.
+- [ ] **Persistência Histórica**: Sistema de Snapshots (armazenar cópia dos dados de cliente/produto no momento da emissão).
+- [ ] **Financeiro Básico**:
+    - Registro de pagamentos (parciais/totais).
+    - Métodos de pagamento (Cash, M-Pesa, Cartão, Transferência).
+- [ ] **Saída**: Exportação de documentos para PDF e impressão otimizada.
+
+---
+
+## 🛒 Fase 5: Ponto de Venda (POS)
+*Objetivo: Interface de venda rápida para balcão.*
+
+- [ ] **Operação de Caixa**: Sessões (Abertura/Fechamento), reforços e sangrias.
+- [ ] **Interface de Venda**:
+    - UI Full-screen otimizada para poucos cliques.
+    - Pesquisa instantânea e integração com scanner de código de barras.
+    - Atalhos de teclado.
+- [ ] **Integração**: Emissão automática de documentos no módulo Billing ao finalizar a venda.
+
+---
+
+## 🚀 Fase 6: Expansões Futuras (Pós-MVP)
+*Módulos planejados para a escala do ERP.*
+
+- [ ] **Purchases**: Fornecedores, Pedidos de Compra e Recepção de Mercadorias.
+- [ ] **Finance**: Gestão de Contas Bancárias, Fluxo de Caixa e Reconciliação.
+- [ ] **Accounting**: Plano de Contas, Diário, Razão e Lançamentos Contábeis.
+- [ ] **CRM**: Gestão de Leads, Oportunidades e Interações.
+- [ ] **HR**: Funcionários, Departamentos, Presenças e Processamento de Salários.
+
+---
+
+## 🛠️ Critérios Técnicos Transversais
+- **Performance**: Eager loading em todas as queries e índices compostos.
+- **Segurança**: Soft deletes em entidades críticas e proteção de rotas via middleware.
+- **UX/UI**: Interface responsiva e formulários com validação em tempo real (Inertia/Vue).
