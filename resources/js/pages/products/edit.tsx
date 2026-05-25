@@ -1,4 +1,4 @@
-import { Head, useForm, Link } from '@inertiajs/react';
+import { Head, useForm, Link, usePage } from '@inertiajs/react';
 import { 
     ArrowLeft, 
     Save, 
@@ -23,10 +23,9 @@ import {
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
+    DialogFooter,
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useState } from 'react';
@@ -48,28 +47,47 @@ interface Brand {
     name: string;
 }
 
+interface Product {
+    id: number;
+    name: string;
+    category_id: number | null;
+    unit_id: number | null;
+    brand_id: number | null;
+    sku: string | null;
+    barcode: string | null;
+    description: string | null;
+    type: 'product' | 'service';
+    track_stock: boolean;
+    min_stock: string;
+    weight: string | null;
+    price: string;
+    cost: string;
+    internal_notes: string | null;
+}
+
 interface Props {
+    product: Product;
     categories: Category[];
     units: Unit[];
     brands: Brand[];
 }
 
-export default function ProductCreate({ categories, units, brands }: Props) {
-    const { data, setData, post, processing, errors } = useForm({
-        name: '',
-        category_id: '',
-        unit_id: '',
-        brand_id: '',
-        sku: '',
-        barcode: '',
-        description: '',
-        type: 'product',
-        track_stock: true,
-        min_stock: '0',
-        weight: '',
-        price: '0',
-        cost: '0',
-        internal_notes: '',
+export default function ProductEdit({ product, categories, units, brands }: Props) {
+    const { data, setData, put, processing, errors } = useForm({
+        name: product.name,
+        category_id: product.category_id?.toString() || '',
+        unit_id: product.unit_id?.toString() || '',
+        brand_id: product.brand_id?.toString() || '',
+        sku: product.sku || '',
+        barcode: product.barcode || '',
+        description: product.description || '',
+        type: product.type,
+        track_stock: !!product.track_stock,
+        min_stock: product.min_stock || '0',
+        weight: product.weight || '',
+        price: product.price,
+        cost: product.cost,
+        internal_notes: product.internal_notes || '',
     });
 
     // Quick Create State
@@ -84,8 +102,8 @@ export default function ProductCreate({ categories, units, brands }: Props) {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/products', {
-            onSuccess: () => toast.success('Item cadastrado com sucesso!'),
+        put(`/products/${product.id}`, {
+            onSuccess: () => toast.success('Item atualizado com sucesso!'),
         });
     };
 
@@ -124,7 +142,7 @@ export default function ProductCreate({ categories, units, brands }: Props) {
 
     return (
         <>
-            <Head title="Novo Item" />
+            <Head title={`Editar ${product.name}`} />
 
             <div className="flex flex-col gap-6 max-w-5xl mx-auto">
                 <div className="flex items-center gap-4">
@@ -134,8 +152,8 @@ export default function ProductCreate({ categories, units, brands }: Props) {
                         </Button>
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-white italic">Novo Item</h1>
-                        <p className="text-muted-foreground text-sm">Adicione um novo produto ou serviço ao seu catálogo.</p>
+                        <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-white italic">Editar Item</h1>
+                        <p className="text-muted-foreground text-sm">Atualize as informações do item: {product.name}</p>
                     </div>
                 </div>
 
@@ -420,7 +438,7 @@ export default function ProductCreate({ categories, units, brands }: Props) {
                         <div className="flex flex-col gap-2">
                             <Button type="submit" className="w-full gap-2 py-6 text-lg" disabled={processing}>
                                 <Save className="h-5 w-5" />
-                                {processing ? 'Gravando...' : 'Salvar Item'}
+                                {processing ? 'Atualizando...' : 'Atualizar Item'}
                             </Button>
                             <Link href="/products" className="w-full">
                                 <Button variant="ghost" className="w-full">Cancelar</Button>

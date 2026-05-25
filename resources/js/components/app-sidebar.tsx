@@ -35,6 +35,15 @@ const mainNavItems: NavItem[] = [
         href: '/products',
         icon: Package,
     },
+    {
+        title: 'Cadastros Base',
+        icon: LayoutGrid,
+        items: [
+            { title: 'Categorias', href: '/categories' },
+            { title: 'Marcas', href: '/brands' },
+            { title: 'Unidades', href: '/units' },
+        ]
+    }
 ];
 
 const footerNavItems: NavItem[] = [

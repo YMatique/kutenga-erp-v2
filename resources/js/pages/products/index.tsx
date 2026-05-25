@@ -196,15 +196,17 @@ export default function ProductsIndex() {
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>Opções</DropdownMenuLabel>
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem className="gap-2">
-                                                        <Edit className="h-4 w-4" /> Editar Item
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href={`/products/${product.id}/edit`} className="flex items-center gap-2 w-full cursor-pointer">
+                                                            <Edit className="h-4 w-4" /> Editar Item
+                                                        </Link>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem className="gap-2">
                                                         <FileText className="h-4 w-4" /> Ver Detalhes
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem 
-                                                        className="gap-2 text-red-600 focus:text-red-600"
+                                                        className="gap-2 text-red-600 focus:text-red-600 cursor-pointer"
                                                         onClick={() => deleteProduct(product.id)}
                                                     >
                                                         <Trash2 className="h-4 w-4" /> Remover

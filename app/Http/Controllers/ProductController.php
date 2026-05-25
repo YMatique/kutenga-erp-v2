@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Unit;
 use App\Models\Brand;
-use Inertia\Inertia;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class ProductController extends Controller
 {
@@ -39,47 +38,63 @@ class ProductController extends Controller
             'sku' => 'nullable|string|max:50',
             'barcode' => 'nullable|string|max:50',
             'description' => 'nullable|string',
+            'type' => 'required|in:product,service',
+            'track_stock' => 'required|boolean',
+            'min_stock' => 'required|numeric|min:0',
+            'weight' => 'nullable|numeric|min:0',
             'price' => 'required|numeric|min:0',
             'cost' => 'required|numeric|min:0',
-            'type' => 'required|in:product,service',
+            'internal_notes' => 'nullable|string',
         ]);
 
         $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(5);
 
         Product::create($validated);
 
-        return redirect()->route('products.index')->with('success', 'Produto criado com sucesso.');
+        return redirect()->route('products.index')->with('success', 'Item criado com sucesso.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit(Product $product)
     {
-        //
+        return Inertia::render('products/edit', [
+            'product' => $product,
+            'categories' => Category::all(),
+            'units' => Unit::all(),
+            'brands' => Brand::all(),
+        ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, Product $product)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'nullable|exists:categories,id',
+            'unit_id' => 'nullable|exists:units,id',
+            'brand_id' => 'nullable|exists:brands,id',
+            'sku' => 'nullable|string|max:50',
+            'barcode' => 'nullable|string|max:50',
+            'description' => 'nullable|string',
+            'type' => 'required|in:product,service',
+            'track_stock' => 'required|boolean',
+            'min_stock' => 'required|numeric|min:0',
+            'weight' => 'nullable|numeric|min:0',
+            'price' => 'required|numeric|min:0',
+            'cost' => 'required|numeric|min:0',
+            'internal_notes' => 'nullable|string',
+        ]);
+
+        if ($request->name !== $product->name) {
+            $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(5);
+        }
+
+        $product->update($validated);
+
+        return redirect()->route('products.index')->with('success', 'Item atualizado com sucesso.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Product $product)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $product->delete();
+        return back()->with('success', 'Item removido com sucesso.');
     }
 }

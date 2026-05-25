@@ -23,8 +23,13 @@ class Product extends Model
         'barcode',
         'description',
         'type',
+        'track_stock',
+        'min_stock',
+        'weight',
         'price',
         'cost',
+        'internal_notes',
+        'image_path',
         'status',
     ];
 
