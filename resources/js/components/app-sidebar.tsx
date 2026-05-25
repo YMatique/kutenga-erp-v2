@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
-import { useAppLayout } from '@/contexts/app-layout-context';
+import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
 const mainNavItems: NavItem[] = [
@@ -41,7 +41,8 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
-    const { sidebarOpen } = useAppLayout();
+    const { state, isMobile } = useSidebar();
+    const sidebarOpen = state === "expanded";
 
     return (
         <Sidebar 

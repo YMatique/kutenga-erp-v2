@@ -2,19 +2,19 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { usePage, router } from '@inertiajs/react';
 import { Building2, ChevronsUpDown, Check, MapPin } from 'lucide-react';
-import { useAppLayout } from '@/contexts/app-layout-context';
+import { useSidebar } from '@/components/ui/sidebar';
 
 export function CompanySwitcher() {
     const { auth, active_company_id, active_branch_id } = usePage<any>().props;
-    const { sidebarOpen } = useAppLayout();
+    const { state } = useSidebar();
+    const sidebarOpen = state === "expanded";
     
     const userCompany = auth.user?.company;
     const activeCompany = userCompany; // For now assuming user only sees their own company
     const activeBranch = activeCompany?.branches?.find((b: any) => b.id === active_branch_id);
 
     const switchBranch = (branchId: number) => {
-        // We'll implement a route for this soon
-        router.post(route('context.switch'), {
+        router.post('/context/switch', {
             company_id: activeCompany.id,
             branch_id: branchId
         }, {
