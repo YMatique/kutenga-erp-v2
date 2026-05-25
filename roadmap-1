@@ -12,11 +12,11 @@ Baseado nos documentos `kutenga-brd.pdf` e `kutenga - Requisitos Funcionais.pdf`
 - [x] **Gestão de Identidade (Auth)**:
     - [x] Autenticação segura.
     - [x] Sistema de Permissões (Roles & Permissions) configurado.
-- [ ] **Módulo Core**:
-    - [/] Cadastro de Empresas e Filiais (Modelos e Migrações prontos).
-    - [/] Gestão de Usuários e Perfis (Seeder e Traits prontos).
+- [x] **Módulo Core**:
+    - [x] Cadastro de Empresas e Filiais (CRUD Unidades pronto).
+    - [x] Gestão de Usuários e Perfis (Seeder e Contexto pronto).
     - [x] Auditoria de Sistema (Trait `HasAudit` implementado).
-- [ ] **Layout Base**: Desenvolvimento de layouts persistentes e componentes reutilizáveis.
+- [x] **Layout Base**: Desenvolvimento de layouts flutuantes e suspendidos (Layout Kutenga pronto).
 
 ---
 
