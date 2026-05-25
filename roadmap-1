@@ -7,16 +7,16 @@ Baseado nos documentos `kutenga-brd.pdf` e `kutenga - Requisitos Funcionais.pdf`
 ## 🏗️ Fase 1: Infraestrutura e Módulo Core (Fundação)
 *Objetivo: Estabelecer a base multi-empresa e o sistema de acesso.*
 
-- [ ] **Setup do Projeto**: Laravel + Inertia.js (Vue 3) + MySQL.
-- [ ] **Arquitetura Multi-Tenant**: Implementação de `tenant_id`, `company_id` e `branch_id` nas entidades centrais.
-- [ ] **Gestão de Identidade (Auth)**:
-    - Autenticação segura.
-    - Sistema de Permissões (Roles & Permissions) por módulo e ação.
+- [x] **Setup do Projeto**: Laravel + Inertia.js (React) + MySQL.
+- [x] **Arquitetura Multi-Tenant**: Implementação de `company_id` e `branch_id` (Contexto de Empresa/Filial pronto).
+- [x] **Gestão de Identidade (Auth)**:
+    - [x] Autenticação segura.
+    - [x] Sistema de Permissões (Roles & Permissions) configurado.
 - [ ] **Módulo Core**:
-    - Cadastro de Empresas e Filiais (com dados fiscais e logotipos).
-    - Gestão de Usuários e Perfis.
-    - Auditoria de Sistema (Logs de quem criou/editou o quê).
-- [ ] **Layout Base**: Desenvolvimento de layouts persistentes, navegação SPA e componentes UI reutilizáveis (modais, tabelas, formulários).
+    - [/] Cadastro de Empresas e Filiais (Modelos e Migrações prontos).
+    - [/] Gestão de Usuários e Perfis (Seeder e Traits prontos).
+    - [x] Auditoria de Sistema (Trait `HasAudit` implementado).
+- [ ] **Layout Base**: Desenvolvimento de layouts persistentes e componentes reutilizáveis.
 
 ---
 
@@ -92,4 +92,4 @@ Baseado nos documentos `kutenga-brd.pdf` e `kutenga - Requisitos Funcionais.pdf`
 ## 🛠️ Critérios Técnicos Transversais
 - **Performance**: Eager loading em todas as queries e índices compostos.
 - **Segurança**: Soft deletes em entidades críticas e proteção de rotas via middleware.
-- **UX/UI**: Interface responsiva e formulários com validação em tempo real (Inertia/Vue).
+- **UX/UI**: Interface responsiva e formulários com validação em tempo real (Inertia/React).

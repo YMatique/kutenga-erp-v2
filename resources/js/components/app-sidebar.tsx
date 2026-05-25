@@ -4,17 +4,20 @@ import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
+import { CompanySwitcher } from '@/components/company-switcher';
 import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
     SidebarHeader,
     SidebarMenu,
-    SidebarMenuButton,
     SidebarMenuItem,
+    SidebarMenuButton,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
+import { useAppLayout } from '@/contexts/app-layout-context';
+import { cn } from '@/lib/utils';
 
 const mainNavItems: NavItem[] = [
     {
@@ -38,18 +41,19 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { sidebarOpen } = useAppLayout();
+
     return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
-                                <AppLogo />
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
+        <Sidebar 
+            collapsible="icon" 
+            variant="inset"
+            className={cn(
+                "transition-all duration-300 ease-in-out",
+                "h-full border border-zinc-200 dark:border-zinc-800 rounded-lg bg-zinc-50 dark:bg-zinc-900/50 shadow-sm overflow-hidden"
+            )}
+        >
+            <SidebarHeader className="p-2">
+                <CompanySwitcher />
             </SidebarHeader>
 
             <SidebarContent>
