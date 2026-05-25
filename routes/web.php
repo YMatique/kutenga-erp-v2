@@ -15,6 +15,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::get('branches', [BranchController::class, 'index'])->name('branches.index');
     Route::post('branches', [BranchController::class, 'store'])->name('branches.store');
+    Route::put('branches/{branch}', [BranchController::class, 'update'])->name('branches.update');
     Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
 });
 

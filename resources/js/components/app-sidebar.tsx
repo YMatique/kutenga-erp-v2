@@ -52,11 +52,7 @@ export function AppSidebar() {
     return (
         <Sidebar 
             collapsible="icon" 
-            variant="inset"
-            className={cn(
-                "transition-all duration-300 ease-in-out",
-                "h-full border border-zinc-200 dark:border-zinc-800 rounded-lg bg-zinc-50 dark:bg-zinc-900/50 shadow-sm overflow-hidden"
-            )}
+            className="bg-transparent border-none shadow-none"
         >
             <SidebarHeader className="p-2">
                 <CompanySwitcher />

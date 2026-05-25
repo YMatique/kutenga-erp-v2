@@ -28,30 +28,37 @@ function KutengaLayoutContent({
     }, [props.flash]);
 
     return (
-        <div className="min-h-screen w-full bg-zinc-100 dark:bg-zinc-950 font-sans antialiased text-zinc-900 dark:text-zinc-100 flex flex-col">
-            {/* Suspended Sidebar - We use the Sidebar component inside SidebarProvider */}
-            <AppSidebar />
+        <div className="min-h-screen w-full bg-zinc-50 dark:bg-zinc-950 font-sans antialiased text-zinc-900 dark:text-zinc-100 flex flex-col">
+            {/* 1. Suspended Top Header */}
+            <header className="fixed top-4 left-4 right-4 z-[60] transition-all duration-300 ease-in-out">
+                <div className="h-16 border border-zinc-200/50 dark:border-zinc-800/50 rounded-xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl px-4 flex items-center shadow-sm">
+                    <AppHeader breadcrumbs={breadcrumbs} />
+                </div>
+            </header>
 
-            <div className="flex flex-1 flex-col transition-all duration-300 ease-in-out">
-                {/* Suspended Header */}
-                <header className={cn(
-                    "fixed top-4 right-4 z-40 transition-all duration-300 ease-in-out",
-                    isMobile ? "left-4" : (sidebarOpen ? "left-[17rem]" : "left-[4rem]")
-                )}>
-                    <div className="h-16 border border-zinc-200 dark:border-zinc-800 rounded-lg bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md px-4 flex items-center shadow-xs">
-                        <AppHeader breadcrumbs={breadcrumbs} />
+            <div className="flex flex-1 relative">
+                {/* 2. Suspended Sidebar - Starts below the header (top-24) */}
+                <aside 
+                    className={cn(
+                        "fixed top-24 left-4 bottom-4 z-50 transition-all duration-300 ease-in-out",
+                        sidebarOpen ? "w-64" : "w-20",
+                        isMobile && !sidebarOpen && "-left-full"
+                    )}
+                >
+                    <div className="h-full border border-zinc-200/50 dark:border-zinc-800/50 rounded-xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl shadow-sm overflow-hidden flex flex-col">
+                        <AppSidebar />
                     </div>
-                </header>
+                </aside>
 
-                {/* Main Content Area */}
+                {/* 3. Main Content Area */}
                 <main
                     className={cn(
-                        "mt-24 mr-4 mb-4 min-h-[calc(100vh-7rem)] transition-all duration-300 ease-in-out flex-1",
-                        isMobile ? "ml-4" : (sidebarOpen ? "ml-[17rem]" : "ml-[4rem]")
+                        "mt-24 w-full transition-all duration-300 ease-in-out flex-1",
+                        isMobile ? "ml-4 mr-4 mb-4" : (sidebarOpen ? "ml-72 mr-4 mb-4" : "ml-28 mr-4 mb-4")
                     )}
                 >
                     {/* Content Wrapper Card */}
-                    <div className="h-full border border-zinc-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-zinc-900 p-6 md:p-8 shadow-xs border-dashed">
+                    <div className="min-h-full border border-zinc-200/60 dark:border-zinc-800/60 rounded-xl bg-white dark:bg-zinc-900 p-6 md:p-8 shadow-xs border-dashed">
                         {children}
                     </div>
                 </main>

@@ -31,6 +31,20 @@ class BranchController extends Controller
         return back()->with('success', 'Filial criada com sucesso.');
     }
 
+    public function update(Request $request, Branch $branch)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:branches,code,' . $branch->id,
+            'address' => 'nullable|string',
+            'phone' => 'nullable|string|max:20',
+        ]);
+
+        $branch->update($validated);
+
+        return back()->with('success', 'Filial atualizada com sucesso.');
+    }
+
     public function destroy(Branch $branch)
     {
         $branch->delete();
