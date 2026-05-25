@@ -3,7 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Company;
+use App\Models\Branch;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,11 +14,27 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // 1. Criar Empresa
+        $company = Company::updateOrCreate(
+            ['nuit' => '123456789'],
+            ['name' => 'Kutenga ERP Demo', 'email' => 'admin@kutenga.com', 'status' => 'active']
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // 2. Criar Filial Matriz
+        $branch = Branch::updateOrCreate(
+            ['company_id' => $company->id, 'code' => 'MATRIZ'],
+            ['name' => 'Unidade Sede', 'status' => 'active']
+        );
+
+        // 3. Criar Usuário Teste vinculado
+        User::updateOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Administrador',
+                'password' => bcrypt('password'),
+                'company_id' => $company->id,
+                'branch_id' => $branch->id,
+            ]
+        );
     }
 }
