@@ -8,6 +8,7 @@ use App\Models\Unit;
 use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -44,10 +45,19 @@ class ProductController extends Controller
             'weight' => 'nullable|numeric|min:0',
             'price' => 'required|numeric|min:0',
             'cost' => 'required|numeric|min:0',
+            'tax_rate' => 'required|numeric|min:0|max:100',
+            'tax_is_exempt' => 'required|boolean',
+            'tax_exemption_reason' => 'nullable|required_if:tax_is_exempt,true|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'internal_notes' => 'nullable|string',
         ]);
 
         $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(5);
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('products', 'public');
+            $validated['image_path'] = '/storage/' . $path;
+        }
 
         Product::create($validated);
 
@@ -80,8 +90,22 @@ class ProductController extends Controller
             'weight' => 'nullable|numeric|min:0',
             'price' => 'required|numeric|min:0',
             'cost' => 'required|numeric|min:0',
+            'tax_rate' => 'required|numeric|min:0|max:100',
+            'tax_is_exempt' => 'required|boolean',
+            'tax_exemption_reason' => 'nullable|required_if:tax_is_exempt,true|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'internal_notes' => 'nullable|string',
         ]);
+
+        if ($request->hasFile('image')) {
+            // Delete old image if it exists
+            if ($product->image_path) {
+                $oldPath = str_replace('/storage/', '', $product->image_path);
+                Storage::disk('public')->delete($oldPath);
+            }
+            $path = $request->file('image')->store('products', 'public');
+            $validated['image_path'] = '/storage/' . $path;
+        }
 
         if ($request->name !== $product->name) {
             $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(5);

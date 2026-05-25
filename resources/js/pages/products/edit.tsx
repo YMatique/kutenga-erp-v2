@@ -7,7 +7,10 @@ import {
     Info, 
     DollarSign, 
     Layers,
-    Plus 
+    Plus,
+    Image as ImageIcon,
+    Upload,
+    Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +65,10 @@ interface Product {
     weight: string | null;
     price: string;
     cost: string;
+    tax_rate: string;
+    tax_is_exempt: boolean;
+    tax_exemption_reason: string | null;
+    image_path: string | null;
     internal_notes: string | null;
 }
 
@@ -73,7 +80,8 @@ interface Props {
 }
 
 export default function ProductEdit({ product, categories, units, brands }: Props) {
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
+        _method: 'PUT',
         name: product.name,
         category_id: product.category_id?.toString() || '',
         unit_id: product.unit_id?.toString() || '',
@@ -87,8 +95,33 @@ export default function ProductEdit({ product, categories, units, brands }: Prop
         weight: product.weight || '',
         price: product.price,
         cost: product.cost,
+        tax_rate: product.tax_rate?.toString() || '16',
+        tax_is_exempt: !!product.tax_is_exempt,
+        tax_exemption_reason: product.tax_exemption_reason || '',
+        image: null as File | null,
         internal_notes: product.internal_notes || '',
     });
+
+    const [imagePreview, setImagePreview] = useState<string | null>(product.image_path || null);
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setData('image', file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRemoveImage = () => {
+        setData('image', null);
+        setImagePreview(null);
+        const fileInput = document.getElementById('product-image-upload') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+    };
 
     // Quick Create State
     const [quickCreateCatOpen, setQuickCreateCatOpen] = useState(false);
@@ -102,7 +135,7 @@ export default function ProductEdit({ product, categories, units, brands }: Prop
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(`/products/${product.id}`, {
+        post(`/products/${product.id}`, {
             onSuccess: () => toast.success('Item atualizado com sucesso!'),
         });
     };
@@ -315,10 +348,137 @@ export default function ProductEdit({ product, categories, units, brands }: Prop
                                 </div>
                             </CardContent>
                         </Card>
+
+                        {/* Fiscal / Impostos Card */}
+                        <Card className="border-zinc-200/50 bg-white/70 backdrop-blur-md shadow-xs">
+                            <CardHeader>
+                                <div className="flex items-center gap-2">
+                                    <Info className="h-4 w-4 text-zinc-400" />
+                                    <CardTitle className="text-lg">Informações Fiscais</CardTitle>
+                                </div>
+                                <CardDescription>Defina a tributação aplicável a este produto ou serviço.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="grid gap-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex flex-col gap-0.5">
+                                        <Label>Isento de Imposto (IVA)?</Label>
+                                        <span className="text-[10px] text-muted-foreground italic">Ativar isenção fiscal para faturamento.</span>
+                                    </div>
+                                    <Button 
+                                        type="button" 
+                                        variant={data.tax_is_exempt ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={() => {
+                                            setData(prev => ({
+                                                ...prev,
+                                                tax_is_exempt: !prev.tax_is_exempt,
+                                                tax_rate: !prev.tax_is_exempt ? '0' : '16',
+                                                tax_exemption_reason: !prev.tax_is_exempt ? 'Artigo 9 do CIVA - Isenção de bens alimentares e saúde' : ''
+                                            }));
+                                        }}
+                                        className="w-20"
+                                    >
+                                        {data.tax_is_exempt ? 'SIM' : 'NÃO'}
+                                    </Button>
+                                </div>
+
+                                {!data.tax_is_exempt ? (
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="tax_rate">Taxa de Imposto (IVA %)</Label>
+                                        <Select 
+                                            value={data.tax_rate} 
+                                            onValueChange={val => setData('tax_rate', val)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecionar taxa..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="16">16% (IVA Normal - Moçambique)</SelectItem>
+                                                <SelectItem value="17">17% (IVA Anterior)</SelectItem>
+                                                <SelectItem value="0">0% (Sem IVA)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        {errors.tax_rate && <p className="text-sm text-red-500">{errors.tax_rate}</p>}
+                                    </div>
+                                ) : (
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="tax_exemption_reason">Motivo da Isenção (Obrigatório)</Label>
+                                        <Select 
+                                            value={data.tax_exemption_reason} 
+                                            onValueChange={val => setData('tax_exemption_reason', val)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecionar enquadramento legal..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Artigo 9 do CIVA - Isenção de bens alimentares e saúde">Artigo 9 do CIVA - Isenção de bens alimentares e saúde</SelectItem>
+                                                <SelectItem value="Artigo 10 do CIVA - Operações financeiras e seguros">Artigo 10 do CIVA - Operações financeiras e seguros</SelectItem>
+                                                <SelectItem value="Isenção por exportação de mercadorias">Isenção por exportação de mercadorias</SelectItem>
+                                                <SelectItem value="Regime Simplificado - Sem IVA">Regime Simplificado - Sem IVA</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        {errors.tax_exemption_reason && <p className="text-sm text-red-500">{errors.tax_exemption_reason}</p>}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
                     </div>
 
                     {/* Sidebar Info */}
                     <div className="flex flex-col gap-6">
+                        {/* Imagem do Produto Card */}
+                        <Card className="border-zinc-200/50 bg-white/70 backdrop-blur-md shadow-xs overflow-hidden">
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center gap-2">
+                                    <ImageIcon className="h-4 w-4 text-zinc-400" />
+                                    <CardTitle className="text-lg">Imagem do Produto</CardTitle>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="flex flex-col items-center justify-center">
+                                {imagePreview ? (
+                                    <div className="relative group w-full aspect-square max-h-[220px] rounded-lg overflow-hidden border border-zinc-200 bg-zinc-50 flex items-center justify-center">
+                                        <img 
+                                            src={imagePreview} 
+                                            alt="Preview" 
+                                            className="w-full h-full object-cover"
+                                        />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            <Button 
+                                                type="button" 
+                                                variant="destructive" 
+                                                size="icon"
+                                                className="rounded-full h-9 w-9 shadow-lg"
+                                                onClick={handleRemoveImage}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <label 
+                                        htmlFor="product-image-upload"
+                                        className="w-full aspect-square max-h-[220px] rounded-lg border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors flex flex-col items-center justify-center gap-2 cursor-pointer bg-zinc-50/50 dark:bg-zinc-900/50 p-4 text-center group"
+                                    >
+                                        <div className="p-3 bg-white dark:bg-zinc-800 rounded-full shadow-xs border border-zinc-200/50 group-hover:scale-105 transition-transform">
+                                            <Upload className="h-5 w-5 text-zinc-400 group-hover:text-blue-500" />
+                                        </div>
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Carregar Imagem</span>
+                                            <span className="text-[10px] text-muted-foreground">PNG, JPG, WEBP até 2MB</span>
+                                        </div>
+                                        <input 
+                                            id="product-image-upload"
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handleImageChange}
+                                        />
+                                    </label>
+                                )}
+                                {errors.image && <p className="text-xs text-red-500 mt-2">{errors.image}</p>}
+                            </CardContent>
+                        </Card>
+
                         <Card className="border-zinc-200/50 bg-white/70 backdrop-blur-md shadow-xs">
                             <CardHeader>
                                 <div className="flex items-center gap-2">

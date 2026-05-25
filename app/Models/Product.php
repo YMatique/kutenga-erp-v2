@@ -28,9 +28,17 @@ class Product extends Model
         'weight',
         'price',
         'cost',
+        'tax_rate',
+        'tax_is_exempt',
+        'tax_exemption_reason',
         'internal_notes',
         'image_path',
         'status',
+    ];
+
+    protected $casts = [
+        'tax_is_exempt' => 'boolean',
+        'track_stock' => 'boolean',
     ];
 
     public function category(): BelongsTo
