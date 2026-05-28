@@ -57,6 +57,9 @@ interface Product {
     price: string;
     cost: string;
     status: string;
+    image_path: string | null;
+    tax_rate: string;
+    tax_is_exempt: boolean;
     category: Category | null;
     unit: Unit | null;
     brand: Brand | null;
@@ -121,9 +124,10 @@ export default function ProductsIndex() {
                     <Table>
                         <TableHeader className="bg-zinc-50/50 dark:bg-zinc-800/30">
                             <TableRow>
-                                <TableHead className="w-[400px]">Item / SKU</TableHead>
+                                <TableHead className="w-[420px]">Item / SKU</TableHead>
                                 <TableHead>Tipo</TableHead>
                                 <TableHead>Categoria / Marca</TableHead>
+                                <TableHead>IVA</TableHead>
                                 <TableHead className="text-right">Preço de Venda</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead className="text-right">Ações</TableHead>
@@ -132,7 +136,7 @@ export default function ProductsIndex() {
                         <TableBody>
                             {filteredProducts.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="h-48 text-center text-muted-foreground">
+                                    <TableCell colSpan={7} className="h-48 text-center text-muted-foreground">
                                         <div className="flex flex-col items-center gap-2">
                                             <Package className="h-8 w-8 opacity-20" />
                                             <span>Nenhum item encontrado no catálogo.</span>
@@ -144,8 +148,19 @@ export default function ProductsIndex() {
                                     <TableRow key={product.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
                                         <TableCell>
                                             <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
-                                                    {product.type === 'product' ? <Package className="h-5 w-5" /> : <Wrench className="h-5 w-5" />}
+                                                {/* Product Image Thumbnail */}
+                                                <div className="h-11 w-11 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                                                    {product.image_path ? (
+                                                        <img 
+                                                            src={product.image_path} 
+                                                            alt={product.name}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <span className="text-zinc-400">
+                                                            {product.type === 'product' ? <Package className="h-5 w-5" /> : <Wrench className="h-5 w-5" />}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div className="flex flex-col gap-0.5">
                                                     <span className="font-semibold text-zinc-900 dark:text-zinc-100 italic leading-none">{product.name}</span>
@@ -174,6 +189,17 @@ export default function ProductsIndex() {
                                                     {product.brand?.name || 'Sem Marca'}
                                                 </div>
                                             </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            {product.tax_is_exempt ? (
+                                                <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-50/50 text-[10px] font-bold px-1.5 py-0">
+                                                    ISENTO
+                                                </Badge>
+                                            ) : (
+                                                <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50/50 text-[10px] font-bold px-1.5 py-0">
+                                                    {parseFloat(product.tax_rate)}% IVA
+                                                </Badge>
+                                            )}
                                         </TableCell>
                                         <TableCell className="text-right font-semibold text-zinc-900 dark:text-zinc-100">
                                             {new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(parseFloat(product.price))}
