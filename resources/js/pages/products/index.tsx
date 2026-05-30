@@ -228,7 +228,9 @@ export default function ProductsIndex() {
                                                         </Link>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem className="gap-2">
-                                                        <FileText className="h-4 w-4" /> Ver Detalhes
+                                                        <Link href={`/products/${product.id}`} className="flex items-center gap-2 w-full cursor-pointer">
+                                                            <FileText className="h-4 w-4" /> Ver Detalhes
+                                                        </Link>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem 

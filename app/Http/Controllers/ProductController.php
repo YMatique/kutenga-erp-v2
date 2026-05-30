@@ -64,6 +64,18 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Item criado com sucesso.');
     }
 
+    public function show(Product $product)
+    {
+         $product->load([
+        'category',
+        'unit',
+        'brand',
+    ]);
+    return Inertia::render('products/show', [
+        'product' => $product,
+    ]);
+
+    }
     public function edit(Product $product)
     {
         return Inertia::render('products/edit', [
