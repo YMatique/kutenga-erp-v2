@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, MapPin, Package } from 'lucide-react';
+import { BookOpen, FolderGit2, LayoutGrid, MapPin, Package, Receipt, Settings, ShoppingCart, Users, Warehouse } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -25,26 +25,76 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
+
     {
-        title: 'Gestão de Unidades',
-        href: '/branches',
-        icon: MapPin,
-    },
-    {
-        title: 'Catálogo de Itens',
-        href: '/products',
+        title: 'Catálogo',
         icon: Package,
-    },
-    {
-        title: 'Cadastros Base',
-        icon: LayoutGrid,
         items: [
+            { title: 'Produtos & Serviços', href: '/products' },
             { title: 'Categorias', href: '/categories' },
             { title: 'Marcas', href: '/brands' },
             { title: 'Unidades', href: '/units' },
-        ]
-    }
+        ],
+    },
+
+    {
+        title: 'Inventário',
+        icon: Warehouse,
+        items: [
+            { title: 'Movimentos', href: '/inventory/movements' },
+            { title: 'Armazéns', href: '/inventory/warehouses' },
+            { title: 'Transferências', href: '/inventory/transfers' },
+            { title: 'Stock', href: '/inventory/stock' },
+        ],
+    },
+
+    {
+        title: 'Vendas',
+        icon: Receipt,
+        items: [
+            { title: 'Faturas', href: '/invoices' },
+            { title: 'Clientes', href: '/customers' },
+            { title: 'Pagamentos', href: '/payments' },
+        ],
+    },
+
+    {
+        title: 'Ponto de Venda',
+        icon: ShoppingCart,
+        items: [
+            { title: 'Caixa', href: '/pos' },
+            { title: 'Sessões', href: '/pos/sessions' },
+        ],
+    },
+
+    {
+        title: 'Unidades',
+        icon: MapPin,
+        items: [
+            { title: 'Empresas', href: '/companies' },
+            { title: 'Filiais', href: '/branches' },
+        ],
+    },
+
+    {
+        title: 'Utilizadores',
+        icon: Users,
+        items: [
+            { title: 'Usuários', href: '/users' },
+            { title: 'Funções', href: '/roles' },
+        ],
+    },
+
+    {
+        title: 'Configurações',
+        icon: Settings,
+        items: [
+            { title: 'Sistema', href: '/settings' },
+            { title: 'Auditoria', href: '/audit' },
+        ],
+    },
 ];
+
 
 const footerNavItems: NavItem[] = [
     {

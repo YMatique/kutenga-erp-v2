@@ -24,7 +24,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
 
     return (
         <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel className="text-xs font-semibold text-zinc-500 uppercase tracking-widest px-4 pt-4 pb-2 italic">KUTENGA ERP</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-xs font-semibold text-zinc-500 uppercase tracking-widest px-4 pt-4 pb-2 ">KUTENGA ERP</SidebarGroupLabel>
             <SidebarMenu>
                 {items.map((item) => {
                     const hasSubItems = item.items && item.items.length > 0;
@@ -39,7 +39,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                 >
                                     <Link href={item.href!} prefetch>
                                         {item.icon && <item.icon />}
-                                        <span className="font-medium tracking-tight italic">{item.title}</span>
+                                        <span className="font-medium tracking-tight ">{item.title}</span>
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
@@ -57,7 +57,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                 <CollapsibleTrigger asChild>
                                     <SidebarMenuButton tooltip={item.title}>
                                         {item.icon && <item.icon />}
-                                        <span className="font-medium tracking-tight italic">{item.title}</span>
+                                        <span className="font-medium tracking-tight">{item.title}</span>
                                         <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                                     </SidebarMenuButton>
                                 </CollapsibleTrigger>
@@ -67,7 +67,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                             <SidebarMenuSubItem key={subItem.title}>
                                                 <SidebarMenuSubButton asChild isActive={isCurrentUrl(subItem.href)}>
                                                     <Link href={subItem.href} prefetch>
-                                                        <span className="text-sm font-normal italic opacity-80">{subItem.title}</span>
+                                                        <span className="text-sm font-normal  opacity-80">{subItem.title}</span>
                                                     </Link>
                                                 </SidebarMenuSubButton>
                                             </SidebarMenuSubItem>
