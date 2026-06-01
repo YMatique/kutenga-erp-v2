@@ -1,11 +1,12 @@
 <?php
 
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\BrandController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ContextController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\UnitController;
-use App\Http\Controllers\BrandController;
+use App\Http\Controllers\WarehouseController;
 use App\Http\Middleware\SetCompanyContext;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -17,22 +18,24 @@ Route::inertia('/', 'welcome', [
 Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
     Route::post('context/switch', [ContextController::class, 'switch'])->name('context.switch');
-    
-    //Catalog
+
+    // Catalog
     Route::resource('branches', BranchController::class);
     Route::resource('products', ProductController::class);
     Route::resource('categories', CategoryController::class);
     Route::resource('units', UnitController::class);
     Route::resource('brands', BrandController::class);
-    
-    //Inventory
 
+    // Inventory
+    Route::prefix('/inventory')->group(function () {
+        Route::resource('warehouses', WarehouseController::class);
+    });
 
     // Sales/Billing
 
     // POS
 
-    // 
+    //
 });
 
 require __DIR__.'/settings.php';
