@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
-use App\Models\Category;
-use App\Models\Unit;
 use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\Unit;
+use App\Services\Inventory\StockService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -52,11 +53,11 @@ class ProductController extends Controller
             'internal_notes' => 'nullable|string',
         ]);
 
-        $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(5);
+        $validated['slug'] = Str::slug($validated['name']).'-'.Str::random(5);
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('products', 'public');
-            $validated['image_path'] = '/storage/' . $path;
+            $validated['image_path'] = '/storage/'.$path;
         }
 
         Product::create($validated);
@@ -64,18 +65,22 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Item criado com sucesso.');
     }
 
-    public function show(Product $product)
+    public function show(Product $product, StockService $stockService)
     {
-         $product->load([
-        'category',
-        'unit',
-        'brand',
-    ]);
-    return Inertia::render('products/show', [
-        'product' => $product,
-    ]);
+        $product->load([
+            'category',
+            'unit',
+            'brand',
+        ]);
+        $stockByWarehouse = $stockService->getStockByWarehouses($product);
+
+        return Inertia::render('products/show', [
+            'product' => $product,
+            'stockByWarehouse' => $stockByWarehouse,
+        ]);
 
     }
+
     public function edit(Product $product)
     {
         return Inertia::render('products/edit', [
@@ -116,11 +121,11 @@ class ProductController extends Controller
                 Storage::disk('public')->delete($oldPath);
             }
             $path = $request->file('image')->store('products', 'public');
-            $validated['image_path'] = '/storage/' . $path;
+            $validated['image_path'] = '/storage/'.$path;
         }
 
         if ($request->name !== $product->name) {
-            $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(5);
+            $validated['slug'] = Str::slug($validated['name']).'-'.Str::random(5);
         }
 
         $product->update($validated);
@@ -131,6 +136,7 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         $product->delete();
+
         return back()->with('success', 'Item removido com sucesso.');
     }
 }

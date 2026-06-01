@@ -125,4 +125,19 @@ class StockService
             'created_by'   => Auth::id(),
         ]);
     }
+
+    public function getStockByWarehouses(Product $product): array
+{
+    $warehouses = Warehouse::where('company_id', $product->company_id)->get();
+
+    return $warehouses->map(function ($warehouse) use ($product) {
+        return [
+            'warehouse' => [
+                'id' => $warehouse->id,
+                'name' => $warehouse->name,
+            ],
+            'stock' => $this->getStock($product, $warehouse),
+        ];
+    })->values()->toArray();
+}
 }
