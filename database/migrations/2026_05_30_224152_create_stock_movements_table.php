@@ -17,20 +17,26 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
              $table->foreignId('warehouse_id')->constrained()->nullOnDelete();
 
-            $table->enum('type', ['purchase','sale','return','adjustment','damage', 'transfer']);
-            // purchase, sale, return, adjustment, demage, transfer
+            $table->enum('type', ['in','out','adjustment']);
+            //Sales -> StockMovement (out)
+            //Purchase -> StockMovement (in)
+            //Transference -> StockMovement (in + out)
+            //Adjust -> StockMovement (adjustment)
+
             $table->decimal('quantity', 12, 2);
 
-            $table->decimal('unit_cost', 12, 2)->nullable();
+            //origem
+            $table->string('source_type')->nullable(); //StockTransfer, StockAdjustment
+            $table->unsignedBigInteger('source_id')->nullable();
 
-            $table->string('reference')->nullable();
+            // $table->string('reference')->nullable();
             $table->text('notes')->nullable();
 
-            $table->foreignId('created_by')->nullable()->constrained('users');
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
 
             $table->timestamps();
 
-            $table->index(['product_id', 'type']);
+            $table->index(['product_id','warehouse_id', 'type']);
         });
     }
 

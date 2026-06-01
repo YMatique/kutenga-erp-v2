@@ -2,23 +2,28 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
+use App\Traits\HasAudit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockMovement extends Model
 {
+        use BelongsToCompany, HasAudit;
     protected $fillable = [
         'company_id',
         'product_id',
         'warehouse_id',
         'type',
         'quantity',
-        'unit_cost',
-        'reference',
+        'source_type',
+        'source_id',
+        // 'unit_cost',
+        // 'reference',
         'notes',
         'created_by',
     ];
-
+    protected $casts = ['quantity'=>'decimal'];
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

@@ -17,10 +17,12 @@ return new class extends Migration
 
             $table->string('name');
             $table->string('code')->nullable();
-            $table->text('address')->nullable();
-
+            $table->string('address')->nullable();
+            $table->text('description')->nullable();
             $table->boolean('is_default')->default(false);
-
+            $table->boolean('is_active')->default(true);
+            //indices
+            $table->index(['company', 'is_active']);
             $table->timestamps();
         });
     }

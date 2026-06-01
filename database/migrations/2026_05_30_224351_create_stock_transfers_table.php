@@ -14,15 +14,12 @@ return new class extends Migration
         Schema::create('stock_transfers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->foreignId('from_warehouse_id')->constrained('warehouses');
             $table->foreignId('to_warehouse_id')->constrained('warehouses');
-            $table->decimal('quantity', 12, 2);
-            // $table->string('status')->default('pending'); 
-            $table->enum('status',['pedding','','completed','cancelled']);
+            $table->enum('status',['pedding','approved','completed','cancelled'])->default('pedding');
             // pending | completed | cancelled
             $table->string('notes')->nullable();
-            $table->foreignId('created_by')->nullable()->constrained('users');
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
 
             $table->timestamps();
         });
