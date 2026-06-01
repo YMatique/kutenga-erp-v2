@@ -64,6 +64,14 @@ interface Product {
     brand: Brand | null;
 }
 
+interface StockByWarehouse {
+    warehouse: {
+        id: number;
+        name: string;
+    };
+    stock: number;
+}
+
 function formatCurrency(value: string | number) {
     return new Intl.NumberFormat('pt-MZ', {
         style: 'currency',
@@ -72,7 +80,10 @@ function formatCurrency(value: string | number) {
 }
 
 export default function ProductShow() {
-    const { product } = usePage<{ product: Product }>().props;
+    const { product, stockByWarehouse } = usePage<{
+        product: Product;
+        stockByWarehouse: StockByWarehouse[];
+    }>().props;
 
     const price = Number(product.price);
     const cost = Number(product.cost);
@@ -88,122 +99,92 @@ export default function ProductShow() {
 
                 {/* Breadcrumb */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Link
-                        href="/products"
-                        className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                    >
+                    <Link href="/products" className="hover:text-zinc-900">
                         Produtos
                     </Link>
-
                     <span>/</span>
-
-                    <span className="text-zinc-900 dark:text-zinc-100">
+                    <span className="text-zinc-900">
                         {product.name}
                     </span>
                 </div>
 
                 {/* Header */}
-                <div className="rounded-3xl border border-zinc-200/70 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/70 backdrop-blur-xl p-6 shadow-sm">
-                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
+                <div className="rounded-3xl border bg-white/80 p-6">
+                    <div className="flex justify-between gap-6">
 
-                        {/* Left */}
                         <div className="flex items-start gap-5">
 
-                            {/* Image */}
-                            <div className="h-24 w-24 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                            <div className="h-24 w-24 rounded-2xl overflow-hidden border bg-zinc-100 flex items-center justify-center">
                                 {product.image_path ? (
                                     <img
                                         src={product.image_path}
-                                        alt={product.name}
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
-                                    <span className="text-zinc-400">
-                                        {product.type === 'product' ? (
-                                            <Package className="h-10 w-10" />
-                                        ) : (
-                                            <Wrench className="h-10 w-10" />
-                                        )}
-                                    </span>
+                                    product.type === 'product'
+                                        ? <Package className="h-10 w-10" />
+                                        : <Wrench className="h-10 w-10" />
                                 )}
                             </div>
 
-                            {/* Info */}
-                            <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-2">
 
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <h1 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-white">
+                                <div className="flex items-center gap-2">
+                                    <h1 className="text-3xl font-bold">
                                         {product.name}
                                     </h1>
 
-                                    <Badge
-                                        variant={
-                                            product.status === 'active'
-                                                ? 'default'
-                                                : 'secondary'
-                                        }
-                                        className="rounded-full px-3"
-                                    >
-                                        {product.status === 'active'
-                                            ? 'Ativo'
-                                            : 'Inativo'}
+                                    <Badge>
+                                        {product.status}
                                     </Badge>
                                 </div>
 
-                                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-
+                                <div className="flex gap-3 text-sm text-muted-foreground">
                                     {product.sku && (
-                                        <div className="flex items-center gap-1.5">
+                                        <span className="flex items-center gap-1">
                                             <Barcode className="h-4 w-4" />
                                             {product.sku}
-                                        </div>
+                                        </span>
                                     )}
 
-                                    <div className="flex items-center gap-1.5">
+                                    <span className="flex items-center gap-1">
                                         <Layers className="h-4 w-4" />
                                         {product.category?.name || 'Sem categoria'}
-                                    </div>
+                                    </span>
 
-                                    <div className="flex items-center gap-1.5">
+                                    <span className="flex items-center gap-1">
                                         <Tag className="h-4 w-4" />
                                         {product.brand?.name || 'Sem marca'}
-                                    </div>
+                                    </span>
                                 </div>
 
                                 {product.description && (
-                                    <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-3xl leading-relaxed">
+                                    <p className="text-sm text-muted-foreground">
                                         {product.description}
                                     </p>
                                 )}
                             </div>
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex items-center gap-3">
-
+                        <div className="flex gap-3">
                             <Link href="/products">
-                                <Button variant="outline" className="gap-2">
+                                <Button variant="outline">
                                     <ArrowLeft className="h-4 w-4" />
                                     Voltar
                                 </Button>
                             </Link>
 
                             <Link href={`/products/${product.id}/edit`}>
-                                <Button className="gap-2">
+                                <Button>
                                     <Pencil className="h-4 w-4" />
                                     Editar
                                 </Button>
                             </Link>
-
-                            <Button variant="outline" className="gap-2">
-                                <Archive className="h-4 w-4" />
-                                Arquivar
-                            </Button>
                         </div>
                     </div>
                 </div>
 
-                {/* Metrics */}
+                 {/* Metrics */}
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
 
                     <div className="rounded-2xl border bg-white/80 dark:bg-zinc-900/70 backdrop-blur-xl p-5">
@@ -281,9 +262,9 @@ export default function ProductShow() {
                 </div>
 
                 {/* Tabs */}
-                <Tabs defaultValue="overview" className="w-full">
+                <Tabs defaultValue="overview">
 
-                    <TabsList className="bg-white dark:bg-zinc-900 border rounded-2xl p-1">
+                    <TabsList>
                         <TabsTrigger value="overview">
                             Visão Geral
                         </TabsTrigger>
@@ -297,7 +278,8 @@ export default function ProductShow() {
                         </TabsTrigger>
                     </TabsList>
 
-                    {/* Overview */}
+                    {/* OVERVIEW */}
+                     {/* Overview */}
                     <TabsContent value="overview" className="mt-6">
 
                         <div className="grid gap-6 xl:grid-cols-3">
@@ -469,36 +451,64 @@ export default function ProductShow() {
                         </div>
                     </TabsContent>
 
-                    {/* Inventory */}
-                    <TabsContent value="inventory" className="mt-6">
-                        <div className="rounded-3xl border bg-white/80 dark:bg-zinc-900/70 backdrop-blur-xl p-10 text-center">
-                            <Boxes className="h-10 w-10 mx-auto text-zinc-300 mb-4" />
+                    {/* INVENTORY REAL */}
+                    <TabsContent value="inventory">
 
-                            <h3 className="text-lg font-semibold">
-                                Gestão de Estoque
-                            </h3>
+                        <div className="border rounded-xl p-6 bg-white">
 
-                            <p className="text-sm text-muted-foreground mt-2">
-                                Movimentações, entradas, saídas e transferências
-                                serão exibidas aqui futuramente.
-                            </p>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold">
+                                    Stock por Armazém
+                                </h3>
+
+                                <Boxes className="h-5 w-5 text-zinc-400" />
+                            </div>
+
+                            <div className="space-y-3">
+
+                                {stockByWarehouse.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground">
+                                        Nenhum armazém encontrado
+                                    </p>
+                                ) : (
+                                    stockByWarehouse.map((item) => (
+                                        <div
+                                            key={item.warehouse.id}
+                                            className="flex justify-between border p-4 rounded-lg"
+                                        >
+                                            <div>
+                                                <p className="font-medium">
+                                                    {item.warehouse.name}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Armazém
+                                                </p>
+                                            </div>
+
+                                            <div className="text-right">
+                                                <p className="text-xl font-bold">
+                                                    {item.stock}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    unidades
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+
+                            </div>
+                        </div>
+
+                    </TabsContent>
+
+                    {/* ACTIVITY */}
+                    <TabsContent value="activity">
+                        <div className="p-6 border rounded-xl text-center text-muted-foreground">
+                            Histórico futuro
                         </div>
                     </TabsContent>
 
-                    {/* Activity */}
-                    <TabsContent value="activity" className="mt-6">
-                        <div className="rounded-3xl border bg-white/80 dark:bg-zinc-900/70 backdrop-blur-xl p-10 text-center">
-                            <Info className="h-10 w-10 mx-auto text-zinc-300 mb-4" />
-
-                            <h3 className="text-lg font-semibold">
-                                Histórico de Atividades
-                            </h3>
-
-                            <p className="text-sm text-muted-foreground mt-2">
-                                Auditoria e alterações do produto aparecerão aqui.
-                            </p>
-                        </div>
-                    </TabsContent>
                 </Tabs>
             </div>
         </>
