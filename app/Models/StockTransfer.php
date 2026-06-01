@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class StockTransfer extends Model
 {
     use BelongsToCompany, HasAudit;
+
     //
     public $fillable = [
         'company_id',
@@ -17,11 +18,27 @@ class StockTransfer extends Model
         'to_warehouse_id',
         'status',
         'notes',
-        'created_by'
+        'created_by',
     ];
 
     public function items(): HasMany
     {
         return $this->hasMany(StockTransferItem::class);
+    }
+
+    public function fromWarehouse()
+    {
+        return $this->belongsTo(
+            Warehouse::class,
+            'from_warehouse_id'
+        );
+    }
+
+    public function toWarehouse()
+    {
+        return $this->belongsTo(
+            Warehouse::class,
+            'to_warehouse_id'
+        );
     }
 }

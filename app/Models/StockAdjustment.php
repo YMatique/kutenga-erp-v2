@@ -10,16 +10,23 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class StockAdjustment extends Model
 {
     use BelongsToCompany, HasAudit;
-    public $fillable = [
+
+    protected $fillable = [
 
         'company_id',
         'warehouse_id',
-        'reasons',
+        'reason',
         'notes',
         'created_by',
     ];
-     public function items(): HasMany
+
+    public function items(): HasMany
     {
         return $this->hasMany(StockAdjustmentItem::class);
+    }
+
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 }

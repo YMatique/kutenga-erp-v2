@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('stock_adjustments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('warehouse_id')->constrained()->nullOnDelete();
-            $table->text('reasons');
+            $table->foreignId('warehouse_id')->constrained()->restrictOnDelete();
+            $table->text('reason');
             $table->text('notes')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();

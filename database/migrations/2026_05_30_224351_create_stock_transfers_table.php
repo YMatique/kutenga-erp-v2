@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('stock_transfers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('from_warehouse_id')->constrained('warehouses');
-            $table->foreignId('to_warehouse_id')->constrained('warehouses');
-            $table->enum('status',['pedding','approved','completed','cancelled'])->default('pedding');
+            $table->foreignId('from_warehouse_id')->constrained('warehouses')->restrictOnDelete();
+            $table->foreignId('to_warehouse_id')->constrained('warehouses')->restrictOnDelete();
+            $table->enum('status',['pending','approved','completed','cancelled'])->default('pending');
             // pending | completed | cancelled
             $table->string('notes')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();

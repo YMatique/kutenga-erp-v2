@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockMovement extends Model
 {
-        use BelongsToCompany, HasAudit;
+    use BelongsToCompany, HasAudit;
+
     protected $fillable = [
         'company_id',
         'product_id',
@@ -23,7 +24,11 @@ class StockMovement extends Model
         'notes',
         'created_by',
     ];
-    protected $casts = ['quantity'=>'decimal'];
+
+    protected $casts = [
+        'quantity' => 'decimal:2',
+    ];
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

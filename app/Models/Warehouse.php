@@ -4,10 +4,11 @@ namespace App\Models;
 
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Warehouse extends Model
 {
-    use BelongsToCompany;
+    use BelongsToCompany, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -24,5 +25,21 @@ class Warehouse extends Model
     public function stockMovements()
     {
         return $this->hasMany(StockMovement::class);
+    }
+
+    public function incomingTransfers()
+    {
+        return $this->hasMany(
+            StockTransfer::class,
+            'to_warehouse_id'
+        );
+    }
+
+    public function outgoingTransfers()
+    {
+        return $this->hasMany(
+            StockTransfer::class,
+            'from_warehouse_id'
+        );
     }
 }
