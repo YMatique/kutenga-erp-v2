@@ -18,11 +18,21 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
     Route::post('context/switch', [ContextController::class, 'switch'])->name('context.switch');
     
+    //Catalog
     Route::resource('branches', BranchController::class);
     Route::resource('products', ProductController::class);
     Route::resource('categories', CategoryController::class);
     Route::resource('units', UnitController::class);
     Route::resource('brands', BrandController::class);
+    
+    //Inventory
+
+
+    // Sales/Billing
+
+    // POS
+
+    // 
 });
 
 require __DIR__.'/settings.php';

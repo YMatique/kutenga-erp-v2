@@ -15,12 +15,10 @@ return new class extends Migration
             $table->id();  
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-             $table->foreignId('warehouse_id')
-        ->nullable()
-        ->constrained()
-        ->nullOnDelete();
+             $table->foreignId('warehouse_id')->constrained()->nullOnDelete();
 
-            $table->enum('type', ['in', 'out', 'adjust']);
+            $table->enum('type', ['purchase','sale','return','adjustment','damage', 'transfer']);
+            // purchase, sale, return, adjustment, demage, transfer
             $table->decimal('quantity', 12, 2);
 
             $table->decimal('unit_cost', 12, 2)->nullable();
