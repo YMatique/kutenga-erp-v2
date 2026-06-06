@@ -71,6 +71,7 @@ class ProductController extends Controller
             'category',
             'unit',
             'brand',
+             'stocks.warehouse'
         ]);
         $stockByWarehouse = $stockService->getStockByWarehouses($product);
 

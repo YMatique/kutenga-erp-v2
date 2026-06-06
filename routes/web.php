@@ -6,7 +6,9 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ContextController;
 use App\Http\Controllers\InventoryDashboardController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductStockController;
 use App\Http\Controllers\StockMovementController;
+use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Middleware\SetCompanyContext;
@@ -35,11 +37,23 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
             ->name('inventory.movements.index');
         Route::get('/', [InventoryDashboardController::class, 'index'])
             ->name('inventory.dashboard');
+
+            Route::get('/stocks', [ProductStockController::class, 'index']);
+    Route::get('/stocks/{product}', [ProductStockController::class, 'show']);
+
+
+        Route::get('/transfers', [StockTransferController::class, 'index']);
+    Route::get('/transfers/create', [StockTransferController::class, 'create']);
+
+    Route::post('/transfers', [StockTransferController::class, 'store']);
+    Route::post('/transfers/{transfer}/complete', [StockTransferController::class, 'complete']);
     });
 
     // Sales/Billing
 
     // POS
+
+    //Users
 
     //
 });

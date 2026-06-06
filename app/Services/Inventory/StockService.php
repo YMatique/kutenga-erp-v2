@@ -3,32 +3,59 @@
 namespace App\Services\Inventory;
 
 use App\Models\Product;
+use App\Models\ProductStock;
 use App\Models\StockMovement;
 use App\Models\Warehouse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class StockService
 {
-      /* STOCK ATUAL (ledger-based)
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | STOCK (CACHE - leitura rápida)
+    |--------------------------------------------------------------------------
+    */
+
     public function getStock(Product $product, Warehouse $warehouse): float
     {
-        $in = StockMovement::where('product_id', $product->id)
+        return (float) ProductStock::where('company_id', $product->company_id)
+            ->where('product_id', $product->id)
             ->where('warehouse_id', $warehouse->id)
-            ->where('type', 'in')
-            ->sum('quantity');
-
-        $out = StockMovement::where('product_id', $product->id)
-            ->where('warehouse_id', $warehouse->id)
-            ->where('type', 'out')
-            ->sum('quantity');
-
-        return (float) ($in - $out);
+            ->value('quantity') ?? 0;
     }
 
-    /**
-     * ENTRADA DE STOCK
-     */
+    public function getTotalStock(Product $product): float
+    {
+        return (float) ProductStock::where('company_id', $product->company_id)
+            ->where('product_id', $product->id)
+            ->sum('quantity');
+    }
+
+    public function getStockByWarehouses(Product $product): array
+    {
+        $stocks = ProductStock::where('company_id', $product->company_id)
+            ->where('product_id', $product->id)
+            ->with('warehouse')
+            ->get();
+
+        return $stocks->map(function ($stock) {
+            return [
+                'warehouse' => [
+                    'id' => $stock->warehouse->id,
+                    'name' => $stock->warehouse->name,
+                ],
+                'stock' => (float) $stock->quantity,
+            ];
+        })->values()->toArray();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ENTRADA DE STOCK
+    |--------------------------------------------------------------------------
+    */
+
     public function in(
         Product $product,
         Warehouse $warehouse,
@@ -48,9 +75,12 @@ class StockService
         );
     }
 
-    /**
-     * SAÍDA DE STOCK
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | SAÍDA DE STOCK
+    |--------------------------------------------------------------------------
+    */
+
     public function out(
         Product $product,
         Warehouse $warehouse,
@@ -79,11 +109,12 @@ class StockService
         );
     }
 
-    /**
-     * AJUSTE (CORRIGIDO)
-     * - positivo = entrada
-     * - negativo = saída
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | AJUSTE
+    |--------------------------------------------------------------------------
+    */
+
     public function adjust(
         Product $product,
         Warehouse $warehouse,
@@ -93,22 +124,23 @@ class StockService
         ?string $notes = null
     ): StockMovement {
 
-        $type = $difference >= 0 ? 'in' : 'out';
-
         return $this->recordMovement(
             $product,
             $warehouse,
-            $type,
-            abs($difference),
+            'adjustment',
+            $difference,
             $sourceType,
             $sourceId,
             $notes
         );
     }
 
-    /**
-     * MÉTODO CENTRAL (CORE DO ERP)
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | CORE DO SISTEMA (MOVIMENTO + ATUALIZAÇÃO DE STOCK)
+    |--------------------------------------------------------------------------
+    */
+
     private function recordMovement(
         Product $product,
         Warehouse $warehouse,
@@ -128,7 +160,9 @@ class StockService
             $sourceId,
             $notes
         ) {
-            return StockMovement::create([
+
+            // 1. Criar movimento (fonte da verdade)
+            $movement = StockMovement::create([
                 'company_id'   => $product->company_id,
                 'product_id'   => $product->id,
                 'warehouse_id' => $warehouse->id,
@@ -139,24 +173,44 @@ class StockService
                 'notes'        => $notes,
                 'created_by'   => Auth::id(),
             ]);
+
+            // 2. Atualizar cache de stock
+            $this->updateProductStock($movement);
+
+            return $movement;
         });
     }
 
-    /**
-     * STOCK POR TODOS ARMAZÉNS
-     */
-    public function getStockByWarehouses(Product $product): array
-    {
-        $warehouses = Warehouse::where('company_id', $product->company_id)->get();
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE DO STOCK CACHE
+    |--------------------------------------------------------------------------
+    */
 
-        return $warehouses->map(function ($warehouse) use ($product) {
-            return [
-                'warehouse' => [
-                    'id' => $warehouse->id,
-                    'name' => $warehouse->name,
-                ],
-                'stock' => $this->getStock($product, $warehouse),
-            ];
-        })->values()->toArray();
+    private function updateProductStock(StockMovement $movement): void
+    {
+        $stock = ProductStock::firstOrCreate([
+            'company_id'   => $movement->company_id,
+            'product_id'   => $movement->product_id,
+            'warehouse_id' => $movement->warehouse_id,
+        ]);
+
+        $delta = match ($movement->type) {
+            'in' => $movement->quantity,
+            'out' => -$movement->quantity,
+            'adjustment' => $movement->quantity,
+            default => 0,
+        };
+
+        $stock->quantity += $delta;
+        $stock->save();
     }
+
+    public function lockStock(Product $product, Warehouse $warehouse)
+{
+    return ProductStock::where('product_id', $product->id)
+        ->where('warehouse_id', $warehouse->id)
+        ->lockForUpdate()
+        ->first();
+}
 }
