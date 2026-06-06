@@ -4,7 +4,9 @@ use App\Http\Controllers\BranchController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ContextController;
+use App\Http\Controllers\InventoryDashboardController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Middleware\SetCompanyContext;
@@ -29,6 +31,10 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     // Inventory
     Route::prefix('/inventory')->group(function () {
         Route::resource('warehouses', WarehouseController::class);
+        Route::get('movements', [StockMovementController::class, 'index'])
+            ->name('inventory.movements.index');
+        Route::get('/', [InventoryDashboardController::class, 'index'])
+            ->name('inventory.dashboard');
     });
 
     // Sales/Billing

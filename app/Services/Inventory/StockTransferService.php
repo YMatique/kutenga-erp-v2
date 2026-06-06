@@ -12,57 +12,116 @@ class StockTransferService
         private StockService $stockService
     ) {}
 
+    // public function complete(StockTransfer $transfer): void
+    // {
+    //     if ($transfer->status === 'completed') {
+    //         throw new \Exception("Transferência já foi concluída.");
+    //     }
+
+    //     DB::transaction(function () use ($transfer) {
+
+    //         // 1. VALIDAR STOCK ANTES DE FAZER QUALQUER MOVIMENTO
+    //         foreach ($transfer->items as $item) {
+
+    //             $currentStock = $this->stockService->getStock(
+    //                 $item->product,
+    //                 $transfer->fromWarehouse
+    //             );
+
+    //             if ($currentStock < $item->quantity) {
+    //                 throw ValidationException::withMessages([
+    //                     'stock' => "Stock insuficiente para {$item->product->name}. Disponível: {$currentStock}"
+    //                 ]);
+    //             }
+    //         }
+
+    //         // 2. EXECUTAR MOVIMENTOS
+    //         foreach ($transfer->items as $item) {
+
+    //             // SAÍDA
+    //             $this->stockService->out(
+    //                 product: $item->product,
+    //                 warehouse: $transfer->fromWarehouse,
+    //                 quantity: $item->quantity,
+    //                 sourceType: StockTransfer::class,
+    //                 sourceId: $transfer->id,
+    //                 notes: "Transferência #{$transfer->id}"
+    //             );
+
+    //             // ENTRADA
+    //             $this->stockService->in(
+    //                 product: $item->product,
+    //                 warehouse: $transfer->toWarehouse,
+    //                 quantity: $item->quantity,
+    //                 sourceType: StockTransfer::class,
+    //                 sourceId: $transfer->id,
+    //                 notes: "Transferência #{$transfer->id}"
+    //             );
+    //         }
+
+    //         // 3. FINALIZAR TRANSFERÊNCIA
+    //         $transfer->update([
+    //             'status' => 'completed'
+    //         ]);
+    //     });
+    // }
     public function complete(StockTransfer $transfer): void
-    {
-        if ($transfer->status === 'completed') {
-            throw new \Exception("Transferência já foi concluída.");
+{
+    if ($transfer->status === 'completed') {
+        throw new \Exception("Transferência já foi concluída.");
+    }
+
+    $transfer->load([
+        'items.product',
+        'fromWarehouse',
+        'toWarehouse'
+    ]);
+
+    DB::transaction(function () use ($transfer) {
+
+        // 1. VALIDAR STOCK
+        foreach ($transfer->items as $item) {
+
+            $currentStock = $this->stockService->getStock(
+                $item->product,
+                $transfer->fromWarehouse
+            );
+
+            if ($currentStock < $item->quantity) {
+                throw ValidationException::withMessages([
+                    'stock' => "Stock insuficiente para {$item->product->name}. Disponível: {$currentStock}"
+                ]);
+            }
         }
 
-        DB::transaction(function () use ($transfer) {
+        // 2. EXECUTAR MOVIMENTOS
+        foreach ($transfer->items as $item) {
 
-            // 1. VALIDAR STOCK ANTES DE FAZER QUALQUER MOVIMENTO
-            foreach ($transfer->items as $item) {
+            // SAÍDA (origem)
+            $this->stockService->out(
+                product: $item->product,
+                warehouse: $transfer->fromWarehouse,
+                quantity: $item->quantity,
+                sourceType: StockTransfer::class,
+                sourceId: $transfer->id,
+                notes: "Transferência #{$transfer->id}"
+            );
 
-                $currentStock = $this->stockService->getStock(
-                    $item->product,
-                    $transfer->fromWarehouse
-                );
+            // ENTRADA (destino)
+            $this->stockService->in(
+                product: $item->product,
+                warehouse: $transfer->toWarehouse,
+                quantity: $item->quantity,
+                sourceType: StockTransfer::class,
+                sourceId: $transfer->id,
+                notes: "Transferência #{$transfer->id}"
+            );
+        }
 
-                if ($currentStock < $item->quantity) {
-                    throw ValidationException::withMessages([
-                        'stock' => "Stock insuficiente para {$item->product->name}. Disponível: {$currentStock}"
-                    ]);
-                }
-            }
-
-            // 2. EXECUTAR MOVIMENTOS
-            foreach ($transfer->items as $item) {
-
-                // SAÍDA
-                $this->stockService->out(
-                    product: $item->product,
-                    warehouse: $transfer->fromWarehouse,
-                    quantity: $item->quantity,
-                    sourceType: StockTransfer::class,
-                    sourceId: $transfer->id,
-                    notes: "Transferência #{$transfer->id}"
-                );
-
-                // ENTRADA
-                $this->stockService->in(
-                    product: $item->product,
-                    warehouse: $transfer->toWarehouse,
-                    quantity: $item->quantity,
-                    sourceType: StockTransfer::class,
-                    sourceId: $transfer->id,
-                    notes: "Transferência #{$transfer->id}"
-                );
-            }
-
-            // 3. FINALIZAR TRANSFERÊNCIA
-            $transfer->update([
-                'status' => 'completed'
-            ]);
-        });
-    }
+        // 3. FINALIZAR
+        $transfer->update([
+            'status' => 'completed'
+        ]);
+    });
+}   
 }
