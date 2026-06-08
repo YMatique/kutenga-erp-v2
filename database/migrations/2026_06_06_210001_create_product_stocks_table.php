@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('warehouse_id')->constrained()->onDelete('cascade');
             $table->decimal('quantity', 12, 2)->default(0);
             $table->timestamps();
-
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             //index
             $table->unique(['product_id','warehouse_id','company_id']);
         });

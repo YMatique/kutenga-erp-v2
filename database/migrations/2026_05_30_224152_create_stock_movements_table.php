@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
              $table->foreignId('warehouse_id')->constrained()->restrictOnDelete();
 
-            $table->enum('type', ['in','out','adjustment']);
+            $table->enum('type', ['in','out','adjustment','opening']);
             //Sales -> StockMovement (out)
             //Purchase -> StockMovement (in)
             //Transference -> StockMovement (in + out)

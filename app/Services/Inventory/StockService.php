@@ -163,15 +163,15 @@ class StockService
 
             // 1. Criar movimento (fonte da verdade)
             $movement = StockMovement::create([
-                'company_id'   => $product->company_id,
-                'product_id'   => $product->id,
+                'company_id' => $product->company_id,
+                'product_id' => $product->id,
                 'warehouse_id' => $warehouse->id,
-                'type'         => $type,
-                'quantity'     => $quantity,
-                'source_type'  => $sourceType,
-                'source_id'    => $sourceId,
-                'notes'        => $notes,
-                'created_by'   => Auth::id(),
+                'type' => $type,
+                'quantity' => $quantity,
+                'source_type' => $sourceType,
+                'source_id' => $sourceId,
+                'notes' => $notes,
+                'created_by' => Auth::id(),
             ]);
 
             // 2. Atualizar cache de stock
@@ -190,8 +190,8 @@ class StockService
     private function updateProductStock(StockMovement $movement): void
     {
         $stock = ProductStock::firstOrCreate([
-            'company_id'   => $movement->company_id,
-            'product_id'   => $movement->product_id,
+            'company_id' => $movement->company_id,
+            'product_id' => $movement->product_id,
             'warehouse_id' => $movement->warehouse_id,
         ]);
 
@@ -199,6 +199,7 @@ class StockService
             'in' => $movement->quantity,
             'out' => -$movement->quantity,
             'adjustment' => $movement->quantity,
+            'opening' => $movement->quantity,
             default => 0,
         };
 
@@ -207,10 +208,39 @@ class StockService
     }
 
     public function lockStock(Product $product, Warehouse $warehouse)
-{
-    return ProductStock::where('product_id', $product->id)
-        ->where('warehouse_id', $warehouse->id)
-        ->lockForUpdate()
-        ->first();
-}
+    {
+        return ProductStock::where('product_id', $product->id)
+            ->where('warehouse_id', $warehouse->id)
+            ->lockForUpdate()
+            ->first();
+    }
+
+    public function opening(
+        Product $product,
+        Warehouse $warehouse,
+        float $quantity,
+        ?string $notes = null
+    ): StockMovement {
+
+     if ($this->openingExists($product, $warehouse)) {
+        throw new \Exception("Stock inicial já foi definido para este produto neste armazém.");
+    }
+        return $this->recordMovement(
+            $product,
+            $warehouse,
+            'opening',
+            $quantity,
+            'opening_stock',
+            null,
+            $notes
+        );
+    }
+
+    public function openingExists(Product $product, Warehouse $warehouse): bool
+    {
+        return StockMovement::where('product_id', $product->id)
+            ->where('warehouse_id', $warehouse->id)
+            ->where('type', 'opening')
+            ->exists();
+    }
 }

@@ -5,6 +5,7 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ContextController;
 use App\Http\Controllers\InventoryDashboardController;
+use App\Http\Controllers\InventoryOpeningController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductStockController;
 use App\Http\Controllers\StockMovementController;
@@ -38,6 +39,11 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
         Route::get('/', [InventoryDashboardController::class, 'index'])
             ->name('inventory.dashboard');
 
+            Route::get('/opening', [InventoryOpeningController::class, 'index'])
+    ->name('inventory.opening.index');
+
+Route::post('/opening', [InventoryOpeningController::class, 'store'])
+    ->name('inventory.opening.store');
             Route::get('/stocks', [ProductStockController::class, 'index']);
     Route::get('/stocks/{product}', [ProductStockController::class, 'show']);
 
