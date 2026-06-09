@@ -42,4 +42,8 @@ class Warehouse extends Model
             'from_warehouse_id'
         );
     }
+    public function stocks()
+{
+    return $this->hasMany(ProductStock::class);
+}
 }

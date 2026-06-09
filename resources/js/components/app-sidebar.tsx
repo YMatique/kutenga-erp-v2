@@ -41,10 +41,12 @@ const mainNavItems: NavItem[] = [
         title: 'Inventário',
         icon: Warehouse,
         items: [
+            {title:'Dashboard', href:'/inventory'},
             { title: 'Movimentos', href: '/inventory/movements' },
             { title: 'Armazéns', href: '/inventory/warehouses' },
             { title: 'Transferências', href: '/inventory/transfers' },
-            { title: 'Stock', href: '/inventory/stock' },
+            { title: 'Stock', href: '/inventory/stocks' },
+            {title: 'Opening Balance', href:'/inventory/opening'}
         ],
     },
 

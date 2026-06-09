@@ -12,69 +12,170 @@ use Inertia\Inertia;
 
 class InventoryDashboardController extends Controller
 {
-     public function index(StockService $stockService)
-    {
-        $companyId = auth()->user()->company_id;
+    //  public function index(StockService $stockService)
+    // {
+    //     $companyId = auth()->user()->company_id;
 
-        $products = Product::where('company_id', $companyId)
-            ->with(['category'])
-            ->get();
+    //     $products = Product::where('company_id', $companyId)
+    //         ->with(['category'])
+    //         ->get();
 
-        $warehouses = Warehouse::where('company_id', $companyId)->get();
+    //     $warehouses = Warehouse::where('company_id', $companyId)->get();
 
-        // produtos com stock baixo
-        $lowStock = $products->filter(function ($product) use ($warehouses, $stockService) {
+    //     // produtos com stock baixo
+    //     $lowStock = $products->filter(function ($product) use ($warehouses, $stockService) {
 
-            foreach ($warehouses as $warehouse) {
+    //         foreach ($warehouses as $warehouse) {
 
-                if (!$product->track_stock) {
-                    continue;
-                }
+    //             if (!$product->track_stock) {
+    //                 continue;
+    //             }
 
-                $stock = $stockService->getStock($product, $warehouse);
+    //             $stock = $stockService->getStock($product, $warehouse);
 
-                if ($product->min_stock !== null && $stock <= $product->min_stock) {
-                    return true;
-                }
+    //             if ($product->min_stock !== null && $stock <= $product->min_stock) {
+    //                 return true;
+    //             }
+    //         }
+
+    //         return false;
+    //     });
+
+    //     // sem stock
+    //     $outOfStock = $products->filter(function ($product) use ($warehouses, $stockService) {
+
+    //         foreach ($warehouses as $warehouse) {
+
+    //             if (!$product->track_stock) {
+    //                 continue;
+    //             }
+
+    //             if ($stockService->getStock($product, $warehouse) > 0) {
+    //                 return false;
+    //             }
+    //         }
+
+    //         return true;
+    //     });
+
+    //     // movimentos recentes
+    //     $recentMovements = StockMovement::with(['product', 'warehouse'])
+    //         ->where('company_id', $companyId)
+    //         ->latest()
+    //         ->limit(10)
+    //         ->get();
+
+    //     return Inertia::render('inventory/dashboard/index', [
+    //         'stats' => [
+    //             'total_products' => $products->count(),
+    //             'low_stock' => $lowStock->count(),
+    //             'out_of_stock' => $outOfStock->count(),
+    //             'total_warehouses' => $warehouses->count(),
+    //         ],
+    //         'lowStockProducts' => $lowStock->values(),
+    //         'outOfStockProducts' => $outOfStock->values(),
+    //         'recentMovements' => $recentMovements,
+    //     ]);
+    // }
+
+    public function index()
+{
+    $companyId = auth()->user()->company_id;
+
+    $products = Product::query()
+        ->where('company_id', $companyId)
+        ->with([
+            'category',
+            'stocks.warehouse'
+        ])
+        ->get();
+
+    $warehouses = Warehouse::query()
+        ->where('company_id', $companyId)
+        ->get();
+
+    $totalStock = $products->sum(function ($product) {
+        return $product->stocks->sum('quantity');
+    });
+
+    $inventoryValue = $products->sum(function ($product) {
+        $qty = $product->stocks->sum('quantity');
+
+        return $qty * ($product->cost ?? 0);
+    });
+
+    $lowStockProducts = $products
+        ->filter(function ($product) {
+
+            if (!$product->track_stock) {
+                return false;
             }
 
-            return false;
-        });
+            $stock = $product->stocks->sum('quantity');
 
-        // sem stock
-        $outOfStock = $products->filter(function ($product) use ($warehouses, $stockService) {
+            return $stock > 0
+                && $product->min_stock !== null
+                && $stock <= $product->min_stock;
+        })
+        ->values();
 
-            foreach ($warehouses as $warehouse) {
+    $outOfStockProducts = $products
+        ->filter(function ($product) {
 
-                if (!$product->track_stock) {
-                    continue;
-                }
-
-                if ($stockService->getStock($product, $warehouse) > 0) {
-                    return false;
-                }
+            if (!$product->track_stock) {
+                return false;
             }
 
-            return true;
-        });
+            return $product->stocks->sum('quantity') <= 0;
+        })
+        ->values();
 
-        // movimentos recentes
-        $recentMovements = StockMovement::with(['product', 'warehouse'])
-            ->where('company_id', $companyId)
-            ->latest()
-            ->limit(10)
-            ->get();
+    $warehouseSummary = $warehouses->map(function ($warehouse) {
 
-        return Inertia::render('inventory/dashboard/index', [
+        $stock = $warehouse->stockMovements()
+            ->where('company_id', $warehouse->company_id)
+            ->count();
+
+        return [
+            'id' => $warehouse->id,
+            'name' => $warehouse->name,
+            'is_default' => $warehouse->is_default,
+            'products' => $warehouse
+                ->stocks()
+                ->count(),
+            'quantity' => $warehouse
+                ->stocks()
+                ->sum('quantity'),
+        ];
+    });
+
+    $recentMovements = StockMovement::query()
+        ->with([
+            'product:id,name',
+            'warehouse:id,name'
+        ])
+        ->where('company_id', $companyId)
+        ->latest()
+        ->limit(10)
+        ->get();
+
+    return Inertia::render(
+        'inventory/dashboard/index',
+        [
             'stats' => [
-                'total_products' => $products->count(),
-                'low_stock' => $lowStock->count(),
-                'out_of_stock' => $outOfStock->count(),
-                'total_warehouses' => $warehouses->count(),
+                'products' => $products->count(),
+                'warehouses' => $warehouses->count(),
+                'total_stock' => $totalStock,
+                'inventory_value' => $inventoryValue,
+                'low_stock' => $lowStockProducts->count(),
+                'out_of_stock' => $outOfStockProducts->count(),
             ],
-            'lowStockProducts' => $lowStock->values(),
-            'outOfStockProducts' => $outOfStock->values(),
+
+            'lowStockProducts' => $lowStockProducts,
+            'outOfStockProducts' => $outOfStockProducts,
+            'warehouseSummary' => $warehouseSummary,
             'recentMovements' => $recentMovements,
-        ]);
-    }
+        ]
+    );
+}
 }
