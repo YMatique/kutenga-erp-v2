@@ -39,27 +39,28 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
         Route::get('/', [InventoryDashboardController::class, 'index'])
             ->name('inventory.dashboard');
 
-            Route::get('/opening', [InventoryOpeningController::class, 'index'])
-    ->name('inventory.opening.index');
+        Route::get('/opening', [InventoryOpeningController::class, 'index'])
+            ->name('inventory.opening.index');
 
-Route::post('/opening', [InventoryOpeningController::class, 'store'])
-    ->name('inventory.opening.store');
-            Route::get('/stocks', [ProductStockController::class, 'index']);
-    Route::get('/stocks/{product}', [ProductStockController::class, 'show']);
+        Route::post('/opening', [InventoryOpeningController::class, 'store'])
+            ->name('inventory.opening.store');
+        Route::get('/stocks', [ProductStockController::class, 'index']);
+        Route::get('/stocks/{product}', [ProductStockController::class, 'show']);
 
+        Route::get('/transfers', [StockTransferController::class, 'index'])->name('inventory.transfers.index');
+        Route::get('/transfers/create', [StockTransferController::class, 'create']);
+        Route::get('/transfers/{transfer}', [StockTransferController::class, 'show'])->name('inventory.transfers.show');
+        Route::get('/transfers/{transfer}/cancel', [StockTransferController::class, 'cancel'])->name('inventory.transfers.cancel');
 
-        Route::get('/transfers', [StockTransferController::class, 'index']);
-    Route::get('/transfers/create', [StockTransferController::class, 'create']);
-
-    Route::post('/transfers', [StockTransferController::class, 'store']);
-    Route::post('/transfers/{transfer}/complete', [StockTransferController::class, 'complete']);
+        Route::post('/transfers', [StockTransferController::class, 'store']);
+        Route::post('/transfers/{transfer}/complete', [StockTransferController::class, 'complete']);
     });
 
     // Sales/Billing
 
     // POS
 
-    //Users
+    // Users
 
     //
 });
