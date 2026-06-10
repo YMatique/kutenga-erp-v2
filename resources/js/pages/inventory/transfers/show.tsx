@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react'
 
-import { Card } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -11,173 +11,213 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
+import { ArrowRight, Package, Landmark, Boxes, Ban, Check, ShieldCheck } from 'lucide-react'
 
-function StatusBadge({ status }: { status: string }) {
-    const map: Record<string, string> = {
-        pending: 'bg-yellow-100 text-yellow-700',
-        approved: 'bg-blue-100 text-blue-700',
-        completed: 'bg-green-100 text-green-700',
-        cancelled: 'bg-red-100 text-red-700',
+// 1. Tipagem estruturada para o autocompletar do editor
+interface Warehouse {
+    id: number
+    name: string
+}
+
+interface Product {
+    id: number
+    name: string
+}
+
+interface TransferItem {
+    id: number
+    quantity: number
+    product: Product
+}
+
+interface Transfer {
+    id: number
+    status: 'pending' | 'approved' | 'completed' | 'cancelled'
+    from_warehouse: Warehouse
+    to_warehouse: Warehouse
+    items: TransferItem[]
+}
+
+interface ShowProps {
+    transfer: Transfer
+}
+
+function StatusBadge({ status }: { status: Transfer['status'] }) {
+    const map: Record<Transfer['status'], { label: string; className: string }> = {
+        pending: { label: 'Pendente', className: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+        approved: { label: 'Aprovado', className: 'bg-blue-50 text-blue-700 border-blue-200' },
+        completed: { label: 'Concluído', className: 'bg-green-50 text-green-700 border-green-200' },
+        cancelled: { label: 'Cancelado', className: 'bg-red-50 text-red-700 border-red-200' },
     }
 
+    const current = map[status]
+
     return (
-        <Badge className={map[status]}>
-            {status}
+        <Badge variant="outline" className={`font-medium ${current.className}`}>
+            {current.label}
         </Badge>
     )
 }
 
-export default function Show({ transfer }: any) {
-
+export default function Show({ transfer }: ShowProps) {
     const totalItems = transfer.items?.length || 0
     const totalQty = transfer.items?.reduce(
-        (sum: number, i: any) => sum + Number(i.quantity),
+        (sum: number, i) => sum + Number(i.quantity),
         0
-    )
+    ) || 0
 
     return (
         <>
             <Head title={`Transferência #${transfer.id}`} />
 
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6  mx-auto">
 
                 {/* HEADER */}
-                <div className="flex justify-between items-start">
-
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-5">
                     <div>
-                        <h1 className="text-2xl font-semibold">
-                            Transferência #{transfer.id}
-                        </h1>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-2xl font-bold text-slate-900">
+                                Transferência #{transfer.id}
+                            </h1>
+                            <StatusBadge status={transfer.status} />
+                        </div>
 
-                        <p className="text-sm text-muted-foreground">
-                            {transfer.from_warehouse.name} → {transfer.to_warehouse.name}
+                        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
+                            {transfer.from_warehouse.name} 
+                            <ArrowRight className="h-3 w-3 text-muted-foreground" /> 
+                            {transfer.to_warehouse.name}
                         </p>
                     </div>
 
-                    <StatusBadge status={transfer.status} />
-
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href="/inventory/transfers">
+                            Voltar para a listagem
+                        </Link>
+                    </Button>
                 </div>
 
-                {/* SUMMARY */}
-                <Card className="p-4 grid grid-cols-3 gap-4">
+                {/* SUMMARY METRICS */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="flex items-center p-4 gap-4 shadow-sm">
+                        <div className="p-2 bg-slate-100 rounded-lg text-slate-600">
+                            <Landmark className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Origem</p>
+                            <p className="font-semibold text-slate-800">{transfer.from_warehouse.name}</p>
+                        </div>
+                    </Card>
 
-                    <div>
-                        <p className="text-xs text-muted-foreground">Origem</p>
-                        <p className="font-medium">{transfer.from_warehouse.name}</p>
-                    </div>
+                    <Card className="flex items-center p-4 gap-4 shadow-sm">
+                        <div className="p-2 bg-slate-100 rounded-lg text-slate-600">
+                            <Package className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Destino</p>
+                            <p className="font-semibold text-slate-800">{transfer.to_warehouse.name}</p>
+                        </div>
+                    </Card>
 
-                    <div>
-                        <p className="text-xs text-muted-foreground">Destino</p>
-                        <p className="font-medium">{transfer.to_warehouse.name}</p>
-                    </div>
+                    <Card className="flex items-center p-4 gap-4 shadow-sm">
+                        <div className="p-2 bg-slate-100 rounded-lg text-slate-600">
+                            <Boxes className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Geral</p>
+                            <p className="font-semibold text-slate-800">
+                                {totalItems} {totalItems === 1 ? 'item' : 'itens'} / {totalQty} un.
+                            </p>
+                        </div>
+                    </Card>
+                </div>
 
-                    <div>
-                        <p className="text-xs text-muted-foreground">Itens</p>
-                        <p className="font-medium">
-                            {totalItems} linhas / {totalQty} unidades
-                        </p>
-                    </div>
-
-                </Card>
-
-                {/* ITEMS */}
-                <Card>
-
-                    <div className="p-4 border-b">
-                        <h2 className="font-semibold">
+                {/* ITEMS TABLE */}
+                <Card className="shadow-sm overflow-hidden">
+                    <CardHeader className="bg-slate-50/75 border-b py-4">
+                        <CardTitle className="text-base font-semibold text-slate-800">
                             Produtos da Transferência
-                        </h2>
-                    </div>
+                        </CardTitle>
+                    </CardHeader>
 
                     <Table>
-
                         <TableHeader>
                             <TableRow>
-                                <TableHead>#</TableHead>
+                                <TableHead className="w-[80px]">#</TableHead>
                                 <TableHead>Produto</TableHead>
-                                <TableHead className="text-right">Quantidade</TableHead>
+                                <TableHead className="text-right w-[150px]">Quantidade</TableHead>
                             </TableRow>
                         </TableHeader>
 
                         <TableBody>
-
-                            {transfer.items.map((i: any, index: number) => (
-                                <TableRow key={i.id}>
-
-                                    <TableCell className="text-muted-foreground">
-                                        {index + 1}
+                            {transfer.items.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
+                                        Nenhum produto adicionado nesta transferência.
                                     </TableCell>
-
-                                    <TableCell className="font-medium">
-                                        {i.product.name}
-                                    </TableCell>
-
-                                    <TableCell className="text-right font-semibold">
-                                        {i.quantity}
-                                    </TableCell>
-
                                 </TableRow>
-                            ))}
-
+                            ) : (
+                                transfer.items.map((i, index) => (
+                                    <TableRow key={i.id} className="hover:bg-slate-50/50">
+                                        <TableCell className="text-muted-foreground font-mono">
+                                            {String(index + 1).padStart(2, '0')}
+                                        </TableCell>
+                                        <TableCell className="font-medium text-slate-700">
+                                            {i.product.name}
+                                        </TableCell>
+                                        <TableCell className="text-right font-semibold text-slate-900">
+                                            {i.quantity}
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
-
                     </Table>
-
                 </Card>
 
-                {/* ACTIONS */}
-                {/* ACTIONS */}
-                <div className="flex justify-between items-center">
-
-                    <Link href="/inventory/transfers">
-                        <Button variant="outline">
-                            Voltar
+                {/* VISUAL FOOTER ACTIONS */}
+                <div className="flex justify-end gap-3 pt-2">
+                    
+                    {/* CANCELAR */}
+                    {['pending', 'approved'].includes(transfer.status) && (
+                        <Button variant="destructive" className="gap-2" asChild>
+                            <Link 
+                                href={`/inventory/transfers/${transfer.id}/cancel`} 
+                                method="post" 
+                                as="button"
+                            >
+                                <Ban className="h-4 w-4" />
+                                Cancelar Operação
+                            </Link>
                         </Button>
-                    </Link>
+                    )}
 
-                    <div className="flex gap-2">
-
-                        {/* CANCELAR */}
-                        {['pending', 'approved'].includes(transfer.status) && (
-                            <Link
-                                href={`/inventory/transfers/${transfer.id}/cancel`}
-                                method="post"
+                    {/* APROVAR */}
+                    {transfer.status === 'pending' && (
+                        <Button variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50 gap-2" asChild>
+                            <Link 
+                                href={`/inventory/transfers/${transfer.id}/approve`} 
+                                method="post" 
                                 as="button"
                             >
-                                <Button variant="destructive">
-                                    Cancelar
-                                </Button>
+                                <ShieldCheck className="h-4 w-4" />
+                                Aprovar Transferência
                             </Link>
-                        )}
+                        </Button>
+                    )}
 
-                        {/* APROVAR */}
-                        {transfer.status === 'pending' && (
-                            <Link
-                                href={`/inventory/transfers/${transfer.id}/approve`}
-                                method="post"
+                    {/* FINALIZAR */}
+                    {transfer.status === 'approved' && (
+                        <Button className="bg-green-600 hover:bg-green-700 gap-2" asChild>
+                            <Link 
+                                href={`/inventory/transfers/${transfer.id}/complete`} 
+                                method="post" 
                                 as="button"
                             >
-                                <Button variant="secondary">
-                                    Aprovar
-                                </Button>
+                                <Check className="h-4 w-4" />
+                                Finalizar e Baixar Estoque
                             </Link>
-                        )}
-
-                        {/* FINALIZAR */}
-                        {transfer.status === 'approved' && (
-                            <Link
-                                href={`/inventory/transfers/${transfer.id}/complete`}
-                                method="post"
-                                as="button"
-                            >
-                                <Button>
-                                    Finalizar
-                                </Button>
-                            </Link>
-                        )}
-
-                    </div>
-
+                        </Button>
+                    )}
                 </div>
 
             </div>

@@ -1,6 +1,29 @@
-import { useForm, Head, Link } from '@inertiajs/react';
+import { useForm, Head, Link } from '@inertiajs/react'
 
-export default function Edit({ warehouse }: any) {
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+// 1. Definição da interface para garantir a tipagem estrita do modelo
+interface Warehouse {
+    id: number
+    name: string
+    code?: string
+    address?: string
+    description?: string
+    is_default: boolean
+    is_active: boolean
+}
+
+interface EditProps {
+    warehouse: Warehouse
+}
+
+export default function Edit({ warehouse }: EditProps) {
+    // 2. Estado inicial mapeado com base nas propriedades recebidas
     const { data, setData, put, processing, errors } = useForm({
         name: warehouse.name || '',
         code: warehouse.code || '',
@@ -8,141 +31,162 @@ export default function Edit({ warehouse }: any) {
         description: warehouse.description || '',
         is_default: warehouse.is_default || false,
         is_active: warehouse.is_active ?? true,
-    });
+    })
 
     function submit(e: React.FormEvent) {
-        e.preventDefault();
-        put(`/inventory/warehouses/${warehouse.id}`);
+        e.preventDefault()
+        put(`/inventory/warehouses/${warehouse.id}`)
     }
 
     return (
         <>
-            <Head title="Editar Armazém" />
+            <Head title={`Editar Armazém - ${warehouse.name}`} />
 
-            <div className="max-w-2xl mx-auto p-6 space-y-6">
+            <div className="p-6 space-y-6 mx-auto">
 
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <h1 className="text-xl font-bold">
+                {/* HEADER */}
+                <div>
+                    <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
                         Editar Armazém
                     </h1>
-
-                    <Link
-                        href="/warehouses"
-                        className="text-sm text-gray-500 hover:text-black"
-                    >
-                        Voltar
-                    </Link>
+                    <p className="text-sm text-muted-foreground mt-1">
+                        Atualize as informações do local de armazenamento selecionado
+                    </p>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={submit} className="space-y-4 border p-6 rounded-lg bg-white">
+                {/* FORM CARD */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Dados do Armazém</CardTitle>
+                    </CardHeader>
 
-                    {/* Nome */}
-                    <div>
-                        <label className="text-sm font-medium">
-                            Nome
-                        </label>
-                        <input
-                            type="text"
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                            className="w-full border p-2 rounded mt-1"
-                        />
-                        {errors.name && (
-                            <p className="text-red-500 text-xs mt-1">
-                                {errors.name}
-                            </p>
-                        )}
-                    </div>
+                    <CardContent>
+                        <form onSubmit={submit} className="space-y-5">
 
-                    {/* Código */}
-                    <div>
-                        <label className="text-sm font-medium">
-                            Código
-                        </label>
-                        <input
-                            type="text"
-                            value={data.code}
-                            onChange={(e) => setData('code', e.target.value)}
-                            className="w-full border p-2 rounded mt-1"
-                        />
-                    </div>
+                            {/* GRID PRINCIPAL */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                    {/* Endereço */}
-                    <div>
-                        <label className="text-sm font-medium">
-                            Endereço
-                        </label>
-                        <input
-                            type="text"
-                            value={data.address}
-                            onChange={(e) => setData('address', e.target.value)}
-                            className="w-full border p-2 rounded mt-1"
-                        />
-                    </div>
+                                {/* Nome */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="name">Nome *</Label>
+                                    <Input
+                                        id="name"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
+                                    />
+                                    {errors.name && (
+                                        <p className="text-sm font-medium text-red-500">
+                                            {errors.name}
+                                        </p>
+                                    )}
+                                </div>
 
-                    {/* Descrição */}
-                    <div>
-                        <label className="text-sm font-medium">
-                            Descrição
-                        </label>
-                        <textarea
-                            value={data.description}
-                            onChange={(e) => setData('description', e.target.value)}
-                            className="w-full border p-2 rounded mt-1"
-                        />
-                    </div>
+                                {/* Código */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="code">Código</Label>
+                                    <Input
+                                        id="code"
+                                        value={data.code}
+                                        onChange={(e) => setData('code', e.target.value)}
+                                    />
+                                    {errors.code && (
+                                        <p className="text-sm font-medium text-red-500">
+                                            {errors.code}
+                                        </p>
+                                    )}
+                                </div>
 
-                    {/* Checkboxes */}
-                    <div className="flex items-center gap-6">
+                            </div>
 
-                        <label className="flex items-center gap-2 text-sm">
-                            <input
-                                type="checkbox"
-                                checked={data.is_default}
-                                onChange={(e) =>
-                                    setData('is_default', e.target.checked)
-                                }
-                            />
-                            Padrão
-                        </label>
+                            {/* ENDEREÇO */}
+                            <div className="space-y-2">
+                                <Label htmlFor="address">Endereço</Label>
+                                <Input
+                                    id="address"
+                                    value={data.address}
+                                    onChange={(e) => setData('address', e.target.value)}
+                                />
+                                {errors.address && (
+                                    <p className="text-sm font-medium text-red-500">
+                                        {errors.address}
+                                    </p>
+                                )}
+                            </div>
 
-                        <label className="flex items-center gap-2 text-sm">
-                            <input
-                                type="checkbox"
-                                checked={data.is_active}
-                                onChange={(e) =>
-                                    setData('is_active', e.target.checked)
-                                }
-                            />
-                            Ativo
-                        </label>
+                            {/* DESCRIÇÃO */}
+                            <div className="space-y-2">
+                                <Label htmlFor="description">Descrição</Label>
+                                <Textarea
+                                    id="description"
+                                    value={data.description}
+                                    onChange={(e) => setData('description', e.target.value)}
+                                />
+                                {errors.description && (
+                                    <p className="text-sm font-medium text-red-500">
+                                        {errors.description}
+                                    </p>
+                                )}
+                            </div>
 
-                    </div>
+                            {/* SWITCHES */}
+                            <div className="flex flex-col gap-4 pt-2">
 
-                    {/* Actions */}
-                    <div className="flex justify-end gap-3 pt-4">
+                                <div className="flex items-center justify-between border-b pb-4">
+                                    <div>
+                                        <p className="font-medium text-sm">Armazém padrão</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Usado como principal no sistema
+                                        </p>
+                                    </div>
 
-                        <Link
-                            href="/inventory/warehouses"
-                            className="px-4 py-2 border rounded"
-                        >
-                            Cancelar
-                        </Link>
+                                    <Switch
+                                        checked={data.is_default}
+                                        onCheckedChange={(val) => setData('is_default', val)}
+                                    />
+                                </div>
 
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="px-4 py-2 bg-black text-white rounded"
-                        >
-                            {processing ? 'Salvando...' : 'Atualizar'}
-                        </button>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="font-medium text-sm">Ativo</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Permite uso no sistema
+                                        </p>
+                                    </div>
 
-                    </div>
+                                    <Switch
+                                        checked={data.is_active}
+                                        onCheckedChange={(val) => setData('is_active', val)}
+                                    />
+                                </div>
 
-                </form>
+                            </div>
+
+                            {/* ACTIONS */}
+                            <div className="flex justify-end gap-3 pt-4 border-t">
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    asChild
+                                >
+                                    <Link href="/inventory/warehouses">
+                                        Cancelar
+                                    </Link>
+                                </Button>
+
+                                <Button
+                                    type="submit"
+                                    disabled={processing}
+                                >
+                                    {processing ? 'A atualizar...' : 'Atualizar'}
+                                </Button>
+
+                            </div>
+
+                        </form>
+                    </CardContent>
+                </Card>
             </div>
         </>
-    );
+    )
 }

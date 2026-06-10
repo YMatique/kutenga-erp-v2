@@ -113,4 +113,15 @@ class StockTransferController extends Controller
             'status' => 'cancelled',
         ]);
     }
+    public function approve(StockTransfer $transfer)
+    {
+        if ($transfer->status !== 'pending') {
+            throw new \Exception('Apenas transferências pendentes podem ser aprovadas.');
+        }
+
+        $transfer->update([
+            'status' => 'approved',
+        ]);
+        return back();
+    }
 }

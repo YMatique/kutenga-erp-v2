@@ -37,7 +37,7 @@ export default function Create() {
             </div>
 
             {/* FORM CARD */}
-            <Card className="max-w-2xl">
+            <Card className="">
                 <CardHeader>
                     <CardTitle>Dados do Armazém</CardTitle>
                 </CardHeader>

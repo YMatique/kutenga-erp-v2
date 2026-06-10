@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+// import { useDebounce } from '@/hooks/use-debounce' // Opcional, ou faça manual como abaixo
 
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -20,34 +21,83 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
+import { Eye, CheckCircle2, ArrowRightLeft, Search } from 'lucide-react'
 
-function StatusBadge({ status }: { status: string }) {
-    const map: Record<string, string> = {
-        pending: 'bg-yellow-100 text-yellow-700',
-        approved: 'bg-blue-100 text-blue-700',
-        completed: 'bg-green-100 text-green-700',
-        cancelled: 'bg-red-100 text-red-700',
+// 1. Tipagem das Props para eliminar o 'any'
+interface Warehouse {
+    id: number
+    name: string
+}
+
+interface Transfer {
+    id: number
+    from_warehouse: Warehouse
+    to_warehouse: Warehouse
+    status: 'pending' | 'approved' | 'completed' | 'cancelled'
+}
+
+interface PaginatedTransfers {
+    data: Transfer[]
+}
+
+interface Filters {
+    search?: string
+    status?: string
+}
+
+interface IndexProps {
+    transfers: PaginatedTransfers
+    filters: Filters
+}
+
+// 2. Componente StatusBadge otimizado e traduzido
+function StatusBadge({ status }: { status: Transfer['status'] }) {
+    const config: Record<Transfer['status'], { label: string; className: string }> = {
+        pending: { label: 'Pendente', className: 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-50' },
+        approved: { label: 'Aprovado', className: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50' },
+        completed: { label: 'Concluído', className: 'bg-green-50 text-green-700 border-green-200 hover:bg-green-50' },
+        cancelled: { label: 'Cancelado', className: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-50' },
     }
 
+    const current = config[status] || { label: status, className: '' }
+
     return (
-        <Badge className={map[status]}>
-            {status}
+        <Badge variant="outline" className={`font-medium ${current.className}`}>
+            {current.label}
         </Badge>
     )
 }
 
-export default function Index({ transfers, filters }: any) {
-
+export default function Index({ transfers, filters }: IndexProps) {
     const [search, setSearch] = useState(filters?.search || '')
     const [status, setStatus] = useState(filters?.status || 'all')
 
-    function applyFilters() {
+    // 3. Filtro inteligente: Submete automaticamente quando o status muda
+    useEffect(() => {
+        // Evita rodar na montagem inicial se os valores forem idênticos aos filtros da URL
+        if (status !== (filters?.status || 'all')) {
+            applyFilters({ newStatus: status })
+        }
+    }, [status])
+
+    // Debounce manual para a pesquisa por texto (espera 400ms após o usuário parar de digitar)
+    useEffect(() => {
+        if (search === (filters?.search || '')) return
+
+        const delayDebounceFn = setTimeout(() => {
+            applyFilters({ newSearch: search })
+        }, 400)
+
+        return () => clearTimeout(delayDebounceFn)
+    }, [search])
+
+    function applyFilters(overrides: { newSearch?: string; newStatus?: string } = {}) {
         router.get('/inventory/transfers', {
-            search,
-            status
+            search: overrides.newSearch !== undefined ? overrides.newSearch : search,
+            status: overrides.newStatus !== undefined ? overrides.newStatus : status,
         }, {
             preserveState: true,
-            replace: true
+            replace: true,
         })
     }
 
@@ -55,159 +105,163 @@ export default function Index({ transfers, filters }: any) {
         <>
             <Head title="Transferências" />
 
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 mx-auto">
 
                 {/* HEADER */}
-                <div className="flex justify-between items-start">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h1 className="text-2xl font-semibold">
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
                             Transferências
                         </h1>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground mt-1">
                             Gestão de movimentação de stock entre armazéns
                         </p>
                     </div>
 
-                    <Link href="/inventory/transfers/create">
-                        <Button>
+                    <Button asChild>
+                        <Link href="/inventory/transfers/create">
                             Nova Transferência
-                        </Button>
-                    </Link>
+                        </Link>
+                    </Button>
                 </div>
 
                 {/* FILTERS */}
-                <Card className="p-4 flex gap-3 items-center">
+                <Card className="p-4 flex flex-col sm:flex-row gap-3 items-center justify-between shadow-sm">
+                    <div className="flex flex-1 flex-col sm:flex-row gap-3 w-full items-center">
+                        <div className="relative w-full sm:w-72">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Pesquisar por ID ou armazém..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="pl-8"
+                            />
+                        </div>
 
-                    <Input
-                        placeholder="Pesquisar..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-64"
-                    />
+                        <Select value={status} onValueChange={setStatus}>
+                            <SelectTrigger className="w-full sm:w-48">
+                                <SelectValue placeholder="Filtrar por Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos os status</SelectItem>
+                                <SelectItem value="pending">Pendentes</SelectItem>
+                                <SelectItem value="approved">Aprovados</SelectItem>
+                                <SelectItem value="completed">Concluídos</SelectItem>
+                                <SelectItem value="cancelled">Cancelados</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
 
-                    <Select value={status} onValueChange={setStatus}>
-                        <SelectTrigger className="w-48">
-                            <SelectValue placeholder="Status" />
-                        </SelectTrigger>
-
-                        <SelectContent>
-                            <SelectItem value="all">Todos</SelectItem>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="approved">Approved</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    <Button onClick={applyFilters}>
-                        Filtrar
-                    </Button>
-
+                    {/* Botão de limpar filtros opcional (aparece se houver algo filtrado) */}
+                    {(search || status !== 'all') && (
+                        <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => { setSearch(''); setStatus('all'); }}
+                            className="text-muted-foreground hover:text-slate-900"
+                        >
+                            Limpar filtros
+                        </Button>
+                    )}
                 </Card>
 
                 {/* TABLE */}
-                <Card>
-
+                <Card className="overflow-hidden border shadow-sm">
                     <Table>
-
-                        <TableHeader>
+                        <TableHeader className="bg-slate-50/75">
                             <TableRow>
-                                <TableHead>ID</TableHead>
-                                <TableHead>Origem</TableHead>
-                                <TableHead>Destino</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">
-                                    Ações
+                                <TableHead className="w-[100px] font-semibold">ID</TableHead>
+                                <TableHead className="font-semibold">Origem</TableHead>
+                                <TableHead className="font-semibold">
+                                    <div className="flex items-center gap-2">
+                                        Destino
+                                    </div>
                                 </TableHead>
+                                <TableHead className="font-semibold">Status</TableHead>
+                                <TableHead className="text-right font-semibold">Ações</TableHead>
                             </TableRow>
                         </TableHeader>
 
                         <TableBody>
-
-                            {transfers.data.map((t: any) => (
-                                <TableRow key={t.id}>
-
-                                    {/* ID + DETALHES */}
-                                    <TableCell>
-                                        <div className="flex flex-col">
-
+                            {transfers.data.length === 0 ? (
+                                /* 4. EMPTY STATE CASO NÃO ACHE NADA */
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                                        Nenhuma transferência encontrada com os filtros aplicados.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                transfers.data.map((t) => (
+                                    <TableRow key={t.id} className="hover:bg-slate-50/50 transition-colors">
+                                        
+                                        {/* ID */}
+                                        <TableCell className="font-medium">
                                             <Link
                                                 href={`/inventory/transfers/${t.id}`}
-                                                className="font-medium text-blue-600 hover:underline"
+                                                className="text-blue-600 hover:text-blue-700 font-semibold"
                                             >
                                                 #{t.id}
                                             </Link>
+                                        </TableCell>
 
-                                            <Link
-                                                href={`/inventory/transfers/${t.id}`}
-                                                className="text-xs text-muted-foreground hover:underline"
-                                            >
-                                                Ver detalhes
-                                            </Link>
+                                        {/* ORIGEM */}
+                                        <TableCell className="text-slate-700 font-medium">
+                                            {t.from_warehouse.name}
+                                        </TableCell>
 
-                                        </div>
-                                    </TableCell>
+                                        {/* DESTINO */}
+                                        <TableCell className="text-slate-700 font-medium">
+                                            <div className="flex items-center gap-2">
+                                                <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
+                                                {t.to_warehouse.name}
+                                            </div>
+                                        </TableCell>
 
-                                    <TableCell>
-                                        {t.from_warehouse.name}
-                                    </TableCell>
+                                        {/* STATUS */}
+                                        <TableCell>
+                                            <StatusBadge status={t.status} />
+                                        </TableCell>
 
-                                    <TableCell>
-                                        {t.to_warehouse.name}
-                                    </TableCell>
+                                        {/* AÇÕES COM COMPONENTES REAIS */}
+                                        <TableCell className="text-right">
+                                            <div className="flex justify-end items-center gap-1">
+                                                
+                                                <Button size="sm" variant="ghost" asChild>
+                                                    <Link href={`/inventory/transfers/${t.id}`} title="Ver detalhes">
+                                                        <Eye className="h-4 w-4 mr-1" />
+                                                        Ver
+                                                    </Link>
+                                                </Button>
 
-                                    <TableCell>
-                                        <StatusBadge status={t.status} />
-                                    </TableCell>
+                                                {t.status === 'pending' && (
+                                                    <Button size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700" asChild>
+                                                        <Link href={`/inventory/transfers/${t.id}/approve`} method="post" as="button">
+                                                            Aprovar
+                                                        </Link>
+                                                    </Button>
+                                                )}
 
-                                    {/* AÇÕES */}
-                                    <TableCell className="text-right space-x-2">
+                                                {t.status === 'approved' && (
+                                                    <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700" asChild>
+                                                        <Link href={`/inventory/transfers/${t.id}/complete`} method="post" as="button">
+                                                            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                                                            Finalizar
+                                                        </Link>
+                                                    </Button>
+                                                )}
 
-                                        {/* SEMPRE VER */}
-                                        <Link
-                                            href={`/inventory/transfers/${t.id}`}
-                                            className="text-gray-600 hover:underline"
-                                        >
-                                            Ver
-                                        </Link>
-
-                                        {t.status === 'pending' && (
-                                            <Link
-                                                href={`/inventory/transfers/${t.id}/approve`}
-                                                method="post"
-                                                as="button"
-                                                className="text-blue-600 hover:underline"
-                                            >
-                                                Aprovar
-                                            </Link>
-                                        )}
-
-                                        {t.status === 'approved' && (
-                                            <Link
-                                                href={`/inventory/transfers/${t.id}/complete`}
-                                                method="post"
-                                                as="button"
-                                                className="text-green-600 hover:underline"
-                                            >
-                                                Finalizar
-                                            </Link>
-                                        )}
-
-                                        {t.status === 'completed' && (
-                                            <span className="text-xs text-green-600">
-                                                Concluído
-                                            </span>
-                                        )}
-
-                                    </TableCell>
-
-                                </TableRow>
-                            ))}
-
+                                                {t.status === 'completed' && (
+                                                    <span className="text-xs font-medium text-emerald-600 px-3 py-1">
+                                                        Concluído
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
-
                     </Table>
-
                 </Card>
             </div>
         </>

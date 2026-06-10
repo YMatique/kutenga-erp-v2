@@ -19,6 +19,8 @@ return new class extends Migration
             $table->decimal('quantity', 12, 2)->default(0);
             $table->timestamps();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
             //index
             $table->unique(['product_id','warehouse_id','company_id']);
         });

@@ -50,7 +50,8 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
         Route::get('/transfers', [StockTransferController::class, 'index'])->name('inventory.transfers.index');
         Route::get('/transfers/create', [StockTransferController::class, 'create']);
         Route::get('/transfers/{transfer}', [StockTransferController::class, 'show'])->name('inventory.transfers.show');
-        Route::get('/transfers/{transfer}/cancel', [StockTransferController::class, 'cancel'])->name('inventory.transfers.cancel');
+        Route::post('/transfers/{transfer}/cancel', [StockTransferController::class, 'cancel'])->name('inventory.transfers.cancel');
+        Route::post('/transfers/{transfer}/approve', [StockTransferController::class, 'approve'])->name('inventory.transfers.approve');
 
         Route::post('/transfers', [StockTransferController::class, 'store']);
         Route::post('/transfers/{transfer}/complete', [StockTransferController::class, 'complete']);
