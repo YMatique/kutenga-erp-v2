@@ -16,8 +16,13 @@ class StockAdjustment extends Model
         'company_id',
         'warehouse_id',
         'reason',
+        'status',
         'notes',
         'created_by',
+        'completed_by',
+        'completed_at',
+        'cancelled_by',
+        'cancelled_at',
     ];
 
     public function items(): HasMany

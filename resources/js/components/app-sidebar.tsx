@@ -45,6 +45,7 @@ const mainNavItems: NavItem[] = [
             { title: 'Movimentos', href: '/inventory/movements' },
             { title: 'Armazéns', href: '/inventory/warehouses' },
             { title: 'Transferências', href: '/inventory/transfers' },
+            {title: 'Ajustes de Stock', href: '/inventory/adjustments' },
             { title: 'Stock', href: '/inventory/stocks' },
             {title: 'Opening Balance', href:'/inventory/opening'}
         ],

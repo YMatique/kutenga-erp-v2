@@ -8,6 +8,7 @@ use App\Http\Controllers\InventoryDashboardController;
 use App\Http\Controllers\InventoryOpeningController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductStockController;
+use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\UnitController;
@@ -55,6 +56,16 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
 
         Route::post('/transfers', [StockTransferController::class, 'store']);
         Route::post('/transfers/{transfer}/complete', [StockTransferController::class, 'complete']);
+
+
+        // Stock Adjustments
+        Route::get('/adjustments', [StockAdjustmentController::class, 'index'])->name('inventory.adjustments.index');
+        Route::get('/adjustments/create', [StockAdjustmentController::class, 'create'])->name('inventory.adjustments.create');
+        
+        Route::get('/adjustments/{adjustment}', [StockAdjustmentController::class, 'show'])->name('inventory.adjustments.show');
+        Route::post('/adjustments', [StockAdjustmentController::class, 'store'])->name('inventory.adjustments.store');
+        Route::post('/adjustments/{adjustment}/complete', [StockAdjustmentController::class, 'complete'])->name('inventory.adjustments.complete');
+        Route::post('/adjustments/{adjustment}/cancel', [StockAdjustmentController::class, 'cancel'])->name('inventory.adjustments.cancel');
     });
 
     // Sales/Billing

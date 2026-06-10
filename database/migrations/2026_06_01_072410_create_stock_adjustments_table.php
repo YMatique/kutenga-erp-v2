@@ -16,9 +16,14 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->foreignId('warehouse_id')->constrained()->restrictOnDelete();
             $table->text('reason');
-            $table->text('notes')->nullable();
+            $table->enum('status', ['draft', 'completed', 'cancelled'])->default('draft');
+            $table->string('notes')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('completed_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('completed_at')->nullable();
+            $table->foreignId('cancelled_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('cancelled_at')->nullable();
             $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
