@@ -3,6 +3,7 @@
 namespace App\Services\Inventory;
 
 use App\Models\StockAdjustment;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class StockAdjustmentService
@@ -41,6 +42,8 @@ class StockAdjustmentService
 
             $adjustment->update([
                 'status' => 'completed',
+                'completed_by' => Auth::id(),
+                'completed_at' => now(),
             ]);
         });
     }

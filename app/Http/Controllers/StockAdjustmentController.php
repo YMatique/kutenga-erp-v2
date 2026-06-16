@@ -130,6 +130,9 @@ class StockAdjustmentController extends Controller
         $adjustment->load([
             'warehouse',
             'items.product',
+            'creator',
+            'completer',
+            'canceller',
         ]);
 
         return Inertia::render(
@@ -163,6 +166,8 @@ class StockAdjustmentController extends Controller
 
         $adjustment->update([
             'status' => 'cancelled',
+            'cancelled_by' => Auth::id(),
+            'cancelled_at' => now(),
         ]);
 
         return back()->with(

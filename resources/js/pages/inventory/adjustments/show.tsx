@@ -21,7 +21,8 @@ import {
     Boxes, 
     ClipboardList,
     FileText,
-    AlertCircle
+    AlertCircle,
+    History
 } from 'lucide-react'
 
 // Interfaces estritas para tipagem do ecrã
@@ -43,6 +44,11 @@ interface AdjustmentItem {
     product: Product
 }
 
+interface AuditUser {
+    id: number
+    name: string
+}
+
 interface Adjustment {
     id: number
     status: 'draft' | 'completed' | 'cancelled'
@@ -50,6 +56,12 @@ interface Adjustment {
     notes: string | null
     warehouse: Warehouse
     items: AdjustmentItem[]
+    created_at: string
+    completed_at: string | null
+    cancelled_at: string | null
+    creator: AuditUser | null
+    completer: AuditUser | null
+    canceller: AuditUser | null
 }
 
 interface ShowProps {
@@ -197,32 +209,123 @@ export default function Show({ adjustment }: ShowProps) {
 
                 </div>
 
-                {/* CARD DE INFORMAÇÕES ADICIONAIS */}
-                <Card className="shadow-sm border-zinc-200">
-                    <CardHeader className="bg-slate-50/75 border-b py-4">
-                        <div className="flex items-center gap-2 text-slate-800">
-                            <FileText className="h-5 w-5 text-slate-500" />
-                            <CardTitle className="text-sm font-bold uppercase tracking-wider">Detalhes e Justificação</CardTitle>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="grid gap-4 pt-5">
-                        <div className="grid gap-1">
-                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Motivo de Ajuste</span>
-                            <p className="text-sm text-slate-800 font-medium bg-slate-50 p-3 rounded-md border">
-                                {adjustment.reason || 'Nenhum motivo especificado.'}
-                            </p>
-                        </div>
+                {/* INFORMAÇÕES ADICIONAIS E TIMELINE */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2">
+                        <Card className="shadow-sm border-zinc-200 h-full">
+                            <CardHeader className="bg-slate-50/75 border-b py-4">
+                                <div className="flex items-center gap-2 text-slate-800">
+                                    <FileText className="h-5 w-5 text-slate-500" />
+                                    <CardTitle className="text-sm font-bold uppercase tracking-wider">Detalhes e Justificação</CardTitle>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="grid gap-4 pt-5">
+                                <div className="grid gap-1">
+                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Motivo de Ajuste</span>
+                                    <p className="text-sm text-slate-800 font-medium bg-slate-50 p-3 rounded-md border">
+                                        {adjustment.reason || 'Nenhum motivo especificado.'}
+                                    </p>
+                                </div>
 
-                        {adjustment.notes && (
-                            <div className="grid gap-1">
-                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Observações Operacionais</span>
-                                <p className="text-sm text-slate-700 bg-slate-50 p-3 rounded-md border whitespace-pre-wrap">
-                                    {adjustment.notes}
-                                </p>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                                {adjustment.notes && (
+                                    <div className="grid gap-1">
+                                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Observações Operacionais</span>
+                                        <p className="text-sm text-slate-700 bg-slate-50 p-3 rounded-md border whitespace-pre-wrap">
+                                            {adjustment.notes}
+                                        </p>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <div className="lg:col-span-1">
+                        <Card className="shadow-sm border-zinc-200 h-full">
+                            <CardHeader className="bg-slate-50/75 border-b py-4">
+                                <div className="flex items-center gap-2 text-slate-800">
+                                    <History className="h-5 w-5 text-slate-500" />
+                                    <CardTitle className="text-sm font-bold uppercase tracking-wider">Histórico do Ajuste</CardTitle>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="pt-6 relative">
+                                <div className="relative pl-6 border-l-2 border-slate-100 space-y-6">
+                                    
+                                    {/* EVENTO 1: CRIADO */}
+                                    <div className="relative">
+                                        <span className="absolute -left-[33px] top-1 flex h-4 w-4 items-center justify-center rounded-full bg-slate-100 ring-4 ring-white">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
+                                        </span>
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">🟡 Ajuste Criado</span>
+                                            <span className="text-sm font-medium text-slate-800 mt-1">
+                                                por {adjustment.creator?.name || 'Sistema'}
+                                            </span>
+                                            <span className="text-xs text-slate-400 mt-0.5 font-mono">
+                                                {new Date(adjustment.created_at).toLocaleString('pt-PT')}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* EVENTO 2: CONCLUÍDO */}
+                                    {adjustment.status === 'completed' && (
+                                        <div className="relative">
+                                            <span className="absolute -left-[33px] top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-50 ring-4 ring-white">
+                                                <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                                            </span>
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-semibold text-green-700 uppercase tracking-wider">🟢 Ajuste Concluído</span>
+                                                <span className="text-sm font-medium text-slate-800 mt-1">
+                                                    por {adjustment.completer?.name || 'Sistema'}
+                                                </span>
+                                                {adjustment.completed_at && (
+                                                    <span className="text-xs text-slate-400 mt-0.5 font-mono">
+                                                        {new Date(adjustment.completed_at).toLocaleString('pt-PT')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* EVENTO 3: CANCELADO */}
+                                    {adjustment.status === 'cancelled' && (
+                                        <div className="relative">
+                                            <span className="absolute -left-[33px] top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-50 ring-4 ring-white">
+                                                <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                                            </span>
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-semibold text-red-700 uppercase tracking-wider">🔴 Ajuste Cancelado</span>
+                                                <span className="text-sm font-medium text-slate-800 mt-1">
+                                                    por {adjustment.canceller?.name || 'Sistema'}
+                                                </span>
+                                                {adjustment.cancelled_at && (
+                                                    <span className="text-xs text-slate-400 mt-0.5 font-mono">
+                                                        {new Date(adjustment.cancelled_at).toLocaleString('pt-PT')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* AGUARDANDO */}
+                                    {adjustment.status === 'draft' && (
+                                        <div className="relative">
+                                            <span className="absolute -left-[33px] top-1 flex h-4 w-4 items-center justify-center rounded-full bg-yellow-50 ring-4 ring-white">
+                                                <span className="h-1.5 w-1.5 rounded-full bg-yellow-500 animate-pulse" />
+                                            </span>
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-semibold text-yellow-600 uppercase tracking-wider">⏳ Em Processamento</span>
+                                                <span className="text-xs text-slate-500 mt-1">
+                                                    Este ajuste ainda é um rascunho e aguarda conclusão para atualizar os estoques.
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
 
                 {/* LISTAGEM DOS PRODUTOS DA TABELA */}
                 <Card className="shadow-sm overflow-hidden border-zinc-200">
