@@ -68,14 +68,19 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
         Route::post('/adjustments/{adjustment}/complete', [StockAdjustmentController::class, 'complete'])->name('inventory.adjustments.complete');
         Route::post('/adjustments/{adjustment}/cancel', [StockAdjustmentController::class, 'cancel'])->name('inventory.adjustments.cancel');
     });
-    // Rotas de Clientes
-    Route::resource('customers', CustomerController::class);
+
     // Sales/Billing
-    // Rotas de Documentos (Faturas, Recibos, etc)
-    Route::resource('documents', DocumentController::class);
-    Route::post('documents/{id}/confirm', [DocumentController::class, 'confirm'])->name('documents.confirm');
-    Route::post('documents/receive-payment', [DocumentController::class, 'receivePayment'])->name('documents.receive-payment');
-    
+
+    Route::prefix('billing')->group(function () {
+        // Rotas de Documentos (Faturas, Recibos, etc)
+        Route::resource('documents', DocumentController::class);
+        // Route::resource('documents', DocumentController::class);
+        Route::post('documents/{id}/confirm', [DocumentController::class, 'confirm'])->name('documents.confirm');
+        Route::post('documents/receive-payment', [DocumentController::class, 'receivePayment'])->name('documents.receive-payment');
+
+        // Rotas de Clientes
+        Route::resource('customers', CustomerController::class);
+    });
     // POS
 
     // Users
