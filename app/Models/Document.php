@@ -14,13 +14,43 @@ class Document extends Model
     use SoftDeletes, HasAudit;
 
     protected $table = 'documents';
-    
+
+    protected static $typeMap = [
+        'FT' => Invoice::class,
+        'FR' => Receipt::class,
+        'CT' => Quote::class,
+        'NC' => CreditNote::class,
+        'ND' => DebitNote::class,
+        'GR' => DeliveryNote::class,
+    ];
+
     protected $fillable = [
-        'company_id', 'branch_id', 'series_id', 'customer_id',
-        'customer_name', 'customer_nuit', 'customer_phone', 'customer_email', 'customer_address',
-        'document_type', 'document_number', 'sequence_number', 'status',
-        'issue_date', 'due_date', 'subtotal', 'tax_total', 'discount_total', 'grand_total',
-        'currency_id', 'exchange_rate', 'payment_status', 'source_module', 'notes', 'created_by', 'updated_by'
+        'company_id',
+        'branch_id',
+        'series_id',
+        'customer_id',
+        'customer_name',
+        'customer_nuit',
+        'customer_phone',
+        'customer_email',
+        'customer_address',
+        'document_type',
+        'document_number',
+        'sequence_number',
+        'status',
+        'issue_date',
+        'due_date',
+        'subtotal',
+        'tax_total',
+        'discount_total',
+        'grand_total',
+        'currency_id',
+        'exchange_rate',
+        'payment_status',
+        'source_module',
+        'notes',
+        'created_by',
+        'updated_by'
     ];
 
     protected $casts = [

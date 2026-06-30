@@ -23,8 +23,8 @@ class CustomerController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('nuit', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                        ->orWhere('nuit', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
                 });
             })
             ->orderBy('name', 'asc')
@@ -35,6 +35,10 @@ class CustomerController extends Controller
             'customers' => $customers,
             'filters' => $request->only(['search'])
         ]);
+    }
+    public function create()
+    {
+        return Inertia::render('billing/customers/create');
     }
 
     /**
@@ -56,10 +60,10 @@ class CustomerController extends Controller
             'phone' => 'nullable|string|max:30',
             'address' => 'nullable|string',
             'credit_limit' => 'nullable|numeric|min:0',
-            
+
             // Validação de múltiplos contactos
             'contacts' => 'nullable|array',
-            'contacts.*.name' => 'required|string|max:255',
+            'contacts.*.name' => 'nullable|string|max:255',
             'contacts.*.role' => 'nullable|string|max:100',
             'contacts.*.phone' => 'nullable|string|max:30',
             'contacts.*.email' => 'nullable|email|max:255',
@@ -67,8 +71,8 @@ class CustomerController extends Controller
             // Validação de múltiplos endereços
             'addresses' => 'nullable|array',
             'addresses.*.type' => 'required|in:billing,delivery',
-            'addresses.*.address' => 'required|string',
-            'addresses.*.city' => 'required|string|max:100',
+            'addresses.*.address' => 'nullable|string',
+            'addresses.*.city' => 'nullable|string|max:100',
         ]);
 
         DB::transaction(function () use ($validated, $companyId) {
@@ -84,22 +88,26 @@ class CustomerController extends Controller
                 'is_active' => true,
             ]);
 
-            // Guardar os contactos associados
             if (!empty($validated['contacts'])) {
                 foreach ($validated['contacts'] as $contact) {
-                    $customer->contacts()->create($contact);
+                    // Só cria se tiver nome ou telefone (para evitar registos vazios)
+                    if (!empty($contact['name']) || !empty($contact['phone']) || !empty($contact['email'])) {
+                        $customer->contacts()->create($contact);
+                    }
                 }
             }
 
-            // Guardar os endereços associados
+            // Guardar endereços (apenas os que têm address ou city preenchidos)
             if (!empty($validated['addresses'])) {
                 foreach ($validated['addresses'] as $address) {
-                    $customer->addresses()->create($address);
+                    if (!empty($address['address']) || !empty($address['city'])) {
+                        $customer->addresses()->create($address);
+                    }
                 }
             }
         });
 
-        return redirect()->back()->with('success', 'Cliente registado com sucesso!');
+        return redirect()->route('billing.customers.index')->with('success', 'Cliente registado com sucesso!');
     }
 
     /**
@@ -123,13 +131,104 @@ class CustomerController extends Controller
             'address' => 'nullable|string',
             'credit_limit' => 'nullable|numeric|min:0',
             'is_active' => 'required|boolean',
+
+            // Contactos – opcionais
+            'contacts' => 'nullable|array',
+            'contacts.*.id' => 'nullable|exists:customer_contacts,id', // para rastrear
+            'contacts.*.name' => 'nullable|string|max:255',
+            'contacts.*.role' => 'nullable|string|max:100',
+            'contacts.*.phone' => 'nullable|string|max:30',
+            'contacts.*.email' => 'nullable|email|max:255',
+
+            // Endereços – opcionais
+            'addresses' => 'nullable|array',
+            'addresses.*.id' => 'nullable|exists:customer_addresses,id',
+            'addresses.*.type' => 'required|in:billing,delivery',
+            'addresses.*.address' => 'nullable|string',
+            'addresses.*.city' => 'nullable|string|max:100',
         ]);
 
-        $customer->update($validated);
+        DB::transaction(function () use ($customer, $validated) {
+            // 1. Atualizar os campos principais
+            $customer->update([
+                'name' => $validated['name'],
+                'nuit' => $validated['nuit'],
+                'email' => $validated['email'] ?? null,
+                'phone' => $validated['phone'] ?? null,
+                'address' => $validated['address'] ?? null,
+                'credit_limit' => $validated['credit_limit'] ?? 0,
+                'is_active' => $validated['is_active'],
+            ]);
 
-        return redirect()->back()->with('success', 'Cadastro do cliente atualizado!');
+            // 2. Sincronizar contactos: apaga todos e recria apenas os que têm nome ou telefone
+            $customer->contacts()->delete();
+            if (!empty($validated['contacts'])) {
+                foreach ($validated['contacts'] as $contact) {
+                    if (!empty($contact['name']) || !empty($contact['phone']) || !empty($contact['email'])) {
+                        $customer->contacts()->create([
+                            'name' => $contact['name'] ?? null,
+                            'role' => $contact['role'] ?? null,
+                            'phone' => $contact['phone'] ?? null,
+                            'email' => $contact['email'] ?? null,
+                        ]);
+                    }
+                }
+            }
+
+            // 3. Sincronizar endereços: apaga todos e recria apenas os que têm address ou city
+            $customer->addresses()->delete();
+            if (!empty($validated['addresses'])) {
+                foreach ($validated['addresses'] as $address) {
+                    if (!empty($address['address']) || !empty($address['city'])) {
+                        $customer->addresses()->create([
+                            'type' => $address['type'],
+                            'address' => $address['address'] ?? null,
+                            'city' => $address['city'] ?? null,
+                        ]);
+                    }
+                }
+            }
+        });
+
+        return redirect()->route('billing.customers.index')
+            ->with('success', 'Cliente atualizado com sucesso!');
     }
 
+    /**
+     * Exibe o formulário de edição de um cliente existente.
+     */
+    public function edit(Request $request, $id)
+    {
+        $companyId = $request->user()->company_id;
+
+        $customer = Customer::where('company_id', $companyId)
+            ->with(['contacts', 'addresses'])
+            ->findOrFail($id);
+
+        return Inertia::render('billing/customers/edit', [
+            'customer' => $customer
+        ]);
+    }
+    /**
+     * Exibe os detalhes de um cliente específico.
+     */
+    public function show(Request $request, $id)
+    {
+        $companyId = $request->user()->company_id;
+
+        $customer = Customer::where('company_id', $companyId)
+            ->with(['contacts', 'addresses'])
+            ->findOrFail($id);
+
+        // Opcional: carregar últimas faturas e pagamentos
+        // $customer->load(['documents' => function($query) {
+        //     $query->orderBy('created_at', 'desc')->limit(10);
+        // }]);
+
+        return Inertia::render('billing/customers/show', [
+            'customer' => $customer
+        ]);
+    }
     /**
      * Elimina logicamente um cliente do sistema.
      */

@@ -6,6 +6,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ContextController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\DocumentSeriesController;
 use App\Http\Controllers\InventoryDashboardController;
 use App\Http\Controllers\InventoryOpeningController;
 use App\Http\Controllers\ProductController;
@@ -71,7 +72,9 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
 
     // Sales/Billing
 
-    Route::prefix('billing')->group(function () {
+    Route::prefix('billing')->name('billing.')->group(function () {
+        Route::resource('series', DocumentSeriesController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
         // Rotas de Documentos (Faturas, Recibos, etc)
         Route::resource('documents', DocumentController::class);
         // Route::resource('documents', DocumentController::class);
@@ -88,4 +91,4 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     //
 });
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';
