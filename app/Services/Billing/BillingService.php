@@ -179,8 +179,8 @@ class BillingService
                 str_pad((string)$sequence, 5, "0", STR_PAD_LEFT)
             );
 
-            $status = $document->document_type === 'FR' ? 'paid' : 'confirmed';
-            $paymentStatus = $document->document_type === 'FR' ? 'paid' : 'unpaid';
+            $status = $document->getInitialStatus();
+            $paymentStatus = $document->getInitialPaymentStatus();
 
             $document->update([
                 'status' => $status,
@@ -189,30 +189,11 @@ class BillingService
                 'payment_status' => $paymentStatus
             ]);
 
-            // INTEGRAÇÃO COM O SEU STOCK SERVICE: Dá a baixa de stock para cada item físico
-            foreach ($document->items as $item) {
-                if ($item->product_id) {
-                    $product = Product::findOrFail($item->product_id);
-                    
-                    // Se o produto gerir stock, executa o método do seu StockService
-                    if ($product->track_stock) {
-                        $this->stockService->out(
-                            $product,
-                            $warehouse,
-                            (float) $item->quantity,
-                            'document',
-                            $document->id,
-                            "Saída física automática decorrente da emissão do documento {$document->document_number}"
-                        );
-                    }
-                }
-            }
+            // Movimentação física de stock conforme as regras de negócio do tipo de documento
+            $document->processStock($this->stockService, $warehouse);
 
-            // Atualização de saldos de conta corrente do cliente (Se for fatura de crédito 'FT')
-            if ($document->document_type === 'FT' && $document->customer_id) {
-                $customer = Customer::findOrFail($document->customer_id);
-                $customer->increment('balance', $document->grand_total);
-            }
+            // Registo e atualização de saldos de conta corrente do cliente
+            $document->processFinancial();
 
             return $document->load('items');
         });

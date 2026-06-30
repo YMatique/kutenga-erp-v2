@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Services\Inventory\StockService;
+use App\Models\Warehouse;
 
 class Document extends Model
 {
@@ -23,6 +25,22 @@ class Document extends Model
         'ND' => DebitNote::class,
         'GR' => DeliveryNote::class,
     ];
+
+    /**
+     * Instancia dinamicamente a subclasse correta com base no document_type.
+     */
+    public function newFromBuilder($attributes = [], $connection = null)
+    {
+        $type = is_object($attributes) ? ($attributes->document_type ?? null) : ($attributes['document_type'] ?? null);
+        $class = static::$typeMap[$type] ?? static::class;
+
+        $model = new $class;
+        $model->exists = true;
+        $model->setRawAttributes((array) $attributes, true);
+        $model->setConnection($connection ?: $this->getConnectionName());
+        $model->fireModelEvent('retrieved', false);
+        return $model;
+    }
 
     protected $fillable = [
         'company_id',
@@ -63,10 +81,24 @@ class Document extends Model
         'exchange_rate' => 'decimal:6'
     ];
 
-    // BOOT: Bloqueio contra mutabilidade indesejada após confirmação
+    // BOOT: Bloqueio contra mutabilidade indesejada após confirmação e configuração de STI
     protected static function boot()
     {
         parent::boot();
+
+        // Configuração de STI para subclasses
+        if (static::class !== self::class) {
+            $type = array_search(static::class, static::$typeMap);
+            if ($type) {
+                static::addGlobalScope('document_type', function ($builder) use ($type) {
+                    $builder->where('document_type', $type);
+                });
+
+                static::creating(function ($model) use ($type) {
+                    $model->document_type = $type;
+                });
+            }
+        }
 
         // Bloquear alterações se o documento estiver confirmado ou pago
         static::updating(function (Document $document) {
@@ -85,6 +117,29 @@ class Document extends Model
                 throw new Exception("Regra de Imutabilidade Fiscal: Não é permitido eliminar fisicamente documentos ativos.");
             }
         });
+    }
+
+    /**
+     * Métodos Polimórficos de STI
+     */
+    public function getInitialStatus(): string
+    {
+        return 'confirmed';
+    }
+
+    public function getInitialPaymentStatus(): string
+    {
+        return 'unpaid';
+    }
+
+    public function processStock(StockService $stockService, Warehouse $warehouse): void
+    {
+        // Por padrão, não faz nada
+    }
+
+    public function processFinancial(): void
+    {
+        // Por padrão, não faz nada
     }
 
     public function series(): BelongsTo
