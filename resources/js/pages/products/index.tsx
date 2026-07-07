@@ -1,28 +1,17 @@
 import { Head, usePage, Link } from '@inertiajs/react';
-import { 
-    Plus, 
-    Search, 
-    MoreHorizontal, 
-    Package, 
+import {
+    Plus,
+    Search,
+    MoreHorizontal,
+    Package,
     Wrench,
     Tag,
     Layers,
     FileText,
     Trash2,
     Edit,
-    PackageOpen
+    PackageOpen,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -31,6 +20,18 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { PageHeader, TableCard, PrimaryButton, StockBadge } from '@/components/ui/brand';
+import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -70,8 +71,8 @@ export default function ProductsIndex() {
     const { products } = usePage<{ products: Product[] }>().props;
     const [search, setSearch] = useState('');
 
-    const filteredProducts = products.filter(p => 
-        p.name.toLowerCase().includes(search.toLowerCase()) || 
+    const filteredProducts = products.filter(p =>
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.sku?.toLowerCase().includes(search.toLowerCase())
     );
 
@@ -85,7 +86,6 @@ export default function ProductsIndex() {
         }
     };
 
-    // Formatador de Moeda localizado (MZN)
     const formatCurrency = (value: string) => {
         const numeric = parseFloat(value) || 0;
         return new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(numeric);
@@ -95,91 +95,111 @@ export default function ProductsIndex() {
         <>
             <Head title="Catálogo de Itens" />
 
-            <div className="p-6 space-y-6  mx-auto">
-                
-                {/* HEADER */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                            Catálogo de Itens
-                        </h1>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            Gerencie seus produtos, mercadorias e serviços prestados.
-                        </p>
-                    </div>
-
-                    <Button className="gap-2 self-start sm:self-auto" asChild>
+            <div className="p-6 space-y-4 bg-slate-50 min-h-screen">
+                {/* PAGE HEADER */}
+                <PageHeader
+                    title="Catálogo de Itens"
+                    subtitle="Gerencie seus produtos, mercadorias e serviços prestados."
+                    actions={
                         <Link href="/products/create">
-                            <Plus className="h-4 w-4" />
-                            Novo Item
+                            <PrimaryButton>
+                                <Plus className="h-4 w-4" />
+                                Novo Item
+                            </PrimaryButton>
                         </Link>
-                    </Button>
-                </div>
+                    }
+                />
 
-                {/* FILTERS BAR */}
-                <div className="flex items-center gap-4">
+                {/* SEARCH BAR */}
+                <div className="flex items-center gap-3">
                     <div className="relative flex-1 max-w-sm">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <Input 
-                            placeholder="Pesquisar por nome ou SKU..." 
-                            className="pl-9 bg-white dark:bg-zinc-900 shadow-xs"
+                        <Input
+                            placeholder="Pesquisar por nome ou SKU..."
+                            className="pl-9 bg-white border-slate-200 rounded-[4px] h-9 text-sm focus-visible:ring-[#2DB8A0]/30"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
+                    <span className="text-xs text-slate-400 font-medium">
+                        {filteredProducts.length} ite{filteredProducts.length !== 1 ? 'ns' : 'm'}
+                    </span>
                 </div>
 
-                {/* DATA TABLE CARD */}
-                <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-xs">
+                {/* TABLE CARD */}
+                <TableCard>
                     <Table>
-                        <TableHeader className="bg-slate-50/75 dark:bg-zinc-800/50">
-                            <TableRow>
-                                <TableHead className="w-[380px] font-semibold text-slate-700 dark:text-slate-300">Item / SKU</TableHead>
-                                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Tipo</TableHead>
-                                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Categoria / Marca</TableHead>
-                                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Imposto</TableHead>
-                                <TableHead className="text-right font-semibold text-slate-700 dark:text-slate-300 w-[180px]">Preço de Venda</TableHead>
-                                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-[100px]">Status</TableHead>
-                                <TableHead className="text-right font-semibold text-slate-700 dark:text-slate-300 w-[80px]">Ações</TableHead>
+                        <TableHeader>
+                            <TableRow className="bg-slate-50 border-b border-slate-100 hover:bg-slate-50">
+                                <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold w-[360px]">
+                                    Item / SKU
+                                </TableHead>
+                                <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">
+                                    Tipo
+                                </TableHead>
+                                <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">
+                                    Categoria / Marca
+                                </TableHead>
+                                <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">
+                                    Imposto
+                                </TableHead>
+                                <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold text-right w-[180px]">
+                                    Preço de Venda
+                                </TableHead>
+                                <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold w-[100px]">
+                                    Status
+                                </TableHead>
+                                <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold text-right w-[80px]">
+                                    Acções
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
-                        
+
                         <TableBody>
                             {filteredProducts.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="h-48 text-center text-muted-foreground">
-                                        <div className="flex flex-col items-center justify-center gap-2.5">
-                                            <PackageOpen className="h-8 w-8 text-slate-300 dark:text-slate-700" />
-                                            <span className="text-sm font-medium">Nenhum item encontrado no catálogo.</span>
+                                    <TableCell colSpan={7} className="h-52 text-center">
+                                        <div className="flex flex-col items-center justify-center gap-3">
+                                            <div className="h-12 w-12 rounded-[4px] bg-slate-100 flex items-center justify-center">
+                                                <PackageOpen className="h-6 w-6 text-slate-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-600">Nenhum item encontrado</p>
+                                                <p className="text-xs text-slate-400 mt-0.5">Adicione produtos ou ajuste o filtro de pesquisa.</p>
+                                            </div>
                                         </div>
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 filteredProducts.map((product) => (
-                                    <TableRow key={product.id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30 transition-colors">
-                                        
+                                    <TableRow
+                                        key={product.id}
+                                        className="hover:bg-slate-50/50 transition-colors border-b border-slate-100"
+                                    >
                                         {/* ITEM / SKU */}
-                                        <TableCell>
+                                        <TableCell className="py-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="h-11 w-11 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 flex items-center justify-center flex-shrink-0 shadow-2xs">
+                                                <div className="h-10 w-10 rounded-[4px] border border-slate-200 bg-slate-50 flex items-center justify-center flex-shrink-0">
                                                     {product.image_path ? (
-                                                        <img 
-                                                            src={product.image_path} 
+                                                        <img
+                                                            src={product.image_path}
                                                             alt={product.name}
-                                                            className="w-full h-full object-cover"
+                                                            className="w-full h-full object-cover rounded-[4px]"
                                                         />
                                                     ) : (
-                                                        <span className="text-slate-400 dark:text-slate-500">
-                                                            {product.type === 'product' ? <Package className="h-5 w-5" /> : <Wrench className="h-5 w-5" />}
+                                                        <span className="text-slate-400">
+                                                            {product.type === 'product'
+                                                                ? <Package className="h-4 w-4" />
+                                                                : <Wrench className="h-4 w-4" />}
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div className="flex flex-col gap-1">
-                                                    <span className="font-semibold text-slate-900 dark:text-zinc-100 leading-none">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="font-semibold text-slate-900 text-sm leading-none">
                                                         {product.name}
                                                     </span>
-                                                    <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
-                                                        {product.sku || 'SEM SKU'}
+                                                    <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                                                        {product.sku || '— sem sku'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -187,100 +207,106 @@ export default function ProductsIndex() {
 
                                         {/* TIPO */}
                                         <TableCell>
-                                            <Badge 
-                                                variant="outline" 
-                                                className={`text-[10px] font-semibold px-2 py-0.5 tracking-wide ${
-                                                    product.type === 'product' 
-                                                        ? 'text-blue-600 border-blue-100 bg-blue-50/40 dark:bg-blue-950/20 dark:border-blue-900' 
-                                                        : 'text-purple-600 border-purple-100 bg-purple-50/40 dark:bg-purple-950/20 dark:border-purple-900'
-                                                }`}
+                                            <span
+                                                className={cn(
+                                                    'inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1 rounded-[4px] uppercase tracking-wide',
+                                                    product.type === 'product'
+                                                        ? 'bg-blue-50 text-blue-600'
+                                                        : 'bg-violet-50 text-violet-600'
+                                                )}
                                             >
-                                                {product.type === 'product' ? 'PRODUTO' : 'SERVIÇO'}
-                                            </Badge>
+                                                {product.type === 'product'
+                                                    ? <><Package className="h-3 w-3" /> Produto</>
+                                                    : <><Wrench className="h-3 w-3" /> Serviço</>}
+                                            </span>
                                         </TableCell>
 
                                         {/* CATEGORIA / MARCA */}
                                         <TableCell>
-                                            <div className="flex flex-col gap-1.5">
-                                                <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-400 font-medium">
-                                                    <Layers className="h-3.5 w-3.5 text-slate-400" />
-                                                    {product.category?.name || 'Sem Categoria'}
+                                            <div className="flex flex-col gap-1">
+                                                <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+                                                    <Layers className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                                                    {product.category?.name || <span className="text-slate-400 italic">Sem categoria</span>}
                                                 </div>
-                                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                                    <Tag className="h-3.5 w-3.5 text-slate-400" />
-                                                    {product.brand?.name || 'Sem Marca'}
+                                                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                                                    <Tag className="h-3.5 w-3.5 flex-shrink-0" />
+                                                    {product.brand?.name || <span className="italic">Sem marca</span>}
                                                 </div>
                                             </div>
                                         </TableCell>
 
-                                        {/* IVA */}
+                                        {/* IMPOSTO */}
                                         <TableCell>
                                             {product.tax_is_exempt ? (
-                                                <Badge variant="outline" className="text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-950 bg-emerald-50/40 dark:bg-emerald-950/10 text-[10px] font-bold px-1.5 py-0">
-                                                    ISENTO
-                                                </Badge>
+                                                <span className="inline-flex items-center text-[10px] font-semibold px-2 py-1 rounded-[4px] bg-[#2DB8A0]/10 text-[#2DB8A0] uppercase tracking-wide">
+                                                    Isento
+                                                </span>
                                             ) : (
-                                                <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-950 bg-amber-50/40 dark:bg-amber-950/10 text-[10px] font-bold px-1.5 py-0">
+                                                <span className="inline-flex items-center text-[10px] font-semibold px-2 py-1 rounded-[4px] bg-[#E8A020]/10 text-[#E8A020] uppercase tracking-wide">
                                                     {parseFloat(product.tax_rate)}% IVA
-                                                </Badge>
+                                                </span>
                                             )}
                                         </TableCell>
 
-                                        {/* PREÇOS */}
+                                        {/* PREÇO DE VENDA */}
                                         <TableCell className="text-right">
-                                            <span className="font-bold text-slate-900 dark:text-zinc-100 font-mono text-sm">
+                                            <span className="font-bold text-slate-900 font-mono text-sm">
                                                 {formatCurrency(product.price)}
                                             </span>
-                                            <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                                            <div className="text-[10px] text-slate-400 font-medium mt-0.5">
                                                 Custo: <span className="font-mono">{formatCurrency(product.cost)}</span>
                                             </div>
                                         </TableCell>
 
                                         {/* STATUS */}
                                         <TableCell>
-                                            <Badge 
-                                                variant={product.status === 'active' ? 'default' : 'secondary'} 
-                                                className={`px-2 py-0.5 text-[10px] font-bold tracking-wide ${
-                                                    product.status === 'active' 
-                                                        ? 'bg-emerald-600 hover:bg-emerald-600 text-white dark:bg-emerald-500' 
-                                                        : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400'
-                                                }`}
-                                            >
-                                                {product.status === 'active' ? 'ATIVO' : 'INATIVO'}
-                                            </Badge>
+                                            <StockBadge status={product.status === 'active' ? 'active' : 'inactive'} />
                                         </TableCell>
 
-                                        {/* AÇÕES (DROPDOWN) */}
+                                        {/* ACÇÕES */}
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-[4px]"
+                                                    >
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="w-[160px]">
-                                                    <DropdownMenuLabel>Ações do Item</DropdownMenuLabel>
+                                                <DropdownMenuContent align="end" className="w-[160px] rounded-[4px]">
+                                                    <DropdownMenuLabel className="text-xs text-slate-500">Acções do Item</DropdownMenuLabel>
                                                     <DropdownMenuSeparator />
-                                                    
+
                                                     <DropdownMenuItem asChild>
-                                                        <Link href={`/products/${product.id}`} className="flex items-center gap-2 cursor-pointer w-full">
-                                                            <FileText className="h-4 w-4 text-slate-400" /> Ver Detalhes
+                                                        <Link
+                                                            href={`/products/${product.id}`}
+                                                            className="flex items-center gap-2 cursor-pointer w-full text-sm"
+                                                        >
+                                                            <FileText className="h-3.5 w-3.5 text-slate-400" />
+                                                            Ver Detalhes
                                                         </Link>
                                                     </DropdownMenuItem>
 
                                                     <DropdownMenuItem asChild>
-                                                        <Link href={`/products/${product.id}/edit`} className="flex items-center gap-2 cursor-pointer w-full">
-                                                            <Edit className="h-4 w-4 text-slate-400" /> Editar Item
+                                                        <Link
+                                                            href={`/products/${product.id}/edit`}
+                                                            className="flex items-center gap-2 cursor-pointer w-full text-sm"
+                                                        >
+                                                            <Edit className="h-3.5 w-3.5 text-slate-400" />
+                                                            Editar Item
                                                         </Link>
                                                     </DropdownMenuItem>
-                                                    
+
                                                     <DropdownMenuSeparator />
-                                                    
-                                                    <DropdownMenuItem 
-                                                        className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/20 gap-2 cursor-pointer"
+
+                                                    <DropdownMenuItem
+                                                        className="text-red-600 focus:text-red-600 focus:bg-red-50 gap-2 cursor-pointer text-sm"
                                                         onClick={() => deleteProduct(product.id)}
                                                     >
-                                                        <Trash2 className="h-4 w-4" /> Remover Item
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                        Remover Item
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
@@ -290,7 +316,7 @@ export default function ProductsIndex() {
                             )}
                         </TableBody>
                     </Table>
-                </div>
+                </TableCard>
             </div>
         </>
     );

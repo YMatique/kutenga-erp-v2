@@ -15,61 +15,62 @@ function KutengaLayoutContent({
 }: PropsWithChildren<{ breadcrumbs?: BreadcrumbItem[] }>) {
     const { props } = usePage<any>();
     const { state, isMobile } = useSidebar();
-    const sidebarOpen = state === "expanded";
+    const sidebarOpen = state === 'expanded';
 
-    // Toast notifications para mensagens flash
     useEffect(() => {
-        if (props.flash?.success) {
-            toast.success(props.flash.success);
-        }
-        if (props.flash?.error) {
-            toast.error(props.flash.error);
-        }
+        if (props.flash?.success) toast.success(props.flash.success);
+        if (props.flash?.error) toast.error(props.flash.error);
+        if (props.flash?.warning) toast.warning(props.flash.warning);
+        if (props.flash?.info) toast.info(props.flash.info);
     }, [props.flash]);
 
     return (
-        <div className="min-h-screen w-full bg-zinc-50 dark:bg-zinc-950 font-sans antialiased text-zinc-900 dark:text-zinc-100 flex flex-col">
-            {/* 1. Suspended Top Header */}
-            <header className="fixed top-4 left-4 right-4 z-[60] transition-all duration-300 ease-in-out">
-                <div className="h-16 border border-zinc-200/50 dark:border-zinc-800/50 rounded-xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl px-4 flex items-center shadow-sm">
+        <div className="min-h-screen w-full bg-slate-50 font-sans antialiased text-slate-900 flex flex-col">
+
+            {/* Floating top header */}
+            <header className="fixed top-3 left-3 right-3 z-[60] transition-all duration-300 ease-in-out">
+                <div className="h-14 border border-slate-200/80 rounded-[4px] bg-white/60 backdrop-blur-xl px-4 flex items-center shadow-xs">
                     <AppHeader breadcrumbs={breadcrumbs} />
                 </div>
             </header>
 
             <div className="flex flex-1 relative">
-                {/* 2. Suspended Sidebar - Starts below the header (top-24) */}
-                <aside 
+
+                {/* Dark navy sidebar panel */}
+                <aside
                     className={cn(
-                        "fixed top-24 left-4 bottom-4 z-50 transition-all duration-300 ease-in-out",
-                        sidebarOpen ? "w-64" : "w-20",
-                        isMobile && !sidebarOpen && "-left-full"
+                        'fixed top-[4.5rem] left-3 bottom-3 z-50 transition-all duration-300 ease-in-out',
+                        sidebarOpen ? 'w-64' : 'w-[4.5rem]',
+                        isMobile && !sidebarOpen && '-left-full',
                     )}
                 >
-                    <div className="h-full border border-zinc-200/50 dark:border-zinc-800/50 rounded-xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl shadow-sm overflow-hidden flex flex-col">
+                    <div className="h-full rounded-[4px] bg-[#1A2332] overflow-hidden flex flex-col shadow-xs border border-white/5 relative">
                         <AppSidebar />
                     </div>
                 </aside>
 
-                {/* 3. Main Content Area */}
+                {/* Main content area */}
                 <main
                     className={cn(
-                        "mt-24 w-full transition-all duration-300 ease-in-out flex-1",
-                        isMobile ? "ml-4 mr-4 mb-4" : (sidebarOpen ? "ml-72 mr-4 mb-4" : "ml-28 mr-4 mb-4")
+                        'mt-[4.5rem] transition-all duration-300 ease-in-out flex-1 min-h-[calc(100vh-4.5rem)]',
+                        isMobile ? 'ml-3 mr-3 mb-3' : sidebarOpen ? 'ml-[17.25rem] mr-3 mb-3' : 'ml-[5.75rem] mr-3 mb-3',
                     )}
                 >
-                    {/* Content Wrapper Card */}
-                    <div className="min-h-full border border-zinc-200/60 dark:border-zinc-800/60 rounded-xl bg-white dark:bg-zinc-900 p-6 md:p-8 shadow-xs border-dashed">
+                    <div className="min-h-full">
                         {children}
                     </div>
                 </main>
             </div>
 
-            <Toaster />
+            <Toaster richColors position="top-right" />
         </div>
     );
 }
 
-export default function KutengaLayout({ children, breadcrumbs = [] }: PropsWithChildren<{ breadcrumbs?: BreadcrumbItem[] }>) {
+export default function KutengaLayout({
+    children,
+    breadcrumbs = [],
+}: PropsWithChildren<{ breadcrumbs?: BreadcrumbItem[] }>) {
     const { sidebarOpen } = usePage<any>().props;
     return (
         <TooltipProvider delayDuration={0}>

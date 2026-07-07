@@ -1,14 +1,16 @@
-import { Head, usePage } from "@inertiajs/react";
-
+import { Head, Link, usePage } from '@inertiajs/react';
 import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-
-import { Badge } from "@/components/ui/badge";
-
+    AlertTriangle,
+    ArrowDownRight,
+    ArrowUpRight,
+    Download,
+    Package,
+    PackageSearch,
+    Plus,
+    RefreshCw,
+    Warehouse,
+} from 'lucide-react';
+import { KpiCard, OutlineButton, PageHeader, PrimaryButton, StockBadge, TableCard } from '@/components/ui/brand';
 import {
     Table,
     TableBody,
@@ -16,324 +18,257 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+
+const movementLabels: Record<string, { label: string; color: string }> = {
+    opening:    { label: 'Stock Inicial', color: 'bg-slate-100 text-slate-600' },
+    in:         { label: 'Entrada',       color: 'bg-[#2DB8A0]/10 text-[#2DB8A0]' },
+    out:        { label: 'Saída',         color: 'bg-red-50 text-red-600' },
+    adjustment: { label: 'Ajuste',        color: 'bg-[#E8A020]/10 text-[#E8A020]' },
+};
 
 export default function InventoryDashboard() {
-    const {
-        stats,
-        lowStockProducts,
-        outOfStockProducts,
-        warehouseSummary,
-        recentMovements,
-    }: any = usePage().props;
+    const { stats, lowStockProducts, outOfStockProducts, warehouseSummary, recentMovements } =
+        usePage<any>().props;
 
     const attentionProducts = [
-        ...outOfStockProducts.map((p: any) => ({
-            ...p,
-            status: "out",
-        })),
-        ...lowStockProducts.map((p: any) => ({
-            ...p,
-            status: "low",
-        })),
+        ...outOfStockProducts.map((p: any) => ({ ...p, alertStatus: 'out_of_stock' as const })),
+        ...lowStockProducts.map((p: any) => ({ ...p, alertStatus: 'low' as const })),
     ];
 
-    const movementLabels: any = {
-        opening: "Stock Inicial",
-        in: "Entrada",
-        out: "Saída",
-        adjustment: "Ajuste",
-    };
+    const formatCurrency = (val: number | string) =>
+        new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(Number(val));
 
     return (
         <>
-            <Head title="Inventário" />
+            <Head title="Inventário — Dashboard" />
 
-            <div className="space-y-6 p-6">
+            <div className="p-6 space-y-4">
+                {/* Page Header */}
+                <PageHeader
+                    title="Gestão de Inventário"
+                    subtitle="Visão geral e controle de estoque"
+                    actions={
+                        <>
+                            <OutlineButton>
+                                <Download className="h-3.5 w-3.5" />
+                                Exportar Relatório
+                            </OutlineButton>
+                            <Link href="/products/create">
+                                <PrimaryButton>
+                                    <Plus className="h-3.5 w-3.5" />
+                                    Novo Produto
+                                </PrimaryButton>
+                            </Link>
+                        </>
+                    }
+                />
 
-                {/* HEADER */}
-
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">
-                        Inventário
-                    </h1>
-
-                    <p className="text-muted-foreground">
-                        Visão geral do stock e movimentações.
-                    </p>
+                {/* KPI Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <KpiCard
+                        label="Produtos Ativos"
+                        value={stats.products}
+                        icon={<Package className="h-4 w-4" />}
+                        accent="teal"
+                        description="no catálogo"
+                    />
+                    <KpiCard
+                        label="Armazéns"
+                        value={stats.warehouses}
+                        icon={<Warehouse className="h-4 w-4" />}
+                        accent="slate"
+                        description="operacionais"
+                    />
+                    <KpiCard
+                        label="Valor do Inventário"
+                        value={formatCurrency(stats.inventory_value)}
+                        icon={<ArrowUpRight className="h-4 w-4" />}
+                        accent="gold"
+                        description="valor total em stock"
+                    />
+                    <KpiCard
+                        label="Alertas de Stock"
+                        value={Number(stats.low_stock) + Number(stats.out_of_stock)}
+                        icon={<AlertTriangle className="h-4 w-4" />}
+                        accent={Number(stats.low_stock) + Number(stats.out_of_stock) > 0 ? 'orange' : 'teal'}
+                        description={`${stats.low_stock} baixo · ${stats.out_of_stock} esgotado`}
+                    />
                 </div>
 
-                {/* KPI CARDS */}
+                {/* Attention Products + Warehouse Summary */}
+                <div className="grid xl:grid-cols-5 gap-4">
 
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm">
-                                Produtos
-                            </CardTitle>
-                        </CardHeader>
-
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {stats.products}
+                    {/* Produtos que requerem atenção */}
+                    <div className="xl:col-span-3">
+                        <TableCard>
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                                <div>
+                                    <h2 className="text-sm font-semibold text-slate-900">Produtos que Requerem Atenção</h2>
+                                    <p className="text-xs text-slate-500 mt-0.5">Stock baixo ou esgotado</p>
+                                </div>
+                                <Link
+                                    href="/inventory/stocks"
+                                    className="text-xs text-[#2DB8A0] font-medium hover:underline"
+                                >
+                                    Ver todos
+                                </Link>
                             </div>
-                        </CardContent>
-                    </Card>
 
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm">
-                                Armazéns
-                            </CardTitle>
-                        </CardHeader>
-
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {stats.warehouses}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm">
-                                Total em Stock
-                            </CardTitle>
-                        </CardHeader>
-
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {stats.total_stock}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm">
-                                Valor Inventário
-                            </CardTitle>
-                        </CardHeader>
-
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {Number(stats.inventory_value).toLocaleString()}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm">
-                                Stock Baixo
-                            </CardTitle>
-                        </CardHeader>
-
-                        <CardContent>
-                            <div className="text-2xl font-bold text-amber-600">
-                                {stats.low_stock}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm">
-                                Sem Stock
-                            </CardTitle>
-                        </CardHeader>
-
-                        <CardContent>
-                            <div className="text-2xl font-bold text-red-600">
-                                {stats.out_of_stock}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                </div>
-
-                {/* PRODUTOS QUE REQUEREM ATENÇÃO */}
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>
-                            Produtos que Requerem Atenção
-                        </CardTitle>
-                    </CardHeader>
-
-                    <CardContent>
-
-                        <Table>
-
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Produto</TableHead>
-                                    <TableHead>Categoria</TableHead>
-                                    <TableHead>Estado</TableHead>
-                                </TableRow>
-                            </TableHeader>
-
-                            <TableBody>
-
-                                {attentionProducts.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={3}
-                                            className="text-center"
-                                        >
-                                            Nenhum produto requer atenção.
-                                        </TableCell>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="bg-slate-50 hover:bg-slate-50 border-b border-slate-100">
+                                        <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9">PRODUTO</TableHead>
+                                        <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9">CATEGORIA</TableHead>
+                                        <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9">ESTADO</TableHead>
+                                        <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9 text-right">ACÇÕES</TableHead>
                                     </TableRow>
-                                ) : (
-                                    attentionProducts.map((product: any) => (
-                                        <TableRow key={`${product.status}-${product.id}`}>
-
-                                            <TableCell className="font-medium">
-                                                {product.name}
+                                </TableHeader>
+                                <TableBody>
+                                    {attentionProducts.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-32 text-center">
+                                                <div className="flex flex-col items-center gap-2 text-slate-400">
+                                                    <PackageSearch className="h-7 w-7" />
+                                                    <span className="text-sm">Nenhum produto requer atenção.</span>
+                                                </div>
                                             </TableCell>
-
-                                            <TableCell>
-                                                {product.category?.name}
-                                            </TableCell>
-
-                                            <TableCell>
-                                                {product.status === "out" ? (
-                                                    <Badge variant="destructive">
-                                                        Esgotado
-                                                    </Badge>
-                                                ) : (
-                                                    <Badge variant="secondary">
-                                                        Stock Baixo
-                                                    </Badge>
-                                                )}
-                                            </TableCell>
-
                                         </TableRow>
-                                    ))
-                                )}
+                                    ) : (
+                                        attentionProducts.map((product: any) => (
+                                            <TableRow
+                                                key={`${product.alertStatus}-${product.id}`}
+                                                className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
+                                            >
+                                                <TableCell className="py-3 font-medium text-slate-900 text-sm">
+                                                    {product.name}
+                                                </TableCell>
+                                                <TableCell className="py-3 text-slate-500 text-sm">
+                                                    {product.category?.name ?? '—'}
+                                                </TableCell>
+                                                <TableCell className="py-3">
+                                                    <StockBadge status={product.alertStatus === 'out_of_stock' ? 'out_of_stock' : 'low'} />
+                                                </TableCell>
+                                                <TableCell className="py-3 text-right">
+                                                    <Link
+                                                        href={`/products/${product.id}`}
+                                                        className="text-xs text-[#2DB8A0] font-medium hover:underline"
+                                                    >
+                                                        Ver
+                                                    </Link>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableCard>
+                    </div>
 
-                            </TableBody>
-
-                        </Table>
-
-                    </CardContent>
-                </Card>
-
-                {/* GRID INFERIOR */}
-
-                <div className="grid gap-6 xl:grid-cols-2">
-
-                    {/* ARMAZÉNS */}
-
-                    <Card>
-
-                        <CardHeader>
-                            <CardTitle>
-                                Stock por Armazém
-                            </CardTitle>
-                        </CardHeader>
-
-                        <CardContent>
-
-                            <div className="grid gap-4">
-
-                                {warehouseSummary.map((warehouse: any) => (
-                                    <div
-                                        key={warehouse.id}
-                                        className="rounded-lg border p-4"
-                                    >
-                                        <div className="flex items-center justify-between">
-
-                                            <div>
-
-                                                <div className="font-semibold">
+                    {/* Stock por Armazém */}
+                    <div className="xl:col-span-2 space-y-4">
+                        <TableCard className="overflow-visible">
+                            <div className="px-5 py-4 border-b border-slate-100">
+                                <h2 className="text-sm font-semibold text-slate-900">Stock por Armazém</h2>
+                                <p className="text-xs text-slate-500 mt-0.5">Quantidade por unidade logística</p>
+                            </div>
+                            <div className="p-4 space-y-2">
+                                {warehouseSummary.length === 0 ? (
+                                    <p className="text-sm text-slate-400 text-center py-4">Nenhum armazém.</p>
+                                ) : (
+                                    warehouseSummary.map((warehouse: any) => (
+                                        <div
+                                            key={warehouse.id}
+                                            className="flex items-center justify-between rounded-[4px] border border-slate-100 bg-slate-50/50 px-4 py-3"
+                                        >
+                                            <div className="min-w-0">
+                                                <div className="text-sm font-semibold text-slate-900 truncate">
                                                     {warehouse.name}
                                                 </div>
-
-                                                <div className="text-sm text-muted-foreground">
-                                                    {warehouse.products} produtos
+                                                <div className="text-xs text-slate-400 mt-0.5">
+                                                    {warehouse.products} produto{warehouse.products !== 1 ? 's' : ''}
                                                 </div>
-
                                             </div>
-
-                                            <div className="text-right">
-
-                                                <div className="font-bold">
-                                                    {warehouse.quantity}
+                                            <div className="text-right flex-shrink-0 ml-4">
+                                                <div className="text-sm font-bold text-slate-900">
+                                                    {Number(warehouse.quantity).toLocaleString()}
                                                 </div>
-
-                                                <div className="text-xs text-muted-foreground">
+                                                <div className="text-[10px] text-slate-400 uppercase tracking-wide">
                                                     unidades
                                                 </div>
-
                                             </div>
-
                                         </div>
-                                    </div>
-                                ))}
-
+                                    ))
+                                )}
                             </div>
-
-                        </CardContent>
-
-                    </Card>
-
-                    {/* MOVIMENTOS */}
-
-                    <Card>
-
-                        <CardHeader>
-                            <CardTitle>
-                                Movimentos Recentes
-                            </CardTitle>
-                        </CardHeader>
-
-                        <CardContent>
-
-                            <div className="space-y-4">
-
-                                {recentMovements.map((movement: any) => (
-
-                                    <div
-                                        key={movement.id}
-                                        className="flex items-center justify-between border-b pb-3"
-                                    >
-                                        <div>
-
-                                            <div className="font-medium">
-                                                {movement.product?.name}
-                                            </div>
-
-                                            <div className="text-sm text-muted-foreground">
-                                                {movement.warehouse?.name}
-                                            </div>
-
-                                        </div>
-
-                                        <div className="text-right">
-
-                                            <Badge variant="outline">
-                                                {movementLabels[movement.type]}
-                                            </Badge>
-
-                                            <div className="mt-1 text-sm">
-                                                {movement.quantity}
-                                            </div>
-
-                                        </div>
-
-                                    </div>
-                                ))}
-
-                            </div>
-
-                        </CardContent>
-
-                    </Card>
-
+                        </TableCard>
+                    </div>
                 </div>
 
+                {/* Movimentos Recentes */}
+                <TableCard>
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                        <div>
+                            <h2 className="text-sm font-semibold text-slate-900">Movimentos Recentes</h2>
+                            <p className="text-xs text-slate-500 mt-0.5">Últimas entradas e saídas de stock</p>
+                        </div>
+                        <Link
+                            href="/inventory/movements"
+                            className="text-xs text-[#2DB8A0] font-medium hover:underline"
+                        >
+                            Ver todos
+                        </Link>
+                    </div>
+
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="bg-slate-50 hover:bg-slate-50 border-b border-slate-100">
+                                <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9">PRODUTO</TableHead>
+                                <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9">ARMAZÉM</TableHead>
+                                <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9">TIPO</TableHead>
+                                <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9 text-right">QUANTIDADE</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {recentMovements.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="h-24 text-center text-slate-400 text-sm">
+                                        Nenhum movimento registado.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                recentMovements.map((movement: any) => {
+                                    const typeInfo = movementLabels[movement.type] ?? { label: movement.type, color: 'bg-slate-100 text-slate-600' };
+                                    return (
+                                        <TableRow
+                                            key={movement.id}
+                                            className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
+                                        >
+                                            <TableCell className="py-3 font-medium text-slate-900 text-sm">
+                                                {movement.product?.name ?? '—'}
+                                            </TableCell>
+                                            <TableCell className="py-3 text-slate-500 text-sm">
+                                                {movement.warehouse?.name ?? '—'}
+                                            </TableCell>
+                                            <TableCell className="py-3">
+                                                <span className={`inline-flex items-center text-[11px] font-medium px-2 py-1 rounded-[4px] ${typeInfo.color}`}>
+                                                    {typeInfo.label}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="py-3 text-right">
+                                                <span className={`text-sm font-bold ${movement.type === 'out' ? 'text-red-600' : movement.type === 'in' ? 'text-[#2DB8A0]' : 'text-slate-700'}`}>
+                                                    {movement.type === 'out' ? '−' : movement.type === 'in' ? '+' : ''}
+                                                    {Number(movement.quantity).toLocaleString()}
+                                                </span>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableCard>
             </div>
         </>
     );

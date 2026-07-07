@@ -1,5 +1,5 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { MapPin, Plus, Trash2, Phone, Hash, MoreVertical } from 'lucide-react';
+import { MapPin, Plus, Trash2, Phone, Hash, Pencil, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -20,9 +20,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { PageHeader, StockBadge, TableCard, PrimaryButton, OutlineButton } from '@/components/ui/brand';
 
 interface Branch {
     id: number;
@@ -96,168 +96,201 @@ export default function BranchesIndex() {
 
     return (
         <>
-            <Head title="Gestão de Unidades" />
+            <Head title="Filiais" />
 
             <div className="flex flex-col gap-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-white italic">Unidades de Negócio</h1>
-                        <p className="text-muted-foreground text-sm">
-                            Gerencie os locais físicos e filiais da sua empresa.
-                        </p>
-                    </div>
+                {/* Page Header */}
+                <PageHeader
+                    title="Filiais"
+                    subtitle="Gerencie as unidades da sua empresa"
+                    actions={
+                        <Dialog open={open} onOpenChange={(val) => {
+                            setOpen(val);
+                            if (!val) setEditingBranch(null);
+                        }}>
+                            <DialogTrigger asChild>
+                                <PrimaryButton onClick={handleNew} className="gap-1.5 h-9 px-3.5">
+                                    <Plus className="h-3.5 w-3.5" />
+                                    Nova Filial
+                                </PrimaryButton>
+                            </DialogTrigger>
+                            <DialogContent className="rounded-[4px]">
+                                <form onSubmit={submit}>
+                                    <DialogHeader>
+                                        <DialogTitle className="text-slate-900">
+                                            {editingBranch ? 'Editar Filial' : 'Adicionar Filial'}
+                                        </DialogTitle>
+                                        <DialogDescription className="text-slate-500">
+                                            {editingBranch
+                                                ? 'Atualize os dados da filial selecionada.'
+                                                : 'Preencha os dados da nova filial ou ponto de venda.'}
+                                        </DialogDescription>
+                                    </DialogHeader>
 
-                    <Dialog open={open} onOpenChange={(val) => {
-                        setOpen(val);
-                        if(!val) setEditingBranch(null);
-                    }}>
-                        <DialogTrigger asChild>
-                            <Button className="gap-2" onClick={handleNew}>
-                                <Plus className="h-4 w-4" />
-                                Nova Unidade
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <form onSubmit={submit}>
-                                <DialogHeader>
-                                    <DialogTitle>{editingBranch ? 'Editar Unidade' : 'Adicionar Unidade'}</DialogTitle>
-                                    <DialogDescription>
-                                        {editingBranch ? 'Atualize os dados da unidade selecionada.' : 'Preencha os dados da nova filial ou ponto de venda.'}
-                                    </DialogDescription>
-                                </DialogHeader>
-
-                                <div className="grid gap-4 py-4">
-                                    <div className="grid gap-2 text-zinc-800 dark:text-zinc-200">
-                                        <Label htmlFor="name">Nome da Unidade</Label>
-                                        <Input
-                                            id="name"
-                                            value={data.name}
-                                            onChange={(e) => setData('name', e.target.value)}
-                                            placeholder="Ex: Loja Central, Depósito Norte"
-                                        />
-                                        {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="code" className="text-zinc-800 dark:text-zinc-200">Código / Indentificador</Label>
+                                    <div className="grid gap-4 py-4">
+                                        <div className="grid gap-1.5">
+                                            <Label htmlFor="name" className="text-sm font-medium text-slate-700">
+                                                Nome da Filial
+                                            </Label>
                                             <Input
-                                                id="code"
-                                                value={data.code}
-                                                onChange={(e) => setData('code', e.target.value)}
-                                                placeholder="Ex: UN-001"
+                                                id="name"
+                                                value={data.name}
+                                                onChange={(e) => setData('name', e.target.value)}
+                                                placeholder="Ex: Loja Central, Depósito Norte"
+                                                className="border border-slate-200 rounded-[4px] focus:ring-1 focus:ring-[#2DB8A0]"
                                             />
-                                            {errors.code && <p className="text-sm text-red-500">{errors.code}</p>}
+                                            {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
                                         </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="phone" className="text-zinc-800 dark:text-zinc-200">Telefone de Contato</Label>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid gap-1.5">
+                                                <Label htmlFor="code" className="text-sm font-medium text-slate-700">
+                                                    Código
+                                                </Label>
+                                                <Input
+                                                    id="code"
+                                                    value={data.code}
+                                                    onChange={(e) => setData('code', e.target.value)}
+                                                    placeholder="Ex: UN-001"
+                                                    className="border border-slate-200 rounded-[4px] focus:ring-1 focus:ring-[#2DB8A0]"
+                                                />
+                                                {errors.code && <p className="text-xs text-red-500">{errors.code}</p>}
+                                            </div>
+                                            <div className="grid gap-1.5">
+                                                <Label htmlFor="phone" className="text-sm font-medium text-slate-700">
+                                                    Telefone
+                                                </Label>
+                                                <Input
+                                                    id="phone"
+                                                    value={data.phone}
+                                                    onChange={(e) => setData('phone', e.target.value)}
+                                                    placeholder="+258..."
+                                                    className="border border-slate-200 rounded-[4px] focus:ring-1 focus:ring-[#2DB8A0]"
+                                                />
+                                                {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
+                                            </div>
+                                        </div>
+
+                                        <div className="grid gap-1.5">
+                                            <Label htmlFor="address" className="text-sm font-medium text-slate-700">
+                                                Endereço Completo
+                                            </Label>
                                             <Input
-                                                id="phone"
-                                                value={data.phone}
-                                                onChange={(e) => setData('phone', e.target.value)}
-                                                placeholder="+258..."
+                                                id="address"
+                                                value={data.address}
+                                                onChange={(e) => setData('address', e.target.value)}
+                                                placeholder="Rua, Bairro, Cidade..."
+                                                className="border border-slate-200 rounded-[4px] focus:ring-1 focus:ring-[#2DB8A0]"
                                             />
-                                            {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
+                                            {errors.address && <p className="text-xs text-red-500">{errors.address}</p>}
                                         </div>
                                     </div>
 
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="address" className="text-zinc-800 dark:text-zinc-200">Endereço Completo</Label>
-                                        <Input
-                                            id="address"
-                                            value={data.address}
-                                            onChange={(e) => setData('address', e.target.value)}
-                                            placeholder="Rua, Bairro, Cidade..."
-                                        />
-                                        {errors.address && <p className="text-sm text-red-500">{errors.address}</p>}
-                                    </div>
-                                </div>
+                                    <DialogFooter>
+                                        <OutlineButton type="button" onClick={() => setOpen(false)}>
+                                            Cancelar
+                                        </OutlineButton>
+                                        <PrimaryButton type="submit" className={processing ? 'opacity-60 cursor-not-allowed' : ''}>
+                                            {processing ? 'A guardar...' : (editingBranch ? 'Atualizar' : 'Guardar')}
+                                        </PrimaryButton>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    }
+                />
 
-                                <DialogFooter>
-                                    <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                                        Cancelar
-                                    </Button>
-                                    <Button type="submit" disabled={processing}>
-                                        {processing ? 'Gravando...' : (editingBranch ? 'Atualizar Unidade' : 'Salvar Unidade')}
-                                    </Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
-                </div>
-
-                <div className="rounded-xl border border-zinc-200/50 bg-white/70 backdrop-blur-md dark:bg-zinc-900/70 overflow-hidden shadow-xs">
+                {/* Table */}
+                <TableCard>
                     <Table>
-                        <TableHeader className="bg-zinc-50/50 dark:bg-zinc-800/30">
-                            <TableRow>
-                                <TableHead className="w-[300px]">Nome / Código</TableHead>
-                                <TableHead>Contato</TableHead>
-                                <TableHead>Localização</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Ações</TableHead>
+                        <TableHeader className="bg-slate-50">
+                            <TableRow className="border-b border-slate-200">
+                                <TableHead className="w-[280px] text-[11px] font-semibold uppercase tracking-wide text-slate-500 py-3">
+                                    Filial
+                                </TableHead>
+                                <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 py-3">
+                                    Empresa
+                                </TableHead>
+                                <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 py-3">
+                                    Tipo
+                                </TableHead>
+                                <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 py-3">
+                                    Estado
+                                </TableHead>
+                                <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 py-3">
+                                    Acções
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {branches.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
-                                        Nenhuma unidade cadastrada.
+                                    <TableCell colSpan={5} className="h-40 text-center">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Building2 className="h-8 w-8 text-slate-300" />
+                                            <p className="text-sm text-slate-400">Nenhuma filial cadastrada.</p>
+                                            <p className="text-xs text-slate-300">Clique em &quot;Nova Filial&quot; para começar.</p>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 branches.map((branch) => (
-                                    <TableRow key={branch.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30">
-                                        <TableCell>
+                                    <TableRow key={branch.id} className="hover:bg-slate-50 border-b border-slate-100 last:border-0">
+                                        {/* FILIAL — name + address sub */}
+                                        <TableCell className="py-3">
                                             <div className="flex flex-col gap-0.5">
-                                                <span className="font-semibold text-zinc-900 dark:text-zinc-100 italic">{branch.name}</span>
-                                                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono uppercase tracking-tighter">
-                                                    <Hash className="h-2.5 w-2.5" />
-                                                    {branch.code}
+                                                <span className="font-semibold text-[13px] text-slate-900">{branch.name}</span>
+                                                <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                                                    {branch.address ? (
+                                                        <>
+                                                            <MapPin className="h-3 w-3 flex-shrink-0" />
+                                                            <span className="truncate max-w-[200px]">{branch.address}</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Hash className="h-3 w-3 flex-shrink-0" />
+                                                            <span className="font-mono uppercase tracking-wider">{branch.code}</span>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
                                         </TableCell>
-                                        <TableCell>
-                                            {branch.phone ? (
-                                                <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-                                                    <Phone className="h-3 w-3 text-zinc-400" />
-                                                    {branch.phone}
-                                                </div>
-                                            ) : (
-                                                <span className="text-xs text-zinc-300 italic">-</span>
-                                            )}
+
+                                        {/* EMPRESA */}
+                                        <TableCell className="py-3">
+                                            <span className="text-[12px] text-slate-600">—</span>
                                         </TableCell>
-                                        <TableCell>
-                                            {branch.address ? (
-                                                <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400 truncate max-w-[200px]">
-                                                    <MapPin className="h-3 w-3 text-zinc-400" />
-                                                    {branch.address}
-                                                </div>
-                                            ) : (
-                                                <span className="text-xs text-zinc-300 italic">-</span>
-                                            )}
+
+                                        {/* TIPO */}
+                                        <TableCell className="py-3">
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-[4px] text-[10px] font-semibold bg-slate-100 text-slate-600 uppercase tracking-wide">
+                                                Filial
+                                            </span>
                                         </TableCell>
-                                        <TableCell>
-                                            <Badge variant={branch.status === 'active' ? 'default' : 'secondary'} className="px-1.5 py-0 text-[10px] font-bold">
-                                                ATIVA
-                                            </Badge>
+
+                                        {/* ESTADO */}
+                                        <TableCell className="py-3">
+                                            <StockBadge status={branch.status === 'active' ? 'active' : 'inactive'} />
                                         </TableCell>
-                                        <TableCell className="text-right">
+
+                                        {/* ACÇÕES */}
+                                        <TableCell className="py-3 text-right">
                                             <div className="flex justify-end gap-1">
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
                                                     onClick={() => handleEdit(branch)}
-                                                    className="h-8 w-8 text-zinc-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                                                    className="h-8 w-8 text-slate-400 hover:text-[#2DB8A0] hover:bg-[#2DB8A0]/10 rounded-[4px]"
                                                 >
-                                                    <MoreVertical className="h-4 w-4" />
+                                                    <Pencil className="h-3.5 w-3.5" />
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
                                                     onClick={() => deleteBranch(branch.id)}
-                                                    className="h-8 w-8 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+                                                    className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-[4px]"
                                                 >
-                                                    <Trash2 className="h-4 w-4" />
+                                                    <Trash2 className="h-3.5 w-3.5" />
                                                 </Button>
                                             </div>
                                         </TableCell>
@@ -266,7 +299,7 @@ export default function BranchesIndex() {
                             )}
                         </TableBody>
                     </Table>
-                </div>
+                </TableCard>
             </div>
         </>
     );

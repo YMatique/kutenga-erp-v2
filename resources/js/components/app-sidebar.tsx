@@ -1,7 +1,14 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, MapPin, Package, Receipt, Settings, ShoppingCart, Users, Warehouse } from 'lucide-react';
-import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
+import {
+    LayoutGrid,
+    Package,
+    Receipt,
+    Settings,
+    ShoppingCart,
+    Users,
+    Warehouse,
+    MapPin,
+} from 'lucide-react';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { CompanySwitcher } from '@/components/company-switcher';
@@ -10,13 +17,10 @@ import {
     SidebarContent,
     SidebarFooter,
     SidebarHeader,
-    SidebarMenu,
-    SidebarMenuItem,
-    SidebarMenuButton,
+    useSidebar,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
-import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
 const mainNavItems: NavItem[] = [
@@ -25,7 +29,6 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
-
     {
         title: 'Catálogo',
         icon: Package,
@@ -36,21 +39,19 @@ const mainNavItems: NavItem[] = [
             { title: 'Unidades', href: '/units' },
         ],
     },
-
     {
         title: 'Inventário',
         icon: Warehouse,
         items: [
-            {title:'Dashboard', href:'/inventory'},
+            { title: 'Dashboard', href: '/inventory' },
             { title: 'Movimentos', href: '/inventory/movements' },
             { title: 'Armazéns', href: '/inventory/warehouses' },
             { title: 'Transferências', href: '/inventory/transfers' },
-            {title: 'Ajustes de Stock', href: '/inventory/adjustments' },
+            { title: 'Ajustes de Stock', href: '/inventory/adjustments' },
             { title: 'Stock', href: '/inventory/stocks' },
-            {title: 'Opening Balance', href:'/inventory/opening'}
+            { title: 'Opening Balance', href: '/inventory/opening' },
         ],
     },
-
     {
         title: 'Faturação',
         icon: Receipt,
@@ -63,7 +64,6 @@ const mainNavItems: NavItem[] = [
             { title: 'Pagamentos', href: '/payments' },
         ],
     },
-
     {
         title: 'Ponto de Venda',
         icon: ShoppingCart,
@@ -72,7 +72,6 @@ const mainNavItems: NavItem[] = [
             { title: 'Sessões', href: '/pos/sessions' },
         ],
     },
-
     {
         title: 'Unidades',
         icon: MapPin,
@@ -81,7 +80,6 @@ const mainNavItems: NavItem[] = [
             { title: 'Filiais', href: '/branches' },
         ],
     },
-
     {
         title: 'Utilizadores',
         icon: Users,
@@ -90,7 +88,6 @@ const mainNavItems: NavItem[] = [
             { title: 'Funções', href: '/roles' },
         ],
     },
-
     {
         title: 'Configurações',
         icon: Settings,
@@ -101,39 +98,54 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
-
 export function AppSidebar() {
-    const { state, isMobile } = useSidebar();
-    const sidebarOpen = state === "expanded";
+    const { state } = useSidebar();
+    const sidebarOpen = state === 'expanded';
 
     return (
-        <Sidebar 
-            collapsible="icon" 
+        <Sidebar
+            collapsible="icon"
             className="bg-transparent border-none shadow-none"
         >
-            <SidebarHeader className="p-2">
-                <CompanySwitcher />
+            {/* Logo area */}
+            <SidebarHeader className="px-3 py-3 border-b border-white/6">
+                <Link
+                    href={dashboard()}
+                    className={cn(
+                        'flex items-center gap-3 h-10 rounded-md px-1 transition-all',
+                        'hover:opacity-90',
+                    )}
+                >
+                    <div className="flex h-8 w-8 items-center justify-center flex-shrink-0">
+                        <img
+                            src="/kutenga-logo.png"
+                            alt="Kutenga"
+                            className="h-8 w-8 object-contain"
+                        />
+                    </div>
+                    {sidebarOpen && (
+                        <div className="leading-tight overflow-hidden">
+                            <span className="text-white font-bold text-[15px] tracking-tight block truncate">
+                                Kutenga
+                            </span>
+                            <span className="text-slate-500 text-[10px] font-medium tracking-widest uppercase block">
+                                ERP
+                            </span>
+                        </div>
+                    )}
+                </Link>
+
+                {/* Branch/Company switcher */}
+                <div className="mt-3">
+                    <CompanySwitcher />
+                </div>
             </SidebarHeader>
 
-            <SidebarContent>
+            <SidebarContent className="overflow-y-auto overflow-x-hidden py-2">
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
-            <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
+            <SidebarFooter className="border-t border-white/6 px-3 py-3">
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

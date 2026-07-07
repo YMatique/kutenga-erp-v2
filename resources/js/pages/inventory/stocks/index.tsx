@@ -1,31 +1,33 @@
 import { Head, Link } from '@inertiajs/react'
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Eye, Layers, PackageSearch } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table'
-import { Eye, Layers } from 'lucide-react'
+    PageHeader,
+    StockBadge,
+    TableCard,
+    PrimaryButton,
+} from '@/components/ui/brand'
 
-// Mantendo suas interfaces limpas e bem tipadas
+// ─── Types ───────────────────────────────────────────────────────────────────
+
 interface Product {
     id: number
     name: string
+    sku?: string | null
+    min_stock?: number
 }
 
 interface Warehouse {
     id: number
     name: string
+    location?: string | null
 }
 
 interface Stock {
     id: number
     quantity: number
+    reserved?: number
+    available?: number
     product: Product
     warehouse: Warehouse
 }
@@ -34,90 +36,154 @@ interface Props {
     stocks: Stock[]
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function resolveStockStatus(
+    qty: number,
+    minStock: number,
+): 'in_stock' | 'low' | 'out_of_stock' {
+    if (qty <= 0) return 'out_of_stock'
+    if (qty <= minStock) return 'low'
+    return 'in_stock'
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function Index({ stocks }: Props) {
     return (
         <>
             <Head title="Stock Geral" />
 
-            <div className="p-6 space-y-6  mx-auto">
-                
-                {/* HEADER */}
-                <div className="flex flex-col gap-1 border-b pb-5">
-                    <div className="flex items-center gap-2">
-                        <Layers className="h-6 w-6 text-slate-700" />
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                            Stock Geral
-                        </h1>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                        Visão consolidada de inventário distribuído por produto e armazém
-                    </p>
-                </div>
+            <div className="p-6 space-y-4 bg-slate-50 min-h-screen">
+
+                {/* PAGE HEADER */}
+                <PageHeader
+                    title="Stock Geral"
+                    subtitle="Visão consolidada de inventário distribuído por produto e armazém"
+                    actions={
+                        <Link href="/inventory/stocks/export">
+                            <PrimaryButton>
+                                <Layers className="h-4 w-4" />
+                                Exportar
+                            </PrimaryButton>
+                        </Link>
+                    }
+                />
 
                 {/* TABLE CARD */}
-                <Card className="shadow-sm overflow-hidden">
-                    <Table>
-                        <TableHeader className="bg-slate-50/75">
-                            <TableRow>
-                                <TableHead className="font-semibold text-slate-700">Produto</TableHead>
-                                <TableHead className="font-semibold text-slate-700">Armazém</TableHead>
-                                <TableHead className="text-right font-semibold text-slate-700 w-[150px]">Stock</TableHead>
-                                <TableHead className="text-right font-semibold text-slate-700 w-[120px]">Ações</TableHead>
-                            </TableRow>
-                        </TableHeader>
+                <TableCard>
+                    <table className="w-full text-sm">
 
-                        <TableBody>
+                        {/* TABLE HEAD */}
+                        <thead className="bg-slate-50 border-b border-slate-100">
+                            <tr>
+                                <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                    Produto
+                                </th>
+                                <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                    SKU
+                                </th>
+                                <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                    Armazém
+                                </th>
+                                <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                    Quantidade
+                                </th>
+                                <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                    Reservado
+                                </th>
+                                <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                    Disponível
+                                </th>
+                                <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                    Status
+                                </th>
+                                <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                    Ações
+                                </th>
+                            </tr>
+                        </thead>
+
+                        {/* TABLE BODY */}
+                        <tbody>
                             {stocks.length === 0 ? (
-                                <TableRow>
-                                    <TableCell 
-                                        colSpan={4} 
-                                        className="h-32 text-center text-muted-foreground text-sm"
-                                    >
-                                        Nenhum registo de stock encontrado no sistema.
-                                    </TableCell>
-                                </TableRow>
+                                <tr>
+                                    <td colSpan={8}>
+                                        <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-400">
+                                            <PackageSearch className="h-10 w-10" />
+                                            <p className="text-sm font-medium">Nenhum registo de stock encontrado no sistema.</p>
+                                        </div>
+                                    </td>
+                                </tr>
                             ) : (
-                                stocks.map((stock) => (
-                                    <TableRow 
-                                        key={stock.id} 
-                                        className="hover:bg-slate-50/50 transition-colors"
-                                    >
-                                        {/* Nome do Produto */}
-                                        <TableCell className="font-medium text-slate-900 py-3.5">
-                                            {stock.product.name}
-                                        </TableCell>
+                                stocks.map((stock) => {
+                                    const reserved = stock.reserved ?? 0
+                                    const available = stock.available ?? (stock.quantity - reserved)
+                                    const minStock = stock.product.min_stock ?? 5
+                                    const status = resolveStockStatus(stock.quantity, minStock)
 
-                                        {/* Nome do Armazém */}
-                                        <TableCell className="text-slate-600">
-                                            {stock.warehouse.name}
-                                        </TableCell>
+                                    return (
+                                        <tr
+                                            key={stock.id}
+                                            className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
+                                        >
+                                            {/* PRODUTO */}
+                                            <td className="px-4 py-3 font-medium text-slate-900">
+                                                {stock.product.name}
+                                            </td>
 
-                                        {/* Quantidade */}
-                                        <TableCell className="text-right font-semibold font-mono text-slate-900">
-                                            {stock.quantity}
-                                        </TableCell>
+                                            {/* SKU */}
+                                            <td className="px-4 py-3">
+                                                <span className="font-mono text-[11px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-[4px]">
+                                                    {stock.product.sku ?? '—'}
+                                                </span>
+                                            </td>
 
-                                        {/* Botão de Ação */}
-                                        <TableCell className="text-right">
-                                            <Button 
-                                                variant="ghost" 
-                                                size="sm" 
-                                                className="h-8 gap-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                asChild
-                                            >
-                                                <Link href={`/inventory/stocks/${stock.product.id}`}>
+                                            {/* ARMAZÉM */}
+                                            <td className="px-4 py-3 text-slate-600">
+                                                {stock.warehouse.name}
+                                            </td>
+
+                                            {/* QUANTIDADE */}
+                                            <td className="px-4 py-3 text-right font-mono font-semibold text-slate-900">
+                                                {stock.quantity.toLocaleString('pt-MZ')}
+                                            </td>
+
+                                            {/* RESERVADO */}
+                                            <td className="px-4 py-3 text-right font-mono text-slate-500">
+                                                {reserved.toLocaleString('pt-MZ')}
+                                            </td>
+
+                                            {/* DISPONÍVEL */}
+                                            <td className={cn(
+                                                'px-4 py-3 text-right font-mono font-semibold',
+                                                available > 0 ? 'text-[#2DB8A0]' : 'text-red-500',
+                                            )}>
+                                                {available.toLocaleString('pt-MZ')}
+                                            </td>
+
+                                            {/* STATUS */}
+                                            <td className="px-4 py-3">
+                                                <StockBadge status={status} />
+                                            </td>
+
+                                            {/* AÇÕES */}
+                                            <td className="px-4 py-3 text-right">
+                                                <Link
+                                                    href={`/inventory/stocks/${stock.product.id}`}
+                                                    className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium border border-slate-200 bg-white text-slate-700 rounded-[4px] hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                                                >
                                                     <Eye className="h-3.5 w-3.5" />
                                                     Detalhes
                                                 </Link>
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                            </td>
+                                        </tr>
+                                    )
+                                })
                             )}
-                        </TableBody>
-                    </Table>
-                </Card>
-
+                        </tbody>
+                    </table>
+                </TableCard>
             </div>
         </>
     )
