@@ -42,4 +42,31 @@ class Invoice extends Document
             $customer->increment('balance', $this->grand_total);
         }
     }
+
+    public function reverseStock(StockService $stockService, Warehouse $warehouse): void
+    {
+        foreach ($this->items as $item) {
+            if ($item->product_id) {
+                $product = Product::findOrFail($item->product_id);
+                if ($product->track_stock) {
+                    $stockService->in(
+                        $product,
+                        $warehouse,
+                        (float) $item->quantity,
+                        'document',
+                        $this->id,
+                        "Entrada física automática por cancelamento da Fatura {$this->document_number}"
+                    );
+                }
+            }
+        }
+    }
+
+    public function reverseFinancial(): void
+    {
+        if ($this->customer_id) {
+            $customer = Customer::findOrFail($this->customer_id);
+            $customer->decrement('balance', $this->grand_total);
+        }
+    }
 }

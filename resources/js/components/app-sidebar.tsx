@@ -52,11 +52,14 @@ const mainNavItems: NavItem[] = [
     },
 
     {
-        title: 'Vendas',
+        title: 'Faturação',
         icon: Receipt,
         items: [
-            { title: 'Faturas', href: '/invoices' },
-            { title: 'Clientes', href: '/customers' },
+            { title: 'Cotações', href: '/billing/quotes' },
+            { title: 'Faturas a Crédito', href: '/billing/invoices' },
+            { title: 'Faturas-Recibo', href: '/billing/receipts' },
+            { title: 'Notas de Crédito', href: '/billing/credit-notes' },
+            { title: 'Clientes', href: '/billing/customers' },
             { title: 'Pagamentos', href: '/payments' },
         ],
     },

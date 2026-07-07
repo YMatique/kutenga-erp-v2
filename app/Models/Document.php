@@ -159,6 +159,16 @@ class Document extends Model
         // Por padrão, não faz nada
     }
 
+    public function reverseStock(StockService $stockService, Warehouse $warehouse): void
+    {
+        // Por padrão, não faz nada
+    }
+
+    public function reverseFinancial(): void
+    {
+        // Por padrão, não faz nada
+    }
+
     public function series(): BelongsTo
     {
         return $this->belongsTo(DocumentSeries::class, 'series_id');

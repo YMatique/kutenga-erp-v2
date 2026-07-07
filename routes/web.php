@@ -7,6 +7,10 @@ use App\Http\Controllers\ContextController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentSeriesController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\ReceiptController;
+use App\Http\Controllers\CreditNoteController;
 use App\Http\Controllers\InventoryDashboardController;
 use App\Http\Controllers\InventoryOpeningController;
 use App\Http\Controllers\ProductController;
@@ -75,11 +79,26 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     Route::prefix('billing')->name('billing.')->group(function () {
         Route::resource('series', DocumentSeriesController::class)
             ->only(['index', 'store', 'update', 'destroy']);
-        // Rotas de Documentos (Faturas, Recibos, etc)
-        Route::resource('documents', DocumentController::class);
-        // Route::resource('documents', DocumentController::class);
-        Route::post('documents/{id}/confirm', [DocumentController::class, 'confirm'])->name('documents.confirm');
-        Route::post('documents/receive-payment', [DocumentController::class, 'receivePayment'])->name('documents.receive-payment');
+        // Faturas (FT)
+        Route::resource('invoices', InvoiceController::class);
+        Route::post('invoices/{id}/confirm', [InvoiceController::class, 'confirm'])->name('invoices.confirm');
+        Route::post('invoices/{id}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
+        Route::post('invoices/receive-payment', [InvoiceController::class, 'receivePayment'])->name('invoices.receive-payment');
+
+        // Cotações (CT)
+        Route::resource('quotes', QuoteController::class);
+        Route::post('quotes/{id}/confirm', [QuoteController::class, 'confirm'])->name('quotes.confirm');
+        Route::post('quotes/{id}/cancel', [QuoteController::class, 'cancel'])->name('quotes.cancel');
+
+        // Faturas-Recibo (FR)
+        Route::resource('receipts', ReceiptController::class);
+        Route::post('receipts/{id}/confirm', [ReceiptController::class, 'confirm'])->name('receipts.confirm');
+        Route::post('receipts/{id}/cancel', [ReceiptController::class, 'cancel'])->name('receipts.cancel');
+
+        // Notas de Crédito (NC)
+        Route::resource('credit-notes', CreditNoteController::class);
+        Route::post('credit-notes/{id}/confirm', [CreditNoteController::class, 'confirm'])->name('credit-notes.confirm');
+        Route::post('credit-notes/{id}/cancel', [CreditNoteController::class, 'cancel'])->name('credit-notes.cancel');
 
         // Rotas de Clientes
         Route::resource('customers', CustomerController::class);

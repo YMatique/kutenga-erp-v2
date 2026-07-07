@@ -11,6 +11,7 @@ use App\Models\PaymentAllocation;
 use App\Models\Product;
 use App\Models\Warehouse;
 use App\Services\Inventory\StockService;
+use App\Models\StockMovement;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -151,7 +152,7 @@ class BillingService
      * EMISSÃO E CONFIRMAÇÃO OFICIAL
      * Tranca as tabelas, gera o sequencial único fiscal e dá a baixa física de stock no armazém.
      */
-    public function confirmAndEmit(int $documentId, Warehouse $warehouse): Document
+    public function confirmAndEmit(int $documentId, ?Warehouse $warehouse = null): Document
     {
         return DB::transaction(function () use ($documentId, $warehouse) {
             
@@ -190,7 +191,13 @@ class BillingService
             ]);
 
             // Movimentação física de stock conforme as regras de negócio do tipo de documento
-            $document->processStock($this->stockService, $warehouse);
+            if ($warehouse) {
+                $document->processStock($this->stockService, $warehouse);
+            } else {
+                if (in_array($document->document_type, ['FT', 'FR', 'NC', 'GR'])) {
+                    throw new Exception("Um armazém de saída/entrada é obrigatório para confirmar este documento.");
+                }
+            }
 
             // Registo e atualização de saldos de conta corrente do cliente
             $document->processFinancial();
@@ -259,6 +266,95 @@ class BillingService
             }
 
             return $payment->load('allocations');
+        });
+    }
+
+    /**
+     * Cancelamento / Estorno oficial de um documento.
+     */
+    public function cancel(int $documentId): Document
+    {
+        return DB::transaction(function () use ($documentId) {
+            $document = Document::lockForUpdate()->findOrFail($documentId);
+
+            if ($document->status === 'cancelled') {
+                throw new Exception("Este documento já se encontra cancelado.");
+            }
+
+            // Se for rascunho, apenas cancelamos o estado
+            if ($document->status === 'draft') {
+                $document->update([
+                    'status' => 'cancelled',
+                    'cancelled_by' => Auth::id()
+                ]);
+                return $document;
+            }
+
+            // Descobrir qual armazém foi usado para a movimentação
+            $warehouseId = StockMovement::where('source_type', 'document')
+                ->where('source_id', $document->id)
+                ->value('warehouse_id');
+
+            $warehouse = $warehouseId ? Warehouse::find($warehouseId) : Warehouse::where('company_id', $document->company_id)->where('is_active', true)->first();
+
+            if (!$warehouse && in_array($document->document_type, ['FT', 'FR', 'NC', 'GR'])) {
+                throw new Exception("Não foi possível determinar o armazém para reverter os movimentos de stock.");
+            }
+
+            // Reverte a movimentação física de stock
+            if ($warehouse) {
+                $document->reverseStock($this->stockService, $warehouse);
+            }
+
+            // Reverte a atualização de saldos de conta corrente do cliente
+            $document->reverseFinancial();
+
+            // Atualiza status e registo de cancelamento
+            $document->update([
+                'status' => 'cancelled',
+                'cancelled_by' => Auth::id()
+            ]);
+
+            return $document->load('items');
+        });
+    }
+
+    /**
+     * Atualização de um Rascunho Documental (Draft).
+     */
+    public function updateDraft(int $documentId, array $payload): Document
+    {
+        return DB::transaction(function () use ($documentId, $payload) {
+            $document = Document::lockForUpdate()->findOrFail($documentId);
+
+            if ($document->status !== 'draft') {
+                throw new Exception("Apenas rascunhos podem ser editados.");
+            }
+
+            $document->update([
+                'customer_id' => $payload['customer_id'] ?? null,
+                'customer_name' => $payload['customer_name'] ?? 'Consumidor Final',
+                'customer_nuit' => $payload['customer_nuit'] ?? '999999999',
+                'customer_phone' => $payload['customer_phone'] ?? null,
+                'customer_email' => $payload['customer_email'] ?? null,
+                'customer_address' => $payload['customer_address'] ?? 'Maputo, Moçambique',
+                'issue_date' => $payload['issue_date'] ?? $document->issue_date,
+                'due_date' => $payload['due_date'] ?? $document->due_date,
+                'notes' => $payload['notes'] ?? null,
+            ]);
+
+            // Limpa os itens antigos e insere os novos
+            $document->items()->delete();
+
+            if (!empty($payload['items'])) {
+                foreach ($payload['items'] as $item) {
+                    $this->addItem($document, $item);
+                }
+            }
+
+            $this->recalculateTotals($document);
+
+            return $document->load('items');
         });
     }
 }
