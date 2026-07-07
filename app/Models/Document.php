@@ -42,6 +42,23 @@ class Document extends Model
         return $model;
     }
 
+    /**
+     * Instancia dinamicamente a subclasse correta com base no document_type para novos registos.
+     */
+    public function newInstance($attributes = [], $exists = false)
+    {
+        $type = is_object($attributes) ? ($attributes->document_type ?? null) : ($attributes['document_type'] ?? null);
+        if (!$type) {
+            $type = $this->document_type ?? null;
+        }
+        $class = static::$typeMap[$type] ?? static::class;
+
+        $model = new $class((array) $attributes);
+        $model->exists = $exists;
+        $model->setConnection($this->getConnectionName());
+        return $model;
+    }
+
     protected $fillable = [
         'company_id',
         'branch_id',

@@ -70,6 +70,7 @@ class BillingStiTest extends TestCase
         $this->product = Product::create([
             'company_id' => $this->company->id,
             'name' => 'Test Product',
+            'slug' => 'test-product',
             'sku' => 'PROD-001',
             'price' => '100.00',
             'tax_rate' => '16.00',
