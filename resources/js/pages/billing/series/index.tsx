@@ -13,7 +13,6 @@ import {
     Dialog, DialogContent, DialogDescription, DialogFooter,
     DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
-import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
 interface Series {
@@ -117,7 +116,7 @@ export default function SeriesIndex({ series, filters }: Props) {
     const hasActiveFilters = filters.search;
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title="Séries Documentais" />
 
             <div className="flex items-center justify-between mb-6">
@@ -316,7 +315,7 @@ export default function SeriesIndex({ series, filters }: Props) {
                                                             </DialogFooter>
                                                         </DialogContent>
                                                     </Dialog>
-
+ 
                                                     <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-600" onClick={() => handleDelete(serie.id)}>
                                                         <Trash2 size={14} />
                                                     </Button>
@@ -326,7 +325,7 @@ export default function SeriesIndex({ series, filters }: Props) {
                                     ))}
                                 </TableBody>
                             </Table>
-
+ 
                             {/* Paginação */}
                             {series.last_page > 1 && (
                                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
@@ -357,6 +356,10 @@ export default function SeriesIndex({ series, filters }: Props) {
                     )}
                 </CardContent>
             </Card>
-        </AppLayout>
+        </>
     );
 }
+
+SeriesIndex.layout = {
+    breadcrumbs,
+};

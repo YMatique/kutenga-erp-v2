@@ -1,5 +1,11 @@
 import DocumentForm from '@/pages/billing/shared/document-form';
 
+const breadcrumbs = [
+    { title: 'Faturação', href: '#' },
+    { title: 'Cotações', href: '/billing/quotes' },
+    { title: 'Nova Cotação', href: '#' },
+];
+
 export default function QuotesCreate(props: any) {
     return (
         <DocumentForm
@@ -10,3 +16,7 @@ export default function QuotesCreate(props: any) {
         />
     );
 }
+
+QuotesCreate.layout = {
+    breadcrumbs,
+};

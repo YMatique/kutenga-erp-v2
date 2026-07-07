@@ -1,4 +1,5 @@
 import DocumentShow from '@/pages/billing/shared/document-show';
+import AppLayout from '@/layouts/app-layout';
 
 export default function ReceiptsShow({ document, ...props }: any) {
     return (
@@ -11,3 +12,17 @@ export default function ReceiptsShow({ document, ...props }: any) {
         />
     );
 }
+
+ReceiptsShow.layout = (page: any) => {
+    const doc = page.props.document;
+    const label = doc.document_number || 'Rascunho';
+    return (
+        <AppLayout breadcrumbs={[
+            { title: 'Faturação', href: '#' },
+            { title: 'Faturas-Recibo', href: '/billing/receipts' },
+            { title: label, href: '#' },
+        ]}>
+            {page}
+        </AppLayout>
+    );
+};

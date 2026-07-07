@@ -11,8 +11,6 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
 
 interface Customer {
     id: number;
@@ -30,8 +28,6 @@ interface Product {
     barcode: string | null;
     price: string;
     tax_rate: string;
-    tax_is_exempt: boolean;
-    tax_exemption_reason: string | null;
 }
 
 interface DocumentSeries {
@@ -81,6 +77,7 @@ interface Props {
     customers: Customer[];
     products: Product[];
     series: DocumentSeries[];
+    warehouses?: { id: number; name: string }[];
     type: string;
     document?: DBDocument;
     submitRoute: string;
@@ -138,8 +135,8 @@ function ItemRow({ item, index, products, onChange, onRemove }: ItemRowProps) {
     };
 
     return (
-        <tr className="border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
-            <td className="p-2 min-w-[180px]">
+        <tr className="border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
+            <td className="p-2 min-w-[200px]">
                 <Select value={item.product_id} onValueChange={handleProductSelect}>
                     <SelectTrigger className="h-8 text-sm">
                         <SelectValue placeholder="Selecionar produto…" />
@@ -162,58 +159,29 @@ function ItemRow({ item, index, products, onChange, onRemove }: ItemRowProps) {
                     />
                 )}
             </td>
-            <td className="p-2 w-20">
-                <Input
-                    type="number"
-                    min="0.001"
-                    step="0.001"
-                    className="h-8 text-sm text-right"
-                    value={item.quantity}
-                    onChange={(e) => onChange(index, 'quantity', parseFloat(e.target.value) || 0)}
-                />
+            <td className="p-2 w-24">
+                <Input type="number" min="0.001" step="0.001" className="h-8 text-sm text-right"
+                    value={item.quantity} onChange={(e) => onChange(index, 'quantity', parseFloat(e.target.value) || 0)} />
             </td>
             <td className="p-2 w-28">
-                <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="h-8 text-sm text-right"
-                    value={item.unit_price}
-                    onChange={(e) => onChange(index, 'unit_price', parseFloat(e.target.value) || 0)}
-                />
+                <Input type="number" min="0" step="0.01" className="h-8 text-sm text-right"
+                    value={item.unit_price} onChange={(e) => onChange(index, 'unit_price', parseFloat(e.target.value) || 0)} />
             </td>
             <td className="p-2 w-20">
-                <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    className="h-8 text-sm text-right"
-                    value={item.discount_percent}
-                    onChange={(e) => onChange(index, 'discount_percent', parseFloat(e.target.value) || 0)}
-                />
+                <Input type="number" min="0" max="100" step="0.01" className="h-8 text-sm text-right"
+                    value={item.discount_percent} onChange={(e) => onChange(index, 'discount_percent', parseFloat(e.target.value) || 0)} />
             </td>
             <td className="p-2 w-20">
-                <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="h-8 text-sm text-right"
-                    value={item.tax_rate}
-                    onChange={(e) => onChange(index, 'tax_rate', parseFloat(e.target.value) || 0)}
-                />
+                <Input type="number" min="0" step="0.01" className="h-8 text-sm text-right"
+                    value={item.tax_rate} onChange={(e) => onChange(index, 'tax_rate', parseFloat(e.target.value) || 0)} />
             </td>
-            <td className="p-2 w-32 text-right font-mono text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+            <td className="p-2 w-32 text-right font-mono text-sm font-semibold text-zinc-800 dark:text-zinc-200 pr-4">
                 {fmt(lineTotal)}
             </td>
             <td className="p-2 w-10">
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
+                <Button type="button" variant="ghost" size="sm"
                     className="h-8 w-8 p-0 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                    onClick={() => onRemove(index)}
-                >
+                    onClick={() => onRemove(index)}>
                     <Trash2 size={14} />
                 </Button>
             </td>
@@ -247,16 +215,9 @@ export default function DocumentForm({ customers, products, series, type, docume
     });
 
     const isEdit = method === 'put';
-    const formTitle = isEdit ? `Editar ${TYPE_LABELS[type]}` : `Novo ${TYPE_LABELS[type]}`;
-
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Faturação', href: '#' },
-        { title: TYPE_LABELS[type] || 'Documentos', href: cancelRoute },
-        { title: isEdit ? 'Editar' : 'Novo', href: '#' },
-    ];
+    const formTitle = isEdit ? `Editar ${TYPE_LABELS[type] ?? type}` : `Novo ${TYPE_LABELS[type] ?? type}`;
 
     const handleCustomerChange = useCallback((customerId: string) => {
-        setData('customer_id', customerId);
         const c = customers.find((c) => c.id.toString() === customerId);
         if (c) {
             setData((prev) => ({
@@ -268,22 +229,15 @@ export default function DocumentForm({ customers, products, series, type, docume
                 customer_email: c.email ?? '',
                 customer_address: c.address ?? '',
             }));
+        } else {
+            setData('customer_id', customerId);
         }
     }, [customers, setData]);
 
     const addItem = () => {
         setData('items', [
             ...data.items,
-            {
-                product_id: '',
-                product_name: '',
-                product_sku: '',
-                product_barcode: '',
-                quantity: 1,
-                unit_price: 0,
-                tax_rate: 16,
-                discount_percent: 0,
-            },
+            { product_id: '', product_name: '', product_sku: '', product_barcode: '', quantity: 1, unit_price: 0, tax_rate: 16, discount_percent: 0 },
         ]);
     };
 
@@ -323,23 +277,23 @@ export default function DocumentForm({ customers, products, series, type, docume
     const hasErrors = Object.keys(errors).length > 0;
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title={formTitle} />
 
+            {/* Page Title */}
             <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30">
                     <ReceiptText className="text-blue-600 dark:text-blue-400" size={20} />
                 </div>
                 <div>
-                    <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
-                        {formTitle}
-                    </h1>
+                    <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">{formTitle}</h1>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400">
                         O documento é gravado como rascunho até ser confirmado e emitido oficialmente.
                     </p>
                 </div>
             </div>
 
+            {/* Validation Errors */}
             {hasErrors && (
                 <div className="mb-4 p-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 flex items-start gap-3">
                     <AlertCircle className="text-red-500 mt-0.5 shrink-0" size={16} />
@@ -347,7 +301,7 @@ export default function DocumentForm({ customers, products, series, type, docume
                         <p className="font-medium mb-1">Existem erros no formulário:</p>
                         <ul className="list-disc list-inside space-y-0.5">
                             {Object.entries(errors).map(([key, msg]) => (
-                                <li key={key}><strong>{key}:</strong> {msg}</li>
+                                <li key={key}><strong>{key}:</strong> {msg as string}</li>
                             ))}
                         </ul>
                     </div>
@@ -356,7 +310,7 @@ export default function DocumentForm({ customers, products, series, type, docume
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Dados do Documento */}
+                    {/* Document Data */}
                     <Card>
                         <CardHeader className="pb-3">
                             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -365,76 +319,54 @@ export default function DocumentForm({ customers, products, series, type, docume
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                                {/* Série */}
-                                <div className="space-y-1.5 col-span-2">
-                                    <Label htmlFor="series_id" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                                        Série Documental <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Select
-                                        value={data.series_id}
-                                        onValueChange={(v) => setData('series_id', v)}
-                                    >
-                                        <SelectTrigger id="series_id">
-                                            <SelectValue placeholder="Selecionar série…" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {series.map((s) => (
-                                                <SelectItem key={s.id} value={s.id.toString()}>
-                                                    {s.code} — {s.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="series_id" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                                    Série Documental <span className="text-red-500">*</span>
+                                </Label>
+                                <Select value={data.series_id} onValueChange={(v) => setData('series_id', v)}>
+                                    <SelectTrigger id="series_id">
+                                        <SelectValue placeholder="Selecionar série…" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {series.map((s) => (
+                                            <SelectItem key={s.id} value={s.id.toString()}>
+                                                {s.code} — {s.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
-                                {/* Data de Emissão */}
                                 <div className="space-y-1.5">
                                     <Label htmlFor="issue_date" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
                                         Data de Emissão <span className="text-red-500">*</span>
                                     </Label>
-                                    <Input
-                                        id="issue_date"
-                                        type="date"
-                                        value={data.issue_date}
-                                        onChange={(e) => setData('issue_date', e.target.value)}
-                                    />
+                                    <Input id="issue_date" type="date" value={data.issue_date}
+                                        onChange={(e) => setData('issue_date', e.target.value)} />
                                 </div>
-                                {/* Data de Vencimento / Validade */}
                                 {type !== 'GR' && (
                                     <div className="space-y-1.5">
                                         <Label htmlFor="due_date" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
                                             {type === 'CT' ? 'Válido Até' : 'Data de Vencimento'} <span className="text-red-500">*</span>
                                         </Label>
-                                        <Input
-                                            id="due_date"
-                                            type="date"
-                                            value={data.due_date}
+                                        <Input id="due_date" type="date" value={data.due_date}
                                             min={data.issue_date}
-                                            onChange={(e) => setData('due_date', e.target.value)}
-                                        />
+                                            onChange={(e) => setData('due_date', e.target.value)} />
                                     </div>
                                 )}
                             </div>
-                            {/* Notas */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="notes" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
                                     Notas / Observações
                                 </Label>
-                                <Textarea
-                                    id="notes"
-                                    placeholder="Condições de pagamento, observações fiscais, referências..."
-                                    rows={2}
-                                    value={data.notes}
-                                    onChange={(e) => setData('notes', e.target.value)}
-                                    className="resize-none text-sm"
-                                />
+                                <Textarea id="notes" placeholder="Condições de pagamento, termos, referências..."
+                                    rows={3} value={data.notes} onChange={(e) => setData('notes', e.target.value)}
+                                    className="resize-none text-sm" />
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Dados do Cliente */}
+                    {/* Customer Data */}
                     <Card>
                         <CardHeader className="pb-3">
                             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -447,10 +379,7 @@ export default function DocumentForm({ customers, products, series, type, docume
                                 <Label htmlFor="customer_select" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
                                     Cliente Registado
                                 </Label>
-                                <Select
-                                    value={data.customer_id}
-                                    onValueChange={handleCustomerChange}
-                                >
+                                <Select value={data.customer_id} onValueChange={handleCustomerChange}>
                                     <SelectTrigger id="customer_select">
                                         <SelectValue placeholder="Selecionar cliente da lista…" />
                                     </SelectTrigger>
@@ -458,7 +387,7 @@ export default function DocumentForm({ customers, products, series, type, docume
                                         {customers.map((c) => (
                                             <SelectItem key={c.id} value={c.id.toString()}>
                                                 <span className="font-medium">{c.name}</span>
-                                                {c.nuit && <span className="text-zinc-400 ml-1 text-xs">· NUIT {c.nuit}</span>}
+                                                {c.nuit && <span className="text-zinc-400 ml-1 text-xs">· {c.nuit}</span>}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -470,61 +399,42 @@ export default function DocumentForm({ customers, products, series, type, docume
                                     <Label htmlFor="customer_name" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
                                         Nome / Razão Social <span className="text-red-500">*</span>
                                     </Label>
-                                    <Input
-                                        id="customer_name"
-                                        value={data.customer_name}
+                                    <Input id="customer_name" value={data.customer_name}
                                         onChange={(e) => setData('customer_name', e.target.value)}
-                                        placeholder="Nome do cliente"
-                                    />
+                                        placeholder="Nome do cliente" />
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label htmlFor="customer_nuit" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
                                         NUIT <span className="text-red-500">*</span>
                                     </Label>
-                                    <Input
-                                        id="customer_nuit"
-                                        value={data.customer_nuit}
+                                    <Input id="customer_nuit" value={data.customer_nuit}
                                         onChange={(e) => setData('customer_nuit', e.target.value)}
-                                        placeholder="000000000"
-                                        className="font-mono"
-                                    />
+                                        placeholder="000000000" className="font-mono" />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1.5">
                                     <Label htmlFor="customer_phone" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Telefone</Label>
-                                    <Input
-                                        id="customer_phone"
-                                        value={data.customer_phone}
-                                        onChange={(e) => setData('customer_phone', e.target.value)}
-                                        placeholder="+258..."
-                                    />
+                                    <Input id="customer_phone" value={data.customer_phone}
+                                        onChange={(e) => setData('customer_phone', e.target.value)} placeholder="+258..." />
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label htmlFor="customer_email" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Email</Label>
-                                    <Input
-                                        id="customer_email"
-                                        type="email"
-                                        value={data.customer_email}
-                                        onChange={(e) => setData('customer_email', e.target.value)}
-                                        placeholder="email@..."
-                                    />
+                                    <Input id="customer_email" type="email" value={data.customer_email}
+                                        onChange={(e) => setData('customer_email', e.target.value)} placeholder="email@..." />
                                 </div>
                             </div>
                             <div className="space-y-1.5">
                                 <Label htmlFor="customer_address" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Morada</Label>
-                                <Input
-                                    id="customer_address"
-                                    value={data.customer_address}
+                                <Input id="customer_address" value={data.customer_address}
                                     onChange={(e) => setData('customer_address', e.target.value)}
-                                    placeholder="Cidade, Bairro, Rua..."
-                                />
+                                    placeholder="Cidade, Bairro, Rua..." />
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* Itens do Documento */}
+                {/* Line Items */}
                 <Card>
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
@@ -543,10 +453,8 @@ export default function DocumentForm({ customers, products, series, type, docume
                     </CardHeader>
                     <CardContent className="p-0">
                         {data.items.length === 0 ? (
-                            <div
-                                className="flex flex-col items-center justify-center py-12 text-center cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors rounded-b-xl"
-                                onClick={addItem}
-                            >
+                            <div className="flex flex-col items-center justify-center py-12 text-center cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors rounded-b-xl"
+                                onClick={addItem}>
                                 <PackageSearch className="text-zinc-300 dark:text-zinc-600 mb-2" size={36} />
                                 <p className="text-zinc-400 dark:text-zinc-500 text-sm">Clique para adicionar a primeira linha</p>
                             </div>
@@ -555,25 +463,19 @@ export default function DocumentForm({ customers, products, series, type, docume
                                 <table className="w-full text-sm">
                                     <thead>
                                         <tr className="border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
-                                            <th className="text-left p-2 pl-4 text-xs font-medium text-zinc-500 dark:text-zinc-400">Produto / Descrição</th>
-                                            <th className="text-right p-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">Qtd</th>
-                                            <th className="text-right p-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">Preço Unit.</th>
-                                            <th className="text-right p-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">Desc. %</th>
-                                            <th className="text-right p-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">IVA %</th>
-                                            <th className="text-right p-2 pr-4 text-xs font-medium text-zinc-500 dark:text-zinc-400">Total (MZN)</th>
+                                            <th className="text-left p-2 pl-4 text-xs font-medium text-zinc-500">Produto / Descrição</th>
+                                            <th className="text-right p-2 text-xs font-medium text-zinc-500">Qtd</th>
+                                            <th className="text-right p-2 text-xs font-medium text-zinc-500">Preço Unit.</th>
+                                            <th className="text-right p-2 text-xs font-medium text-zinc-500">Desc. %</th>
+                                            <th className="text-right p-2 text-xs font-medium text-zinc-500">IVA %</th>
+                                            <th className="text-right p-2 pr-4 text-xs font-medium text-zinc-500">Total (MZN)</th>
                                             <th className="p-2 w-10"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {data.items.map((item, index) => (
-                                            <ItemRow
-                                                key={index}
-                                                item={item}
-                                                index={index}
-                                                products={products}
-                                                onChange={updateItem}
-                                                onRemove={removeItem}
-                                            />
+                                            <ItemRow key={index} item={item} index={index}
+                                                products={products} onChange={updateItem} onRemove={removeItem} />
                                         ))}
                                     </tbody>
                                 </table>
@@ -582,7 +484,7 @@ export default function DocumentForm({ customers, products, series, type, docume
                     </CardContent>
                 </Card>
 
-                {/* Totais + Submissão */}
+                {/* Totals + Submit */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
                     <div className="lg:col-span-2" />
                     <Card>
@@ -611,23 +513,15 @@ export default function DocumentForm({ customers, products, series, type, docume
                 </div>
 
                 <div className="flex items-center justify-end gap-3 pt-2">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => router.get(cancelRoute)}
-                    >
+                    <Button type="button" variant="outline" onClick={() => router.get(cancelRoute)}>
                         Cancelar
                     </Button>
-                    <Button
-                        type="submit"
-                        disabled={processing || data.items.length === 0}
-                        className="gap-2 min-w-[180px]"
-                    >
+                    <Button type="submit" disabled={processing || data.items.length === 0} className="gap-2 min-w-[180px]">
                         <Save size={16} />
                         {processing ? 'A gravar…' : 'Gravar Rascunho'}
                     </Button>
                 </div>
             </form>
-        </AppLayout>
+        </>
     );
 }

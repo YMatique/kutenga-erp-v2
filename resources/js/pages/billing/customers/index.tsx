@@ -8,7 +8,6 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
 interface Customer {
@@ -65,7 +64,7 @@ export default function CustomerIndex({ customers, filters }: Props) {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title="Clientes" />
 
             <div className="flex items-center justify-between mb-6">
@@ -161,7 +160,7 @@ export default function CustomerIndex({ customers, filters }: Props) {
                                                             <Eye size={14} />
                                                         </Button>
                                                     </Link>
-
+ 
                                                     <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-600" onClick={() => handleDelete(customer.id, customer.name)}>
                                                         <Trash2 size={14} />
                                                     </Button>
@@ -200,6 +199,10 @@ export default function CustomerIndex({ customers, filters }: Props) {
                     )}
                 </CardContent>
             </Card>
-        </AppLayout>
+        </>
     );
 }
+
+CustomerIndex.layout = {
+    breadcrumbs,
+};

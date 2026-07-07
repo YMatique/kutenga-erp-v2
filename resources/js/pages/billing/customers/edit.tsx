@@ -41,6 +41,12 @@ interface Props {
     };
 }
 
+const breadcrumbs = (customerName: string): BreadcrumbItem[] => [
+    { title: 'Faturação', href: '#' },
+    { title: 'Clientes', href: '/billing/customers' },
+    { title: `Editar: ${customerName}`, href: '#' },
+];
+
 export default function CustomerEdit({ customer }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         name: customer.name,
@@ -87,14 +93,8 @@ export default function CustomerEdit({ customer }: Props) {
         setData('addresses', updated);
     };
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Faturação', href: '#' },
-        { title: 'Clientes', href: '/billing/customers' },
-        { title: `Editar: ${customer.name}`, href: '#' },
-    ];
-
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title={`Editar Cliente: ${customer.name}`} />
 
             <div className="flex items-center gap-3 mb-6">
@@ -169,19 +169,19 @@ export default function CustomerEdit({ customer }: Props) {
                                 </Button>
                                 <div className="space-y-1">
                                     <Label className="text-xs">Nome</Label>
-                                    <Input size="sm" value={contact.name} onChange={(e) => updateContact(index, 'name', e.target.value)} placeholder="Nome do contacto" />
+                                    <Input value={contact.name} onChange={(e) => updateContact(index, 'name', e.target.value)} placeholder="Nome do contacto" />
                                 </div>
                                 <div className="space-y-1">
                                     <Label className="text-xs">Função</Label>
-                                    <Input size="sm" value={contact.role} onChange={(e) => updateContact(index, 'role', e.target.value)} placeholder="Ex: Gerente" />
+                                    <Input value={contact.role} onChange={(e) => updateContact(index, 'role', e.target.value)} placeholder="Ex: Gerente" />
                                 </div>
                                 <div className="space-y-1">
                                     <Label className="text-xs">Telefone</Label>
-                                    <Input size="sm" value={contact.phone} onChange={(e) => updateContact(index, 'phone', e.target.value)} placeholder="+258..." />
+                                    <Input value={contact.phone} onChange={(e) => updateContact(index, 'phone', e.target.value)} placeholder="+258..." />
                                 </div>
                                 <div className="space-y-1">
                                     <Label className="text-xs">Email</Label>
-                                    <Input size="sm" type="email" value={contact.email} onChange={(e) => updateContact(index, 'email', e.target.value)} placeholder="email@..." />
+                                    <Input type="email" value={contact.email} onChange={(e) => updateContact(index, 'email', e.target.value)} placeholder="email@..." />
                                 </div>
                             </div>
                         ))}
@@ -219,11 +219,11 @@ export default function CustomerEdit({ customer }: Props) {
                                 </div>
                                 <div className="space-y-1 md:col-span-2">
                                     <Label className="text-xs">Morada</Label>
-                                    <Input size="sm" value={address.address} onChange={(e) => updateAddress(index, 'address', e.target.value)} placeholder="Rua, número, bairro..." />
+                                    <Input value={address.address} onChange={(e) => updateAddress(index, 'address', e.target.value)} placeholder="Rua, número, bairro..." />
                                 </div>
                                 <div className="space-y-1">
                                     <Label className="text-xs">Cidade</Label>
-                                    <Input size="sm" value={address.city} onChange={(e) => updateAddress(index, 'city', e.target.value)} placeholder="Maputo, Beira..." />
+                                    <Input value={address.city} onChange={(e) => updateAddress(index, 'city', e.target.value)} placeholder="Maputo, Beira..." />
                                 </div>
                             </div>
                         ))}
@@ -242,6 +242,12 @@ export default function CustomerEdit({ customer }: Props) {
                     </Button>
                 </div>
             </form>
-        </AppLayout>
+        </>
     );
 }
+
+CustomerEdit.layout = (page: any) => (
+    <AppLayout breadcrumbs={breadcrumbs(page.props.customer.name)}>
+        {page}
+    </AppLayout>
+);

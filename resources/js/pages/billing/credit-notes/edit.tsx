@@ -1,4 +1,5 @@
 import DocumentForm from '@/pages/billing/shared/document-form';
+import AppLayout from '@/layouts/app-layout';
 
 export default function CreditNotesEdit({ document, ...props }: any) {
     return (
@@ -11,3 +12,17 @@ export default function CreditNotesEdit({ document, ...props }: any) {
         />
     );
 }
+
+CreditNotesEdit.layout = (page: any) => {
+    const doc = page.props.document;
+    const label = doc.document_number || 'Rascunho';
+    return (
+        <AppLayout breadcrumbs={[
+            { title: 'Faturação', href: '#' },
+            { title: 'Notas de Crédito', href: '/billing/credit-notes' },
+            { title: `Editar: ${label}`, href: '#' },
+        ]}>
+            {page}
+        </AppLayout>
+    );
+};

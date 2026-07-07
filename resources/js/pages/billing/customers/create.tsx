@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
 interface Contact {
@@ -77,7 +76,7 @@ export default function CustomerCreate() {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title="Novo Cliente" />
 
             <div className="flex items-center gap-3 mb-6">
@@ -104,12 +103,7 @@ export default function CustomerCreate() {
                 )}
                 {/* Dados Principais */}
                 <Card>
-                    <CardHeader>
-                        <CardTitle className="text-sm font-medium flex items-center gap-2">
-                            <User size={14} className="text-blue-500" /> Dados Pessoais / Fiscais
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6">
                         <div className="space-y-2">
                             <Label htmlFor="name">Nome <span className="text-red-500">*</span></Label>
                             <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder="Nome completo ou razão social" />
@@ -162,19 +156,19 @@ export default function CustomerCreate() {
                                 </Button>
                                 <div className="space-y-1">
                                     <Label className="text-xs">Nome</Label>
-                                    <Input size="sm" value={contact.name} onChange={(e) => updateContact(index, 'name', e.target.value)} placeholder="Nome do contacto" />
+                                    <Input value={contact.name} onChange={(e) => updateContact(index, 'name', e.target.value)} placeholder="Nome do contacto" />
                                 </div>
                                 <div className="space-y-1">
                                     <Label className="text-xs">Função</Label>
-                                    <Input size="sm" value={contact.role} onChange={(e) => updateContact(index, 'role', e.target.value)} placeholder="Ex: Gerente" />
+                                    <Input value={contact.role} onChange={(e) => updateContact(index, 'role', e.target.value)} placeholder="Ex: Gerente" />
                                 </div>
                                 <div className="space-y-1">
                                     <Label className="text-xs">Telefone</Label>
-                                    <Input size="sm" value={contact.phone} onChange={(e) => updateContact(index, 'phone', e.target.value)} placeholder="+258..." />
+                                    <Input value={contact.phone} onChange={(e) => updateContact(index, 'phone', e.target.value)} placeholder="+258..." />
                                 </div>
                                 <div className="space-y-1">
                                     <Label className="text-xs">Email</Label>
-                                    <Input size="sm" type="email" value={contact.email} onChange={(e) => updateContact(index, 'email', e.target.value)} placeholder="email@..." />
+                                    <Input type="email" value={contact.email} onChange={(e) => updateContact(index, 'email', e.target.value)} placeholder="email@..." />
                                 </div>
                             </div>
                         ))}
@@ -212,11 +206,11 @@ export default function CustomerCreate() {
                                 </div>
                                 <div className="space-y-1 md:col-span-2">
                                     <Label className="text-xs">Morada</Label>
-                                    <Input size="sm" value={address.address} onChange={(e) => updateAddress(index, 'address', e.target.value)} placeholder="Rua, número, bairro..." />
+                                    <Input value={address.address} onChange={(e) => updateAddress(index, 'address', e.target.value)} placeholder="Rua, número, bairro..." />
                                 </div>
                                 <div className="space-y-1">
                                     <Label className="text-xs">Cidade</Label>
-                                    <Input size="sm" value={address.city} onChange={(e) => updateAddress(index, 'city', e.target.value)} placeholder="Maputo, Beira..." />
+                                    <Input value={address.city} onChange={(e) => updateAddress(index, 'city', e.target.value)} placeholder="Maputo, Beira..." />
                                 </div>
                             </div>
                         ))}
@@ -235,6 +229,10 @@ export default function CustomerCreate() {
                     </Button>
                 </div>
             </form>
-        </AppLayout>
+        </>
     );
 }
+
+CustomerCreate.layout = {
+    breadcrumbs,
+};

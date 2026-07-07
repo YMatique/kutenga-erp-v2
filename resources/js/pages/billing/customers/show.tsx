@@ -44,14 +44,8 @@ interface Props {
 }
 
 export default function Show({ customer }: Props) {
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Faturação', href: '#' },
-        { title: 'Clientes', href: '/billing/customers' },
-        { title: customer.name, href: '#' },
-    ];
-
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title={`Cliente: ${customer.name}`} />
 
             {/* ─── Page Header ─────────────────────────────────────────── */}
@@ -226,6 +220,16 @@ export default function Show({ customer }: Props) {
                         </CardContent>
                     </Card>
                 )}
-        </AppLayout>
+        </>
     );
 }
+
+Show.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Faturação', href: '#' },
+        { title: 'Clientes', href: '/billing/customers' },
+        { title: page.props.customer.name, href: '#' },
+    ]}>
+        {page}
+    </AppLayout>
+);

@@ -12,14 +12,6 @@ import {
     Select, SelectContent, SelectItem,
     SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-
-interface DocumentSeries {
-    id: number;
-    code: string;
-    name: string;
-}
 
 interface Document {
     id: number;
@@ -31,10 +23,7 @@ interface Document {
     customer_nuit: string;
     status: string;
     payment_status: string | null;
-    subtotal: string;
-    tax_total: string;
     grand_total: string;
-    series: DocumentSeries | null;
 }
 
 interface PaginationLink {
@@ -47,7 +36,6 @@ interface PaginatedDocuments {
     data: Document[];
     current_page: number;
     last_page: number;
-    per_page: number;
     total: number;
     links: PaginationLink[];
 }
@@ -88,11 +76,6 @@ export default function DocumentList({ documents, filters, type, title, createHr
     const [search, setSearch] = React.useState(filters.search ?? '');
     const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Faturação', href: '#' },
-        { title: title, href: showHrefPrefix },
-    ];
-
     const applyFilter = useCallback((params: Partial<Filters>) => {
         router.get(
             showHrefPrefix,
@@ -118,33 +101,33 @@ export default function DocumentList({ documents, filters, type, title, createHr
     const hasActiveFilters = filters.search || (filters.status && filters.status !== 'all');
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title={title} />
 
-            <div className="flex flex-col gap-1 mb-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30">
-                            <ReceiptText className="text-blue-600 dark:text-blue-400" size={20} />
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
-                                {title}
-                            </h1>
-                            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                {documents.total} registo{documents.total !== 1 ? 's' : ''} encontrado{documents.total !== 1 ? 's' : ''}
-                            </p>
-                        </div>
+            {/* Page Header */}
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30">
+                        <ReceiptText className="text-blue-600 dark:text-blue-400" size={20} />
                     </div>
-                    <Link href={createHref}>
-                        <Button className="gap-2">
-                            <Plus size={16} />
-                            Novo Registo
-                        </Button>
-                    </Link>
+                    <div>
+                        <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+                            {title}
+                        </h1>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                            {documents.total} registo{documents.total !== 1 ? 's' : ''} encontrado{documents.total !== 1 ? 's' : ''}
+                        </p>
+                    </div>
                 </div>
+                <Link href={createHref}>
+                    <Button className="gap-2">
+                        <Plus size={16} />
+                        Novo Registo
+                    </Button>
+                </Link>
             </div>
 
+            {/* Filters */}
             <Card className="mb-4">
                 <CardContent className="pt-4 pb-4">
                     <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
@@ -179,7 +162,7 @@ export default function DocumentList({ documents, filters, type, title, createHr
                         </Select>
 
                         {hasActiveFilters && (
-                            <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">
+                            <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-zinc-500">
                                 <X size={14} /> Limpar
                             </Button>
                         )}
@@ -187,6 +170,7 @@ export default function DocumentList({ documents, filters, type, title, createHr
                 </CardContent>
             </Card>
 
+            {/* Table */}
             <Card>
                 <CardHeader className="pb-0">
                     <CardTitle className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
@@ -258,6 +242,7 @@ export default function DocumentList({ documents, filters, type, title, createHr
                         </Table>
                     )}
 
+                    {/* Pagination */}
                     {documents.last_page > 1 && (
                         <div className="flex items-center justify-between mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                             <p className="text-sm text-zinc-500">
@@ -285,6 +270,6 @@ export default function DocumentList({ documents, filters, type, title, createHr
                     )}
                 </CardContent>
             </Card>
-        </AppLayout>
+        </>
     );
 }

@@ -1,5 +1,10 @@
 import DocumentList from '@/pages/billing/shared/document-list';
 
+const breadcrumbs = [
+    { title: 'Faturação', href: '#' },
+    { title: 'Faturas a Crédito', href: '/billing/invoices' },
+];
+
 export default function InvoicesIndex(props: any) {
     return (
         <DocumentList
@@ -9,3 +14,7 @@ export default function InvoicesIndex(props: any) {
         />
     );
 }
+
+InvoicesIndex.layout = {
+    breadcrumbs,
+};
