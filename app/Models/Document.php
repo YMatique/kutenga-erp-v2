@@ -183,4 +183,8 @@ class Document extends Model
     {
         return $this->hasMany(PaymentAllocation::class, 'document_id');
     }
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
 }

@@ -103,14 +103,15 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
         // Rotas de Clientes
         Route::resource('customers', CustomerController::class);
 
-        // Documentos PDF
+        // Documentos PDF e Email
         Route::get('documents/{id}/pdf', [DocumentController::class, 'downloadPdf'])->name('documents.pdf');
+        Route::post('documents/{id}/send-email', [DocumentController::class, 'sendEmail'])->name('documents.send-email');
     });
     // POS
 
     // Users
 
-    //
+    // Configs
 });
 
 require __DIR__ . '/settings.php';

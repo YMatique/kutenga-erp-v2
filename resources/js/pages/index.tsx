@@ -295,7 +295,7 @@ export default function Landing() {
                                     <div className="grid grid-cols-3 gap-3">
                                         <div className="bg-white border border-slate-200 p-3.5 rounded-[4px] shadow-xs">
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Faturamento</p>
-                                            <p className="text-lg font-extrabold text-[#1A2332] mt-1">1.84M Kz</p>
+                                            <p className="text-lg font-extrabold text-[#1A2332] mt-1">1.84M MZN</p>
                                             <span className="text-[9px] text-emerald-600 font-semibold flex items-center mt-1">
                                                 ▲ +12% esta semana
                                             </span>
@@ -363,14 +363,14 @@ export default function Landing() {
                                                         <p className="text-xs font-semibold text-slate-800">Fatura Simplificada</p>
                                                         <p className="text-[9px] text-slate-400">Há 2 mins • FS 2026/0129</p>
                                                     </div>
-                                                    <span className="text-xs font-bold text-slate-800">+12,450 Kz</span>
+                                                    <span className="text-xs font-bold text-slate-800">+12,450 MZN</span>
                                                 </div>
                                                 <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                                                     <div>
                                                         <p className="text-xs font-semibold text-slate-800">Venda Direta POS</p>
                                                         <p className="text-[9px] text-slate-400">Há 15 mins • PDV #8410</p>
                                                     </div>
-                                                    <span className="text-xs font-bold text-slate-800">+3,200 Kz</span>
+                                                    <span className="text-xs font-bold text-slate-800">+3,200 MZN</span>
                                                 </div>
                                                 <div className="flex justify-between items-center">
                                                     <div>
@@ -498,7 +498,7 @@ export default function Landing() {
                                                         </Badge>
                                                     </div>
                                                     <h4 className="font-bold text-slate-800 mt-1.5 group-hover:text-[#2DB8A0] transition-colors">{p.name}</h4>
-                                                    <p className="font-extrabold text-[#1A2332] text-lg mt-2">{p.price.toLocaleString('pt-PT')} Kz</p>
+                                                    <p className="font-extrabold text-[#1A2332] text-lg mt-2">{p.price.toLocaleString('pt-PT')} MZN</p>
                                                 </div>
                                             ))}
                                         </div>
@@ -525,12 +525,12 @@ export default function Landing() {
                                                             <div className="min-w-0 flex-1">
                                                                 <p className="font-bold text-slate-800 truncate text-xs">{item.product.name}</p>
                                                                 <p className="text-[11px] text-slate-500 font-medium">
-                                                                    {item.qty}x • {item.product.price.toLocaleString('pt-PT')} Kz
+                                                                    {item.qty}x • {item.product.price.toLocaleString('pt-PT')} MZN
                                                                 </p>
                                                             </div>
                                                             <div className="flex items-center gap-2">
                                                                 <span className="font-extrabold text-[#1A2332] text-xs">
-                                                                    {(item.product.price * item.qty).toLocaleString('pt-PT')} Kz
+                                                                    {(item.product.price * item.qty).toLocaleString('pt-PT')} MZN
                                                                 </span>
                                                                 <button
                                                                     onClick={() => removeFromCart(item.product.id)}
@@ -551,15 +551,15 @@ export default function Landing() {
                                                 <div className="space-y-1.5 text-xs">
                                                     <div className="flex justify-between text-slate-500">
                                                         <span>Subtotal</span>
-                                                        <span>{cart.reduce((a, b) => a + (b.product.price * b.qty), 0).toLocaleString('pt-PT')} Kz</span>
+                                                        <span>{cart.reduce((a, b) => a + (b.product.price * b.qty), 0).toLocaleString('pt-PT')} MZN</span>
                                                     </div>
                                                     <div className="flex justify-between text-slate-500">
                                                         <span>IVA (14%)</span>
-                                                        <span>{(cart.reduce((a, b) => a + (b.product.price * b.qty), 0) * 0.14).toLocaleString('pt-PT')} Kz</span>
+                                                        <span>{(cart.reduce((a, b) => a + (b.product.price * b.qty), 0) * 0.14).toLocaleString('pt-PT')} MZN</span>
                                                     </div>
                                                     <div className="flex justify-between font-extrabold text-[#1A2332] text-sm pt-1 border-t border-slate-200/50">
                                                         <span>Total Geral</span>
-                                                        <span>{Math.round(cart.reduce((a, b) => a + (b.product.price * b.qty), 0) * 1.14).toLocaleString('pt-PT')} Kz</span>
+                                                        <span>{Math.round(cart.reduce((a, b) => a + (b.product.price * b.qty), 0) * 1.14).toLocaleString('pt-PT')} MZN</span>
                                                     </div>
                                                 </div>
                                             )}
@@ -738,7 +738,7 @@ export default function Landing() {
                                                         <tr key={inv.id} className="hover:bg-slate-50/50">
                                                             <td className="py-3.5 font-mono text-xs font-semibold text-[#1A2332]">{inv.id}</td>
                                                             <td className="py-3.5 text-slate-600 font-semibold">{inv.customer}</td>
-                                                            <td className="py-3.5 font-extrabold text-[#1A2332] text-right">{inv.total.toLocaleString('pt-PT')} Kz</td>
+                                                            <td className="py-3.5 font-extrabold text-[#1A2332] text-right">{inv.total.toLocaleString('pt-PT')} MZN</td>
                                                             <td className="py-3.5 text-center">
                                                                 <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-[3px] border ${inv.color}`}>
                                                                     {inv.status}
@@ -778,7 +778,7 @@ export default function Landing() {
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Valor Total (Kz)</label>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Valor Total (MZN)</label>
                                                 <input
                                                     type="number"
                                                     required
@@ -1059,7 +1059,7 @@ export default function Landing() {
                                     </h3>
                                     <p className="text-slate-400 text-xs mt-1">Para pequenas e médias empresas</p>
                                     <div className="my-6">
-                                        <span className="text-3xl font-extrabold text-[#1A2332]">15,000 Kz</span>
+                                        <span className="text-3xl font-extrabold text-[#1A2332]">3,500 MZN</span>
                                         <span className="text-slate-400 text-xs font-medium"> / mês</span>
                                     </div>
                                     <ul className="space-y-3.5 text-slate-600 text-xs border-t border-slate-100 pt-6">
@@ -1216,4 +1216,4 @@ export default function Landing() {
             </div>
         </>
     );
-}
+}

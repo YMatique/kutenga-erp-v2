@@ -4,7 +4,7 @@ import {
     ReceiptText, CheckCircle2, Clock, Ban, ArrowLeft,
     Calendar, CreditCard, AlertCircle,
     Warehouse as WarehouseIcon, Printer, Plus, History,
-    FileDown,
+    FileDown, Mail,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -112,6 +112,7 @@ export default function DocumentShow({
     receivePaymentRoute,
 }: Props) {
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+    const [isEmailOpen, setIsEmailOpen] = useState(false);
 
     const confirmForm = useForm({ warehouse_id: warehouses[0]?.id?.toString() ?? '' });
     const paymentForm = useForm({
@@ -121,6 +122,9 @@ export default function DocumentShow({
         reference: '',
     });
     const cancelForm = useForm({});
+    const emailForm = useForm({
+        email: doc.customer_email ?? '',
+    });
 
     const handleConfirm = () => confirmForm.post(confirmRoute);
 
@@ -134,6 +138,12 @@ export default function DocumentShow({
         if (!receivePaymentRoute) return;
         paymentForm.post(receivePaymentRoute, {
             onSuccess: () => { setIsPaymentOpen(false); paymentForm.reset('reference'); },
+        });
+    };
+
+    const handleSendEmail = () => {
+        emailForm.post(`/billing/documents/${doc.id}/send-email`, {
+            onSuccess: () => { setIsEmailOpen(false); },
         });
     };
 
@@ -192,6 +202,42 @@ export default function DocumentShow({
                             Descarregar PDF
                         </Button>
                     </a>
+
+                    <Dialog open={isEmailOpen} onOpenChange={setIsEmailOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="gap-1.5 border-zinc-200 text-zinc-700 hover:bg-zinc-50 font-medium">
+                                <Mail size={14} />
+                                Enviar por Email
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Enviar Documento por Email</DialogTitle>
+                                <DialogDescription>
+                                    O documento PDF correspondente será anexado e enviado por e-mail ao cliente.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 py-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="email-recipient">E-mail do Destinatário</Label>
+                                    <Input
+                                        id="email-recipient"
+                                        type="email"
+                                        required
+                                        value={emailForm.data.email}
+                                        onChange={(e) => emailForm.setData('email', e.target.value)}
+                                        placeholder="exemplo@empresa.com"
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsEmailOpen(false)}>Cancelar</Button>
+                                <Button onClick={handleSendEmail} disabled={emailForm.processing} className="bg-[#2DB8A0] hover:bg-[#259b86] text-white">
+                                    Confirmar e Enviar
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
 
                     {isDraft && (
                         <Link href={`${backRoute}/${doc.id}/edit`}>

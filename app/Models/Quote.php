@@ -25,4 +25,5 @@ class Quote extends Document
     {
         // Cotação/Orçamento não gera impacto financeiro
     }
+    
 }
