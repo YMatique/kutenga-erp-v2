@@ -4,6 +4,7 @@ import {
     ReceiptText, CheckCircle2, Clock, Ban, ArrowLeft,
     Calendar, CreditCard, AlertCircle,
     Warehouse as WarehouseIcon, Printer, Plus, History,
+    FileDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -182,8 +183,15 @@ export default function DocumentShow({
                 <div className="flex flex-wrap items-center gap-2 self-end md:self-auto">
                     <Button variant="outline" size="sm" onClick={() => window.print()} className="gap-1.5">
                         <Printer size={14} />
-                        Imprimir / PDF
+                        Imprimir
                     </Button>
+
+                    <a href={`/billing/documents/${doc.id}/pdf`} target="_blank" rel="noopener noreferrer" className="inline-block">
+                        <Button variant="outline" size="sm" className="gap-1.5 border-zinc-200 text-zinc-700 hover:bg-zinc-50 font-medium">
+                            <FileDown size={14} />
+                            Descarregar PDF
+                        </Button>
+                    </a>
 
                     {isDraft && (
                         <Link href={`${backRoute}/${doc.id}/edit`}>

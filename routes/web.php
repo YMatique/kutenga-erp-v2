@@ -102,6 +102,9 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
 
         // Rotas de Clientes
         Route::resource('customers', CustomerController::class);
+
+        // Documentos PDF
+        Route::get('documents/{id}/pdf', [DocumentController::class, 'downloadPdf'])->name('documents.pdf');
     });
     // POS
 

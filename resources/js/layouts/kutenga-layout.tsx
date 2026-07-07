@@ -25,7 +25,7 @@ function KutengaLayoutContent({
     }, [props.flash]);
 
     return (
-        <div className="min-h-screen w-full bg-slate-50 font-sans antialiased text-slate-900 flex flex-col">
+        <div className="min-h-screen w-full bg-slate-50 font-sans antialiased text-slate-900 flex flex-col overflow-x-hidden">
 
             {/* Floating top header */}
             <header className="fixed top-3 left-3 right-3 z-[60] transition-all duration-300 ease-in-out">
@@ -34,7 +34,7 @@ function KutengaLayoutContent({
                 </div>
             </header>
 
-            <div className="flex flex-1 relative">
+            <div className="relative w-full">
 
                 {/* Dark navy sidebar panel */}
                 <aside
@@ -52,8 +52,8 @@ function KutengaLayoutContent({
                 {/* Main content area */}
                 <main
                     className={cn(
-                        'mt-[4.5rem] transition-all duration-300 ease-in-out flex-1 min-h-[calc(100vh-4.5rem)]',
-                        isMobile ? 'ml-3 mr-3 mb-3' : sidebarOpen ? 'ml-[17.25rem] mr-3 mb-3' : 'ml-[5.75rem] mr-3 mb-3',
+                        'pt-[4.5rem] transition-all duration-300 ease-in-out w-full min-h-screen',
+                        isMobile ? 'pl-3 pr-3 pb-3' : sidebarOpen ? 'pl-[17.25rem] pr-3 pb-3' : 'pl-[5.75rem] pr-3 pb-3',
                     )}
                 >
                     <div className="min-h-full">

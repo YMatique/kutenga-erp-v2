@@ -186,4 +186,27 @@ class DocumentController extends Controller
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }
     }
+
+    /**
+     * Gera e faz o download / stream do PDF de um documento.
+     */
+    public function downloadPdf(Request $request, $id)
+    {
+        $companyId = $request->user()->company_id;
+
+        $document = Document::where('company_id', $companyId)
+            ->with(['items', 'series', 'customer'])
+            ->findOrFail($id);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.document', compact('document'));
+
+        // Configurar folha A4 e margens padrão
+        $pdf->setPaper('a4', 'portrait');
+
+        // Formata o nome do arquivo, ex: FT_2026_0012.pdf
+        $name = $document->document_number ?: "{$document->document_type}_draft_{$document->id}";
+        $filename = str_replace(['/', ' '], '_', $name) . '.pdf';
+
+        return $pdf->stream($filename);
+    }
 }
