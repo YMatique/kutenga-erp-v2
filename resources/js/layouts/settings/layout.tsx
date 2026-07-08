@@ -6,12 +6,13 @@ import { edit as editAppearance } from '@/routes/appearance';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
-import { User, Shield, Palette } from 'lucide-react';
+import { User, Shield, Palette, Building2 } from 'lucide-react';
 
 const sidebarNavItems: NavItem[] = [
     { title: 'Perfil',      href: edit(),           icon: User },
     { title: 'Segurança',   href: editSecurity(),   icon: Shield },
     { title: 'Aparência',   href: editAppearance(), icon: Palette },
+    { title: 'Empresa',     href: '/settings/company', icon: Building2 },
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {

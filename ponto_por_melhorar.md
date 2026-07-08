@@ -35,14 +35,16 @@
 - criação de usuários da empresa e seus níveis de permissões
 
 ## Configuração de Sistema: Configuração de empresa: 
-- dados, logo, impostos, smtp (personalizado), carimbo, etc
+- Dados, logo, impostos, smtp (personalizado), carimbo, etc
+- Os dados da empresa devem ser únicos por empresa, por exemplo, o email, NUIT, telefone, etc
+- Esses dados podem ser usados por exemplo para envio de emails, etc.
 
 ## Trabalhar roles e permissões
 - criação de papeis e permissões
 
-## Tela de bloqueio [feito]
+## Tela de bloqueio
 - Tela de bloquio quando passar muito tempo de inactividade [feito]
-- Deve ser uma tela diverente, não apenas um overlay [feito]
+- Deve ser uma tela diverente, não apenas um overlay (pode colocar um relógio, ou algo sobre fatura, etc)
 
 ## Recuperação de senha e redefinição
 - permitir que senhas de usuários seja recuperável atraves de um link
@@ -52,3 +54,10 @@
 - Ter telas de bloquio quando os limites forem atingidos
 
 ## Trabalhar nas Telas de Auditoria
+
+## Onbording
+- No onbording pedir informações mais completas da empresa, como: NUIT, número de telefone, email, morada, moeda oficial, etc
+- Deve enviar um email de boas-vindas ao usuário 
+- Deve enviar um email de confirmação de cadastro
+
+

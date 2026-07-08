@@ -21,4 +21,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('user-password.update');
 
     Route::inertia('settings/appearance', 'settings/appearance')->name('appearance.edit');
+    
+    Route::get('settings/company', [\App\Http\Controllers\Settings\CompanySettingsController::class, 'edit'])->name('company-settings.edit');
+    Route::post('settings/company', [\App\Http\Controllers\Settings\CompanySettingsController::class, 'update'])->name('company-settings.update');
+    Route::post('settings/company/test-smtp', [\App\Http\Controllers\Settings\CompanySettingsController::class, 'testSmtp'])->name('company-settings.test-smtp');
 });

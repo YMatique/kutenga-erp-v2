@@ -18,7 +18,14 @@ class Company extends Model
         'phone',
         'address',
         'logo_path',
+        'stamp_path',
         'status',
+        'default_tax_rate',
+        'smtp_host',
+        'smtp_port',
+        'smtp_username',
+        'smtp_password',
+        'smtp_encryption',
     ];
 
     public function branches(): HasMany
