@@ -183,15 +183,20 @@ class ReceiptController extends Controller
         $companyId = $request->user()->company_id;
         $receipt = Receipt::where('company_id', $companyId)->findOrFail($id);
 
+        $hasPhysicalProducts = $receipt->has_physical_products;
+
         $validated = $request->validate([
-            'warehouse_id' => 'required|exists:warehouses,id',
+            'warehouse_id' => $hasPhysicalProducts ? 'required|exists:warehouses,id' : 'nullable|exists:warehouses,id',
         ]);
 
         try {
-            $warehouse = Warehouse::where('company_id', $companyId)->findOrFail($validated['warehouse_id']);
+            $warehouse = null;
+            if (!empty($validated['warehouse_id'])) {
+                $warehouse = Warehouse::where('company_id', $companyId)->findOrFail($validated['warehouse_id']);
+            }
             $this->billingService->confirmAndEmit($receipt->id, $warehouse);
 
-            return redirect()->back()->with('success', 'Fatura-Recibo emitida e stock atualizado!');
+            return redirect()->back()->with('success', 'Fatura-Recibo emitido oficialmente e stock atualizado!');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }

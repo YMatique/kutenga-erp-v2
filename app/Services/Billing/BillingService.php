@@ -194,8 +194,8 @@ class BillingService
             if ($warehouse) {
                 $document->processStock($this->stockService, $warehouse);
             } else {
-                if (in_array($document->document_type, ['FT', 'FR', 'NC', 'GR'])) {
-                    throw new Exception("Um armazém de saída/entrada é obrigatório para confirmar este documento.");
+                if ($document->has_physical_products && in_array($document->document_type, ['FT', 'FR', 'NC', 'GR'])) {
+                    throw new Exception("Um armazém de saída/entrada é obrigatório para confirmar este documento, pois contém itens físicos.");
                 }
             }
 

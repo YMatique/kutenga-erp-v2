@@ -88,6 +88,8 @@ class Document extends Model
         'updated_by'
     ];
 
+    protected $appends = ['has_physical_products'];
+
     protected $casts = [
         'issue_date' => 'date',
         'due_date' => 'date',
@@ -97,6 +99,13 @@ class Document extends Model
         'grand_total' => 'decimal:2',
         'exchange_rate' => 'decimal:6'
     ];
+
+    public function getHasPhysicalProductsAttribute(): bool
+    {
+        return $this->items()->whereHas('product', function ($query) {
+            $query->where('track_stock', true);
+        })->exists();
+    }
 
     // BOOT: Bloqueio contra mutabilidade indesejada após confirmação e configuração de STI
     protected static function boot()

@@ -62,6 +62,7 @@ interface Document {
     notes: string | null;
     series: DocumentSeries | null;
     items: DocumentItem[];
+    has_physical_products?: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -151,7 +152,7 @@ export default function DocumentShow({
     const isDraft = doc.status === 'draft';
     const isCancelled = doc.status === 'cancelled';
     const isConfirmed = doc.status === 'confirmed' || doc.status === 'partial';
-    const needsWarehouse = ['FT', 'FR', 'NC', 'GR'].includes(type);
+    const needsWarehouse = ['FT', 'FR', 'NC', 'GR'].includes(type) && doc.has_physical_products;
 
     return (
         <>

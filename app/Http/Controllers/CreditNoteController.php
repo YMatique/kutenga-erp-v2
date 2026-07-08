@@ -183,15 +183,20 @@ class CreditNoteController extends Controller
         $companyId = $request->user()->company_id;
         $note = CreditNote::where('company_id', $companyId)->findOrFail($id);
 
+        $hasPhysicalProducts = $note->has_physical_products;
+
         $validated = $request->validate([
-            'warehouse_id' => 'required|exists:warehouses,id',
+            'warehouse_id' => $hasPhysicalProducts ? 'required|exists:warehouses,id' : 'nullable|exists:warehouses,id',
         ]);
 
         try {
-            $warehouse = Warehouse::where('company_id', $companyId)->findOrFail($validated['warehouse_id']);
+            $warehouse = null;
+            if (!empty($validated['warehouse_id'])) {
+                $warehouse = Warehouse::where('company_id', $companyId)->findOrFail($validated['warehouse_id']);
+            }
             $this->billingService->confirmAndEmit($note->id, $warehouse);
 
-            return redirect()->back()->with('success', 'Nota de Crédito emitida e devolução de stock registada!');
+            return redirect()->back()->with('success', 'Nota de Crédito emitida oficialmente e stock atualizado!');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }

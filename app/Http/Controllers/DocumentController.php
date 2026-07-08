@@ -146,13 +146,17 @@ class DocumentController extends Controller
         $companyId = $request->user()->company_id;
         $document = Document::where('company_id', $companyId)->findOrFail($id);
 
+        $hasPhysicalProducts = $document->has_physical_products;
+
         $validated = $request->validate([
-            'warehouse_id' => 'required|exists:warehouses,id', // Armazém de onde o stock sairá
+            'warehouse_id' => $hasPhysicalProducts ? 'required|exists:warehouses,id' : 'nullable|exists:warehouses,id',
         ]);
 
         try {
-            $warehouse = Warehouse::where('company_id', $companyId)->findOrFail($validated['warehouse_id']);
-
+            $warehouse = null;
+            if (!empty($validated['warehouse_id'])) {
+                $warehouse = Warehouse::where('company_id', $companyId)->findOrFail($validated['warehouse_id']);
+            }
             $this->billingService->confirmAndEmit($document->id, $warehouse);
 
             return redirect()->back()->with('success', 'Documento emitido oficialmente e stock atualizado!');

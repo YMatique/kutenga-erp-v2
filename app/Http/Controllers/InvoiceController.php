@@ -183,12 +183,17 @@ class InvoiceController extends Controller
         $companyId = $request->user()->company_id;
         $invoice = Invoice::where('company_id', $companyId)->findOrFail($id);
 
+        $hasPhysicalProducts = $invoice->has_physical_products;
+
         $validated = $request->validate([
-            'warehouse_id' => 'required|exists:warehouses,id',
+            'warehouse_id' => $hasPhysicalProducts ? 'required|exists:warehouses,id' : 'nullable|exists:warehouses,id',
         ]);
 
         try {
-            $warehouse = Warehouse::where('company_id', $companyId)->findOrFail($validated['warehouse_id']);
+            $warehouse = null;
+            if (!empty($validated['warehouse_id'])) {
+                $warehouse = Warehouse::where('company_id', $companyId)->findOrFail($validated['warehouse_id']);
+            }
             $this->billingService->confirmAndEmit($invoice->id, $warehouse);
 
             return redirect()->back()->with('success', 'Fatura emitida oficialmente e stock atualizado!');
