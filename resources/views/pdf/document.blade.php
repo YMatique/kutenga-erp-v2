@@ -250,7 +250,9 @@
                 <div class="header-issuer">
                     @if($document->company)
                         <strong>{{ $document->company->name }}</strong><br>
-                        {{ $document->company->address }}<br>
+                        @if($document->company->address)
+                            {!! nl2br(e($document->company->address)) !!}<br>
+                        @endif
                         NUIT: {{ $document->company->nuit }}
                     @else
                         <strong>Kutenga Solutions Lda.</strong><br>
@@ -298,7 +300,9 @@
                 @if($document->company)
                     <div class="party-name">{{ $document->company->name }}</div>
                     <div class="party-details">
-                        {{ $document->company->address }}<br>
+                        @if($document->company->address)
+                            {!! nl2br(e($document->company->address)) !!}<br>
+                        @endif
                         @if($document->company->phone)
                             Tel: {{ $document->company->phone }}<br>
                         @endif

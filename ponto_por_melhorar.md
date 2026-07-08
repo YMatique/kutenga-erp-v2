@@ -34,11 +34,11 @@
 ## Criação de Usuários: CRUD [feito]
 - criação de usuários da empresa e seus níveis de permissões [feito]
 
-## Configuração de Sistema: Configuração de empresa: [parcial]
+## Configuração de Sistema: Configuração de empresa: [feito]
 - Dados, logo, impostos, smtp (personalizado), carimbo, etc [feito]
-- [PENDENTE] Detalhes adicionais (ex: Contas Bancárias, Prefixos de Documentos, Prazos de Vencimento Padrão, Moeda Padrão)
-- Os dados da empresa devem ser únicos por empresa, por exemplo, o email, NUIT, telefone, etc
-- Esses dados podem ser usados por exemplo para envio de emails, etc.
+- Detalhes adicionais (ex: Contas Bancárias, Prefixos de Documentos, Prazos de Vencimento Padrão, Moeda Padrão) [feito]
+- Os dados da empresa devem ser únicos por empresa, por exemplo, o email, NUIT, telefone, etc [feito]
+- Esses dados podem ser usados por exemplo para envio de emails, etc. [feito]
 
 ## Trabalhar roles e permissões [feito]
 - criação de papeis e permissões [feito]

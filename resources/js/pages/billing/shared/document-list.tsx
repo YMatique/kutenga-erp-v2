@@ -56,6 +56,26 @@ const STATUS_CONFIG: Record<string, { label: string; dot: string; cls: string }>
     overdue:   { label: 'Em Atraso',  dot: 'bg-orange-500',  cls: 'bg-orange-50 text-orange-600' },
 };
 
+function formatDate(dateStr: string | null | undefined): string {
+    if (!dateStr) return '—';
+    try {
+        const cleanDateStr = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+        const parts = cleanDateStr.split('-');
+        if (parts.length === 3) {
+            const [year, month, day] = parts;
+            return `${day}/${month}/${year}`;
+        }
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    } catch {
+        return dateStr;
+    }
+}
+
 function StatusBadge({ status }: { status: string }) {
     const cfg = STATUS_CONFIG[status] ?? { label: status, dot: 'bg-slate-400', cls: 'bg-slate-100 text-slate-600' };
     return (
@@ -196,11 +216,11 @@ export default function DocumentList({ documents, filters, type, title, createHr
                                                 {doc.customer_nuit}
                                             </TableCell>
                                             <TableCell className="py-3 text-sm text-slate-500">
-                                                {doc.issue_date}
+                                                {formatDate(doc.issue_date)}
                                             </TableCell>
                                             {type !== 'FR' && type !== 'GR' && (
                                                 <TableCell className="py-3 text-sm text-slate-500">
-                                                    {doc.due_date}
+                                                    {formatDate(doc.due_date)}
                                                 </TableCell>
                                             )}
                                             <TableCell className="py-3 text-right font-mono font-semibold text-slate-900 text-sm">

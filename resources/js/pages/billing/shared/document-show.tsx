@@ -110,6 +110,26 @@ function fmt(n: number | string): string {
     return Number(n).toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function formatDate(dateStr: string | null | undefined): string {
+    if (!dateStr) return '—';
+    try {
+        const cleanDateStr = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+        const parts = cleanDateStr.split('-');
+        if (parts.length === 3) {
+            const [year, month, day] = parts;
+            return `${day}/${month}/${year}`;
+        }
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    } catch {
+        return dateStr;
+    }
+}
+
 export default function DocumentShow({
     document: doc,
     warehouses = [],
@@ -367,10 +387,10 @@ export default function DocumentShow({
                                         {doc.document_number ?? 'RASCUNHO'}
                                     </p>
                                     <p className="text-xs text-zinc-500 mt-1 flex items-center gap-1 justify-end">
-                                        <Calendar size={11} /> Emissão: {doc.issue_date}
+                                        <Calendar size={11} /> Emissão: {formatDate(doc.issue_date)}
                                     </p>
                                     {type !== 'GR' && type !== 'FR' && (
-                                        <p className="text-xs text-zinc-500">Vencimento: {doc.due_date}</p>
+                                        <p className="text-xs text-zinc-500">Vencimento: {formatDate(doc.due_date)}</p>
                                     )}
                                 </div>
                             </div>
