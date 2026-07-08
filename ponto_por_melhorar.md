@@ -43,12 +43,13 @@
 ## Trabalhar roles e permissões [feito]
 - criação de papeis e permissões [feito]
 
-## Tela de bloqueio
-- Tela de bloquio quando passar muito tempo de inactividade [feito]
-- Deve ser uma tela diverente, não apenas um overlay (pode colocar um relógio, ou algo sobre fatura, etc)
+## Trabalhar na tela de Login [parcial]
+- permitir que senhas de usuários seja recuperável atraves de um link [feito]
+- Tela de bloquio quando passar muito tempo de inactividade [feito]. Deve ser uma tela diverente, não apenas um overlay (pode colocar um relógio, ou algo sobre fatura, etc) [feito]
+- Melhorar tela de bloqueio com UI limpa e relógio funcional [feito]
 
-## Recuperação de senha e redefinição
-- permitir que senhas de usuários seja recuperável atraves de um link
+## Recuperação de senha e redefinição [feito]
+- permitir que senhas de usuários seja recuperável atraves de um link [feito]
 
 ## Trabalhar em Subscrições e Planos para as empresas
 - Cada empresa deverá estar subscrita em um determinado plano e consoante a esse plano ter limites de uso;
@@ -69,5 +70,5 @@
 
 ## Ver A Implementação de dark mode
 
-## 
+## Relatórios
 
