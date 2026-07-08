@@ -5,10 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import InputError from '@/components/input-error';
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Trash2, ImagePlus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState } from 'react';
 
 export default function CompanySettings({ company }: { company: any }) {
+    const [logoPreview, setLogoPreview] = useState<string | null>(company.logo_path ? `/storage/${company.logo_path}` : null);
+    const [stampPreview, setStampPreview] = useState<string | null>(company.stamp_path ? `/storage/${company.stamp_path}` : null);
+
     const { data, setData, post, processing, errors, recentlySuccessful } = useForm({
         name: company.name || '',
         nuit: company.nuit || '',
@@ -156,33 +160,65 @@ export default function CompanySettings({ company }: { company: any }) {
                                 description="Logotipo e Carimbo/Assinatura."
                             />
 
-                            <div className="grid gap-6 sm:grid-cols-2">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="logo">Logotipo</Label>
-                                    {company.logo_path && (
-                                        <img src={`/storage/${company.logo_path}`} alt="Logo" className="h-16 object-contain mb-2 border p-1 rounded bg-white" />
-                                    )}
-                                    <Input
-                                        id="logo"
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => setData('logo', e.target.files?.[0] || null)}
-                                    />
-                                    <InputError message={errors.logo} />
+                            <div className="grid gap-8 sm:grid-cols-2">
+                                <div className="flex items-start gap-4">
+                                    <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center group hover:border-[#2DB8A0] hover:bg-[#2DB8A0]/5 transition-all">
+                                        {logoPreview ? (
+                                            <img src={logoPreview} alt="Logo" className="h-full w-full object-contain p-2" />
+                                        ) : (
+                                            <ImagePlus className="h-8 w-8 text-slate-400 group-hover:text-[#2DB8A0] transition-colors" />
+                                        )}
+                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="text-white text-xs font-medium">Alterar</span>
+                                        </div>
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    setData('logo', file);
+                                                    setLogoPreview(URL.createObjectURL(file));
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-base">Logotipo da Empresa</Label>
+                                        <p className="text-sm text-slate-500">Recomendado: Fundo transparente, formato PNG. Máximo 2MB.</p>
+                                        <InputError message={errors.logo} />
+                                    </div>
                                 </div>
 
-                                <div className="grid gap-2">
-                                    <Label htmlFor="stamp">Carimbo / Assinatura</Label>
-                                    {company.stamp_path && (
-                                        <img src={`/storage/${company.stamp_path}`} alt="Stamp" className="h-16 object-contain mb-2 border p-1 rounded bg-white" />
-                                    )}
-                                    <Input
-                                        id="stamp"
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => setData('stamp', e.target.files?.[0] || null)}
-                                    />
-                                    <InputError message={errors.stamp} />
+                                <div className="flex items-start gap-4">
+                                    <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center group hover:border-[#2DB8A0] hover:bg-[#2DB8A0]/5 transition-all">
+                                        {stampPreview ? (
+                                            <img src={stampPreview} alt="Stamp" className="h-full w-full object-contain p-2" />
+                                        ) : (
+                                            <ImagePlus className="h-8 w-8 text-slate-400 group-hover:text-[#2DB8A0] transition-colors" />
+                                        )}
+                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="text-white text-xs font-medium">Alterar</span>
+                                        </div>
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    setData('stamp', file);
+                                                    setStampPreview(URL.createObjectURL(file));
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-base">Carimbo / Assinatura</Label>
+                                        <p className="text-sm text-slate-500">Usado para assinar faturas digitalmente. Fundo transparente, PNG. Máximo 2MB.</p>
+                                        <InputError message={errors.stamp} />
+                                    </div>
                                 </div>
                             </div>
                         </TabsContent>
