@@ -71,6 +71,34 @@ class CheckDocumentStatus extends Command
             Log::info("Fatura #{$invoice->id} ({$invoice->document_number}) marcada como Em Atraso (overdue). Vencimento: {$invoice->due_date->toDateString()}");
         }
 
+        // 1.5 Verificar Faturas (FT) prestes a expirar (3 dias)
+        $warningDate = $today->copy()->addDays(3);
+        $expiringInvoices = Document::where('document_type', 'FT')
+            ->whereIn('status', ['confirmed', 'partial'])
+            ->whereIn('payment_status', ['unpaid', 'partial'])
+            ->whereDate('due_date', '=', $warningDate)
+            ->get();
+
+        $warnedInvoices = 0;
+        foreach ($expiringInvoices as $invoice) {
+            $exists = SystemNotification::where('company_id', $invoice->company_id)
+                ->where('type', 'invoice_expiring')
+                ->where('link', "/billing/invoices/{$invoice->id}")
+                ->exists();
+
+            if (!$exists) {
+                SystemNotification::create([
+                    'company_id' => $invoice->company_id,
+                    'type' => 'invoice_expiring',
+                    'title' => 'Fatura Prestes a Expirar',
+                    'message' => "A fatura {$invoice->document_number} para {$invoice->customer_name} no valor de " . number_format($invoice->grand_total, 2, ',', '.') . " MZN expira em 3 dias (" . $invoice->due_date->format('d/m/Y') . ").",
+                    'link' => "/billing/invoices/{$invoice->id}",
+                    'is_read' => false,
+                ]);
+                $warnedInvoices++;
+            }
+        }
+
         // 2. Verificar Cotações (CT) expiradas
         // Cotações que estão em status 'confirmed' (ou seja, ativas) e due_date < hoje
         $overdueQuotes = Document::where('document_type', 'CT')
@@ -97,6 +125,6 @@ class CheckDocumentStatus extends Command
             Log::info("Cotação #{$quote->id} ({$quote->document_number}) marcada como Expirada/Em Atraso (overdue). Vencimento: {$quote->due_date->toDateString()}");
         }
 
-        $this->info("Verificação concluída. Faturas atualizadas: {$updatedInvoices}. Cotações atualizadas: {$updatedQuotes}.");
+        $this->info("Verificação concluída. Faturas atualizadas: {$updatedInvoices}. Cotações atualizadas: {$updatedQuotes}. Alertas de expiração: {$warnedInvoices}.");
     }
 }

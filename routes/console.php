@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 // Agendar a verificação diária de vencimento de faturas e cotações
 Schedule::command('app:check-document-status')->daily();
+Schedule::command('app:check-low-stock')->daily();

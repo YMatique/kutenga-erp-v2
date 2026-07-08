@@ -111,6 +111,7 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     // POS
 
     // Users
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\SystemNotificationController::class, 'markAsRead'])->name('notifications.read');
 
     // Configs
 });

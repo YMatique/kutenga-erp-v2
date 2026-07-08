@@ -264,6 +264,17 @@ class BillingService
                     'payment_status' => $newDue <= 0 ? 'paid' : 'partial',
                     'status' => $newDue <= 0 ? 'paid' : 'partial'
                 ]);
+
+                if ($newDue <= 0) {
+                    \App\Models\SystemNotification::create([
+                        'company_id' => $invoice->company_id,
+                        'type' => 'invoice_paid',
+                        'title' => 'Fatura Liquidada',
+                        'message' => "A fatura {$invoice->document_number} foi totalmente paga com a receção de " . number_format($allocationAmount, 2, ',', '.') . " MZN.",
+                        'link' => "/billing/invoices/{$invoice->id}",
+                        'is_read' => false,
+                    ]);
+                }
             }
 
             return $payment->load('allocations');

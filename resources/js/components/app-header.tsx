@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import { Bell, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem } from '@/types';
+import { NotificationsDropdown } from '@/components/notifications-dropdown';
 
 type Props = {
     breadcrumbs?: BreadcrumbItem[];
@@ -19,7 +20,7 @@ type Props = {
 
 export function AppHeader({ breadcrumbs = [] }: Props) {
     const page = usePage<any>();
-    const { auth } = page.props;
+    const { auth, notifications } = page.props;
     const getInitials = useInitials();
 
     return (
@@ -42,15 +43,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                     <Search className="h-4 w-4" />
                 </Button>
 
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md relative"
-                >
-                    <Bell className="h-4 w-4" />
-                    {/* Notification dot */}
-                    <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-[#E8A020]" />
-                </Button>
+                <NotificationsDropdown notifications={notifications || []} />
 
                 <div className="w-px h-4 bg-slate-200 mx-1" />
 

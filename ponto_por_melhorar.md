@@ -7,11 +7,11 @@
 - Garantir que apenas produtos rastreáveis apareçam no stock [feito]
 - Ao faturar ou vender, garantir que apenas que tem stock sofra abate, pois pode se dar o caso de ser usado por uma empresa de consultoria e tem apenas serviços, isso não tem a ver com o estoque. [feito]
 
-## Notificações
-- Trabalhar nas notificações do sistema
-- alerta de estoque quanto atingir a quantidade mínima para alerta
-- alerta de faturas prestes a expirar, expiradas e pagas
-- entre outras alertas
+## Notificações [feito]
+- Trabalhar nas notificações do sistema [feito]
+- alerta de estoque quanto atingir a quantidade mínima para alerta [feito]
+- alerta de faturas prestes a expirar, expiradas e pagas [feito]
+- entre outras alertas [feito]
 
 ## Jobs e Workers [feito]
 - Trabalhar em tarefas em segundo plano: como envio de emails [feito]
