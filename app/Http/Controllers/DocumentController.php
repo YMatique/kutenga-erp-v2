@@ -230,19 +230,10 @@ class DocumentController extends Controller
         ]);
 
         try {
-            // Gerar PDF em buffer na memória
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.document', compact('document'));
-            $pdf->setPaper('a4', 'portrait');
-            $pdfContent = $pdf->output();
+            // Enviar e-mail em segundo plano (enfileirado automaticamente devido ao ShouldQueue)
+            \Illuminate\Support\Facades\Mail::to($validated['email'])->send(new \App\Mail\DocumentMail($document));
 
-            // Nome do ficheiro em anexo
-            $name = $document->document_number ?: "{$document->document_type}_draft_{$document->id}";
-            $filename = str_replace(['/', ' '], '_', $name) . '.pdf';
-
-            // Enviar e-mail com anexo dinâmico
-            \Illuminate\Support\Facades\Mail::to($validated['email'])->send(new \App\Mail\DocumentMail($document, $pdfContent, $filename));
-
-            return redirect()->back()->with('success', 'Documento enviado por e-mail com sucesso!');
+            return redirect()->back()->with('success', 'Documento enfileirado para envio por e-mail com sucesso!');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => 'Erro ao enviar e-mail: ' . $e->getMessage()]);
         }

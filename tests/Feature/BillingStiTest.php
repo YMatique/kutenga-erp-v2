@@ -239,4 +239,141 @@ class BillingStiTest extends TestCase
         $currentStock = $this->stockService->getStock($this->product, $this->warehouse);
         $this->assertEquals(12.00, $currentStock);
     }
+
+    public function test_invoice_payment_and_cancellation_status_transitions()
+    {
+        // 1. Criar fatura rascunho e confirmar
+        $invoice = $this->billingService->createDraft([
+            'customer_id' => $this->customer->id,
+            'customer_name' => $this->customer->name,
+            'customer_nuit' => $this->customer->nuit,
+            'document_type' => 'FT',
+            'series_id' => $this->series->id,
+            'items' => [
+                [
+                    'product_id' => $this->product->id,
+                    'product_name' => $this->product->name,
+                    'quantity' => 1,
+                    'unit_price' => 100.00,
+                    'tax_rate' => 16.00,
+                ]
+            ]
+        ], $this->company->id);
+
+        $confirmed = $this->billingService->confirmAndEmit($invoice->id, $this->warehouse);
+        $this->assertEquals('confirmed', $confirmed->status);
+        $this->assertEquals('unpaid', $confirmed->payment_status);
+
+        // 2. Registar pagamento parcial
+        $paymentPartial = $this->billingService->registerPayment(
+            $this->customer->id,
+            50.00,
+            'Cash',
+            'REF-123'
+        );
+        
+        $confirmed->refresh();
+        $this->assertEquals('partial', $confirmed->status);
+        $this->assertEquals('partial', $confirmed->payment_status);
+
+        // 3. Registar pagamento restante (Total é 116.00. 116.00 - 50.00 = 66.00)
+        $paymentFull = $this->billingService->registerPayment(
+            $this->customer->id,
+            66.00,
+            'Cash',
+            'REF-124'
+        );
+
+        $confirmed->refresh();
+        $this->assertEquals('paid', $confirmed->status);
+        $this->assertEquals('paid', $confirmed->payment_status);
+
+        // 4. Testar cancelamento de documento confirmado/pago
+        $cancelled = $this->billingService->cancel($confirmed->id);
+        $this->assertEquals('cancelled', $cancelled->status);
+
+        // 5. Testar que alteração de campos protegidos (ex: grand_total) em documento confirmado joga exceção
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage("Regra de Imutabilidade Fiscal");
+        $cancelled->grand_total = 200.00;
+        $cancelled->save();
+    }
+
+    public function test_check_document_status_command()
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+
+        // 1. Criar Fatura que venceu ontem (vencida) com email do cliente
+        $invoice = $this->billingService->createDraft([
+            'customer_id' => $this->customer->id,
+            'customer_name' => $this->customer->name,
+            'customer_nuit' => $this->customer->nuit,
+            'customer_email' => 'client@example.com',
+            'document_type' => 'FT',
+            'series_id' => $this->series->id,
+            'issue_date' => now()->subDays(5)->toDateString(),
+            'due_date' => now()->subDays(1)->toDateString(), // vencido
+            'items' => [
+                [
+                    'product_id' => $this->product->id,
+                    'product_name' => $this->product->name,
+                    'quantity' => 1,
+                    'unit_price' => 100.00,
+                    'tax_rate' => 16.00,
+                ]
+            ]
+        ], $this->company->id);
+        $invoiceConfirmed = $this->billingService->confirmAndEmit($invoice->id, $this->warehouse);
+        $this->assertEquals('confirmed', $invoiceConfirmed->status);
+
+        // 2. Criar Cotação que venceu ontem (vencida)
+        $quote = $this->billingService->createDraft([
+            'customer_id' => $this->customer->id,
+            'customer_name' => $this->customer->name,
+            'customer_nuit' => $this->customer->nuit,
+            'document_type' => 'CT',
+            'series_id' => $this->series->id,
+            'issue_date' => now()->subDays(5)->toDateString(),
+            'due_date' => now()->subDays(1)->toDateString(), // vencido
+            'items' => [
+                [
+                    'product_id' => $this->product->id,
+                    'product_name' => $this->product->name,
+                    'quantity' => 1,
+                    'unit_price' => 100.00,
+                    'tax_rate' => 16.00,
+                ]
+            ]
+        ], $this->company->id);
+        $quoteConfirmed = $this->billingService->confirmAndEmit($quote->id, $this->warehouse);
+        $this->assertEquals('confirmed', $quoteConfirmed->status);
+
+        // 3. Rodar o comando do agendador
+        $this->artisan('app:check-document-status')
+            ->assertExitCode(0);
+
+        // 4. Verificar se ambos foram atualizados para 'overdue' (Em Atraso)
+        $invoiceConfirmed->refresh();
+        $quoteConfirmed->refresh();
+
+        $this->assertEquals('overdue', $invoiceConfirmed->status);
+        $this->assertEquals('overdue', $quoteConfirmed->status);
+
+        // 5. Verificar se as notificações no sistema foram geradas
+        $this->assertDatabaseHas('system_notifications', [
+            'company_id' => $this->company->id,
+            'type' => 'invoice_overdue',
+            'title' => 'Fatura em Atraso',
+        ]);
+        $this->assertDatabaseHas('system_notifications', [
+            'company_id' => $this->company->id,
+            'type' => 'quote_expired',
+            'title' => 'Cotação Expirada',
+        ]);
+
+        // 6. Verificar se o e-mail foi enfileirado para o cliente
+        \Illuminate\Support\Facades\Mail::assertQueued(\App\Mail\InvoiceOverdueMail::class, function ($mail) use ($invoiceConfirmed) {
+            return $mail->hasTo('client@example.com') && $mail->document->id === $invoiceConfirmed->id;
+        });
+    }
 }

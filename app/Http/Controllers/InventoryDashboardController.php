@@ -84,6 +84,7 @@ class InventoryDashboardController extends Controller
 
     $products = Product::query()
         ->where('company_id', $companyId)
+        ->where('track_stock', true)
         ->with([
             'category',
             'stocks.warehouse'

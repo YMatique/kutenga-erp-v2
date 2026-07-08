@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class DocumentMail extends Mailable implements ShouldQueue
+class InvoiceOverdueMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -30,20 +30,8 @@ class DocumentMail extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
-        $typeLabels = [
-            'FT' => 'Fatura',
-            'FR' => 'Fatura-Recibo',
-            'CT' => 'Cotação',
-            'NC' => 'Nota de Crédito',
-            'ND' => 'Nota de Débito',
-            'GR' => 'Guia de Remessa',
-        ];
-        
-        $label = $typeLabels[$this->document->document_type] ?? 'Documento';
-        $subject = "Kutenga ERP - " . $label . " " . ($this->document->document_number ?? 'Rascunho');
-
         return new Envelope(
-            subject: $subject,
+            subject: "AVISO: Pagamento em Atraso - Fatura " . ($this->document->document_number ?? 'Rascunho'),
         );
     }
 
@@ -53,7 +41,7 @@ class DocumentMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.document',
+            view: 'emails.invoice_overdue',
         );
     }
 
@@ -64,16 +52,14 @@ class DocumentMail extends Mailable implements ShouldQueue
      */
     public function attachments(): array
     {
-        // Carregar relações necessárias caso tenham sido serializadas sem elas
         $this->document->loadMissing(['items', 'series', 'customer']);
 
-        // Gerar PDF em buffer na memória do worker
+        // Gerar PDF em buffer
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.document', ['document' => $this->document]);
         $pdf->setPaper('a4', 'portrait');
         $pdfContent = $pdf->output();
 
-        // Nome do ficheiro em anexo
-        $name = $this->document->document_number ?: "{$this->document->document_type}_draft_{$this->document->id}";
+        $name = $this->document->document_number ?: "FT_overdue_{$this->document->id}";
         $filename = str_replace(['/', ' '], '_', $name) . '.pdf';
 
         return [

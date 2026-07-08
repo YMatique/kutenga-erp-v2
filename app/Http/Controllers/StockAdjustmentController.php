@@ -50,6 +50,7 @@ class StockAdjustmentController extends Controller
                 'company_id',
                 $companyId
             )
+                ->where('track_stock', true)
                 ->orderBy('name')
                 ->get([
                     'id',

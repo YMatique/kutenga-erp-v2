@@ -133,7 +133,14 @@ class Document extends Model
             }
 
             if (in_array($document->getOriginal('status'), ['confirmed', 'paid', 'partial', 'cancelled'])) {
-                throw new Exception("Regra de Imutabilidade Fiscal: Documentos emitidos/confirmados não podem ser alterados.");
+                // Permitir atualizar apenas campos de estado, controle e timestamps de auditoria
+                $allowedChanges = ['status', 'payment_status', 'updated_at', 'updated_by', 'cancelled_by'];
+                $dirtyFields = array_keys($document->getDirty());
+                $unallowedDirty = array_diff($dirtyFields, $allowedChanges);
+
+                if (count($unallowedDirty) > 0) {
+                    throw new Exception("Regra de Imutabilidade Fiscal: Documentos emitidos/confirmados não podem ter seus dados alterados.");
+                }
             }
         });
 

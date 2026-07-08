@@ -50,6 +50,16 @@ class HandleInertiaRequests extends Middleware
                 'warning' => fn () => $request->session()->get('warning'),
                 'info' => fn () => $request->session()->get('info'),
             ],
+            'notifications' => function () use ($request) {
+                if (! $request->user()) {
+                    return [];
+                }
+                return \App\Models\SystemNotification::where('company_id', $request->user()->company_id)
+                    ->where('is_read', false)
+                    ->orderBy('created_at', 'desc')
+                    ->limit(5)
+                    ->get();
+            },
         ];
     }
 }

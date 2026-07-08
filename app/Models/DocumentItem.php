@@ -7,11 +7,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DocumentItem extends Model
 {
-     protected $table = 'document_items';
-    
+    protected $table = 'document_items';
+
     protected $fillable = [
-        'document_id', 'product_id', 'product_name', 'product_sku', 'product_barcode',
-        'description', 'quantity', 'unit_price', 'tax_rate', 'discount_percent', 'total'
+        'document_id',
+        'product_id',
+        'product_name',
+        'product_sku',
+        'product_barcode',
+        'description',
+        'quantity',
+        'unit_price',
+        'tax_rate',
+        'discount_percent',
+        'total'
     ];
 
     protected $casts = [
@@ -25,5 +34,9 @@ class DocumentItem extends Model
     public function document(): BelongsTo
     {
         return $this->belongsTo(Document::class, 'document_id');
+    }
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'product_id');
     }
 }

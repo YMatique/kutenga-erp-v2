@@ -252,7 +252,8 @@ class BillingService
                 PaymentAllocation::create([
                     'payment_id' => $payment->id,
                     'document_id' => $invoice->id,
-                    'amount_allocated' => $allocationAmount
+                    'amount_allocated' => $allocationAmount,
+                    'created_by' => Auth::id() ?? $payment->created_by
                 ]);
 
                 $remaining -= $allocationAmount;

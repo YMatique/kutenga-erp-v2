@@ -56,6 +56,7 @@ class StockTransferController extends Controller
         $companyId = Auth::user()->company_id;
         $products = Product::query()
             ->where('company_id', $companyId)
+            ->where('track_stock', true)
             ->whereHas('stocks', function ($q) {
                 $q->where('quantity', '>', 0);
             })

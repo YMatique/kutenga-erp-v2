@@ -1,11 +1,11 @@
 # Pontos por melhorar no sistema
 
-## Produtos/Serviços
-- verificar a tela de criação e edição de produtos/serviços: se escolher serviço, geralmente, não tem stock, marca e nem unidade
+## Produtos/Serviços [feito]
+- verificar a tela de criação e edição de produtos/serviços: se escolher serviço, geralmente, não tem stock, marca e nem unidade [feito]
 
-## Inventário
-- Garantir que apenas produtos rastreáveis apareçam no stock
-- Ao faturar ou vender, garantir que apenas que tem stock sofra abate, pois pode se dar o caso de ser usado por uma empresa de consultoria e tem apenas serviços, isso não tem a ver com o estoque.
+## Inventário [feito]
+- Garantir que apenas produtos rastreáveis apareçam no stock [feito]
+- Ao faturar ou vender, garantir que apenas que tem stock sofra abate, pois pode se dar o caso de ser usado por uma empresa de consultoria e tem apenas serviços, isso não tem a ver com o estoque. [feito]
 
 ## Notificações
 - Trabalhar nas notificações do sistema
@@ -13,19 +13,19 @@
 - alerta de faturas prestes a expirar, expiradas e pagas
 - entre outras alertas
 
-## Jobs e Workers
-- Trabalhar em tarefas em segundo plano: como envio de emails
-- Trabalhar em Schedules para verificação de faturas, cotações, entre outros: verificando os que estão a expirar, os expirados
+## Jobs e Workers [feito]
+- Trabalhar em tarefas em segundo plano: como envio de emails [feito]
+- Trabalhar em Schedules para verificação de faturas, cotações, entre outros: verificando os que estão a expirar, os expirados [feito]
 
-## Alertas
-- Ao criar, editar, remover deve mostrar notificação toast
+## Alertas [feito]
+- Ao criar, editar, remover deve mostrar notificação toast [feito]
 
 ## Modal de delete [feito]
-- antes de eliminar algo, deve primeiramente mostrar uma caixa de diálogo para confirmação 
-- Não usar alerta padrão do navegador
+- antes de eliminar algo, deve primeiramente mostrar uma caixa de diálogo para confirmação [feito]
+- Não usar alerta padrão do navegador [feito]
 
-## Diferenciar produto e serviço ao gerar factura, cotação, pois um serviço não tem stock
-- Ao gerar factura, cotação ou qualquer outro documento comercial deve diferenciar o produto do serviço; serviço não sofre abate no stock.
+## Diferenciar produto e serviço ao gerar factura, cotação, pois um serviço não tem stock [feito]
+- Ao gerar factura, cotação ou qualquer outro documento comercial deve diferenciar o produto do serviço; serviço não sofre abate no stock. [feito]
 
 ## Colocar os breadcrumb em todas as páginas [feito]
 - Verificar as páginas internas sem o breadcrum [feito]
@@ -40,9 +40,9 @@
 ## Trabalhar roles e permissões
 - criação de papeis e permissões
 
-## Tela de bloqueio
-- Tela de bloquio quando passar muito tempo de inactividade
-- Deve ser uma tela diverente, não apenas um overlay
+## Tela de bloqueio [feito]
+- Tela de bloquio quando passar muito tempo de inactividade [feito]
+- Deve ser uma tela diverente, não apenas um overlay [feito]
 
 ## Recuperação de senha e redefinição
 - permitir que senhas de usuários seja recuperável atraves de um link
