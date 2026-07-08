@@ -1,4 +1,5 @@
 import { Head, usePage, useForm } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
 import { Plus, Search, Tag, Edit, Trash2, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -245,3 +246,12 @@ export default function BrandsIndex() {
         </>
     );
 }
+
+BrandsIndex.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Catálogo', href: '#' },
+        { title: 'Marcas', href: '/brands' },
+    ]}>
+        {page}
+    </AppLayout>
+);

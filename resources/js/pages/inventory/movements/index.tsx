@@ -1,4 +1,5 @@
 import { Head, usePage } from '@inertiajs/react'
+import AppLayout from '@/layouts/app-layout';
 import { ArrowDownCircle, ArrowUpCircle, RefreshCw, Package2, Activity } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -211,3 +212,12 @@ export default function MovementsIndex() {
         </>
     )
 }
+
+MovementsIndex.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Inventário', href: '#' },
+        { title: 'Movimentos', href: '/inventory/movements' },
+    ]}>
+        {page}
+    </AppLayout>
+);

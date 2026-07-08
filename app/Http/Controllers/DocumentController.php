@@ -15,7 +15,7 @@ use Inertia\Response;
 
 class DocumentController extends Controller
 {
-     protected BillingService $billingService;
+    protected BillingService $billingService;
 
     public function __construct(BillingService $billingService)
     {
@@ -34,8 +34,8 @@ class DocumentController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('document_number', 'like', "%{$search}%")
-                      ->orWhere('customer_name', 'like', "%{$search}%")
-                      ->orWhere('customer_nuit', 'like', "%{$search}%");
+                        ->orWhere('customer_name', 'like', "%{$search}%")
+                        ->orWhere('customer_nuit', 'like', "%{$search}%");
                 });
             })
             ->when($request->status, function ($query, $status) {
@@ -67,7 +67,7 @@ class DocumentController extends Controller
 
         // Dados necessários para popular os seletores do frontend
         $customers = Customer::where('company_id', $companyId)->where('is_active', true)->get();
-        
+
         $products = Product::where('company_id', $companyId)
             ->where('status', 'active')
             ->get(['id', 'name', 'sku', 'barcode', 'price', 'tax_rate', 'tax_is_exempt', 'tax_exemption_reason']);
@@ -152,7 +152,7 @@ class DocumentController extends Controller
 
         try {
             $warehouse = Warehouse::where('company_id', $companyId)->findOrFail($validated['warehouse_id']);
-            
+
             $this->billingService->confirmAndEmit($document->id, $warehouse);
 
             return redirect()->back()->with('success', 'Documento emitido oficialmente e stock atualizado!');

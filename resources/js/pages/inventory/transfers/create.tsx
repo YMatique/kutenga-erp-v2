@@ -1,5 +1,6 @@
 import { useForm, usePage } from '@inertiajs/react'
 import { useState } from 'react'
+import AppLayout from '@/layouts/app-layout';
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -224,3 +225,13 @@ const { warehouses = [], products = [] }: any = usePage().props
         </div>
     )
 }
+
+CreateTransfer.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Inventário', href: '#' },
+        { title: 'Transferências de Stock', href: '/inventory/transfers' },
+        { title: 'Criar Transferência', href: '#' },
+    ]}>
+        {page}
+    </AppLayout>
+);

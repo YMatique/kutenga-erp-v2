@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react'
+import AppLayout from '@/layouts/app-layout';
 import { Eye, Layers, PackageSearch } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -188,3 +189,12 @@ export default function Index({ stocks }: Props) {
         </>
     )
 }
+
+Index.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Inventário', href: '#' },
+        { title: 'Stock Geral', href: '/inventory/stocks' },
+    ]}>
+        {page}
+    </AppLayout>
+);

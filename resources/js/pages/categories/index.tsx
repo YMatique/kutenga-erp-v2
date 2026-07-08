@@ -1,4 +1,5 @@
 import { Head, usePage, useForm } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
 import {
     Plus,
     Search,
@@ -373,3 +374,12 @@ export default function CategoriesIndex() {
         </>
     );
 }
+
+CategoriesIndex.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Catálogo', href: '#' },
+        { title: 'Categorias', href: '/categories' },
+    ]}>
+        {page}
+    </AppLayout>
+);

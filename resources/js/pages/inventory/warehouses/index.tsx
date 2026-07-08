@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Head, Link, usePage } from '@inertiajs/react'
+import AppLayout from '@/layouts/app-layout';
 import {
     Warehouse,
     MapPin,
@@ -294,3 +295,12 @@ export default function Index() {
         </>
     )
 }
+
+Index.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Inventário', href: '#' },
+        { title: 'Armazéns', href: '/inventory/warehouses' },
+    ]}>
+        {page}
+    </AppLayout>
+);

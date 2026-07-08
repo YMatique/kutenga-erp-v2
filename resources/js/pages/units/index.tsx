@@ -1,4 +1,5 @@
 import { Head, usePage, useForm } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
 import { Plus, Search, Ruler, Edit, Trash2, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -299,3 +300,12 @@ export default function UnitsIndex() {
         </>
     );
 }
+
+UnitsIndex.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Catálogo', href: '#' },
+        { title: 'Unidades', href: '/units' },
+    ]}>
+        {page}
+    </AppLayout>
+);

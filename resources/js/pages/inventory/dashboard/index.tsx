@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
 import {
     AlertTriangle,
     ArrowDownRight,
@@ -273,3 +274,12 @@ export default function InventoryDashboard() {
         </>
     );
 }
+
+InventoryDashboard.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Inventário', href: '#' },
+        { title: 'Dashboard', href: '/inventory' },
+    ]}>
+        {page}
+    </AppLayout>
+);

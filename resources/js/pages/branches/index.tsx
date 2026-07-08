@@ -1,4 +1,5 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
 import { MapPin, Plus, Trash2, Phone, Hash, Pencil, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -304,3 +305,12 @@ export default function BranchesIndex() {
         </>
     );
 }
+
+BranchesIndex.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Catálogo', href: '#' },
+        { title: 'Filiais', href: '/branches' },
+    ]}>
+        {page}
+    </AppLayout>
+);

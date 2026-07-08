@@ -1,4 +1,5 @@
 import { Head, usePage, Link } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
 import {
     Plus,
     Search,
@@ -321,3 +322,12 @@ export default function ProductsIndex() {
         </>
     );
 }
+
+ProductsIndex.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Catálogo', href: '#' },
+        { title: 'Produtos e Serviços', href: '/products' },
+    ]}>
+        {page}
+    </AppLayout>
+);

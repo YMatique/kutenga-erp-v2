@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
 import { Package2 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/brand';
 import { Label } from '@/components/ui/label';
@@ -148,3 +149,12 @@ export default function Index({
         </>
     );
 }
+
+Index.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Inventário', href: '#' },
+        { title: 'Stock Inicial', href: '/inventory/opening' },
+    ]}>
+        {page}
+    </AppLayout>
+);

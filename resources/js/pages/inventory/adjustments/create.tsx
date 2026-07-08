@@ -1,4 +1,5 @@
 import { Head, useForm } from '@inertiajs/react'
+import AppLayout from '@/layouts/app-layout';
 import { Plus, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -311,3 +312,13 @@ export default function Create({
         </>
     )
 }
+
+Create.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Inventário', href: '#' },
+        { title: 'Ajustes de Stock', href: '/inventory/adjustments' },
+        { title: 'Criar Ajuste', href: '#' },
+    ]}>
+        {page}
+    </AppLayout>
+);

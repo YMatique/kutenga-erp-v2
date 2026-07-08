@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
 import {
     ArrowLeft,
     Package,
@@ -97,16 +98,7 @@ export default function ProductShow() {
 
             <div className="flex flex-col gap-6">
 
-                {/* Breadcrumb */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Link href="/products" className="hover:text-zinc-900">
-                        Produtos
-                    </Link>
-                    <span>/</span>
-                    <span className="text-zinc-900">
-                        {product.name}
-                    </span>
-                </div>
+
 
                 {/* Header */}
                 <div className="rounded-3xl border bg-white/80 p-6">
@@ -514,3 +506,13 @@ export default function ProductShow() {
         </>
     );
 }
+
+ProductShow.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Catálogo', href: '#' },
+        { title: 'Produtos e Serviços', href: '/products' },
+        { title: page.props?.product?.name ?? 'Detalhes', href: '#' },
+    ]}>
+        {page}
+    </AppLayout>
+);

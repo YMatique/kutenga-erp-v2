@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react'
+import AppLayout from '@/layouts/app-layout';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -141,3 +142,13 @@ export default function Show({ product, stocks }: Props) {
         </>
     )
 }
+
+Show.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Inventário', href: '#' },
+        { title: 'Stock Geral', href: '/inventory/stocks' },
+        { title: page.props?.product?.name ?? 'Detalhes', href: '#' },
+    ]}>
+        {page}
+    </AppLayout>
+);

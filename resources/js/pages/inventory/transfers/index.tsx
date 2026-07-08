@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react'
+import AppLayout from '@/layouts/app-layout';
 import { useState, useEffect } from 'react'
 import {
     ArrowRightLeft,
@@ -334,3 +335,12 @@ export default function Index({ transfers, filters }: IndexProps) {
         </>
     )
 }
+
+Index.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Inventário', href: '#' },
+        { title: 'Transferências de Stock', href: '/inventory/transfers' },
+    ]}>
+        {page}
+    </AppLayout>
+);

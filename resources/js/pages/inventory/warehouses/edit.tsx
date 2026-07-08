@@ -1,4 +1,5 @@
 import { useForm, Head, Link } from '@inertiajs/react'
+import AppLayout from '@/layouts/app-layout';
 
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -200,3 +201,13 @@ export default function Edit({ warehouse }: EditProps) {
         </>
     )
 }
+
+Edit.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Inventário', href: '#' },
+        { title: 'Armazéns', href: '/inventory/warehouses' },
+        { title: `Editar: ${page.props?.warehouse?.name ?? ''}`, href: '#' },
+    ]}>
+        {page}
+    </AppLayout>
+);

@@ -1,4 +1,5 @@
 import { Head, useForm, Link } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
 import { 
     ArrowLeft, 
     Save, 
@@ -823,3 +824,13 @@ export default function ProductEdit({ product, categories, units, brands }: Prop
         </>
     );
 }
+
+ProductEdit.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Catálogo', href: '#' },
+        { title: 'Produtos e Serviços', href: '/products' },
+        { title: `Editar: ${page.props?.product?.name ?? ''}`, href: '#' },
+    ]}>
+        {page}
+    </AppLayout>
+);
