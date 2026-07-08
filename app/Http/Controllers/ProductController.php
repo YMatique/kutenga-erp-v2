@@ -32,6 +32,15 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->type === 'service') {
+            $request->merge([
+                'track_stock' => false,
+                'min_stock' => 0,
+                'weight' => null,
+                'brand_id' => null,
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'nullable|exists:categories,id',
@@ -94,6 +103,15 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
+        if ($request->type === 'service') {
+            $request->merge([
+                'track_stock' => false,
+                'min_stock' => 0,
+                'weight' => null,
+                'brand_id' => null,
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'nullable|exists:categories,id',

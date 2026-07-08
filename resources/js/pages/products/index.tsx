@@ -231,10 +231,12 @@ export default function ProductsIndex() {
                                                     <Layers className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
                                                     {product.category?.name || <span className="text-slate-400 italic">Sem categoria</span>}
                                                 </div>
-                                                <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                                                    <Tag className="h-3.5 w-3.5 flex-shrink-0" />
-                                                    {product.brand?.name || <span className="italic">Sem marca</span>}
-                                                </div>
+                                                {product.type === 'product' && (
+                                                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                                                        <Tag className="h-3.5 w-3.5 flex-shrink-0" />
+                                                        {product.brand?.name || <span className="italic">Sem marca</span>}
+                                                    </div>
+                                                )}
                                             </div>
                                         </TableCell>
 

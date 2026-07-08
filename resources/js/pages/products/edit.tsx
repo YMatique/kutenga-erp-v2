@@ -293,54 +293,56 @@ export default function ProductEdit({ product, categories, units, brands }: Prop
                                 </div>
                             </CardHeader>
                             <CardContent className="grid gap-6 pt-5">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="grid gap-4">
-                                        <div className="flex items-center justify-between p-3 bg-slate-50/50 dark:bg-zinc-800/40 rounded-lg border">
-                                            <div className="flex flex-col gap-0.5">
-                                                <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Rastrear Stock?</Label>
-                                                <span className="text-[10px] text-muted-foreground">Monitorizar quantidades disponíveis</span>
+                                {data.type === 'product' && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="grid gap-4">
+                                            <div className="flex items-center justify-between p-3 bg-slate-50/50 dark:bg-zinc-800/40 rounded-lg border">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Rastrear Stock?</Label>
+                                                    <span className="text-[10px] text-muted-foreground">Monitorizar quantidades disponíveis</span>
+                                                </div>
+                                                <Switch 
+                                                    checked={data.track_stock}
+                                                    onCheckedChange={(val) => setData('track_stock', val)}
+                                                />
                                             </div>
-                                            <Switch 
-                                                checked={data.track_stock}
-                                                onCheckedChange={(val) => setData('track_stock', val)}
-                                            />
+
+                                            {data.track_stock && (
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="min_stock" className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                                                        Stock Mínimo (Ponto de Encomenda)
+                                                    </Label>
+                                                    <Input 
+                                                        id="min_stock" 
+                                                        type="number"
+                                                        min="0"
+                                                        value={data.min_stock} 
+                                                        onChange={e => setData('min_stock', e.target.value)} 
+                                                        className="h-10 font-mono"
+                                                    />
+                                                    {errors.min_stock && <p className="text-xs font-medium text-red-500">{errors.min_stock}</p>}
+                                                </div>
+                                            )}
                                         </div>
 
-                                        {data.track_stock && (
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="min_stock" className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                                                    Stock Mínimo (Ponto de Encomenda)
-                                                </Label>
-                                                <Input 
-                                                    id="min_stock" 
-                                                    type="number"
-                                                    min="0"
-                                                    value={data.min_stock} 
-                                                    onChange={e => setData('min_stock', e.target.value)} 
-                                                    className="h-10 font-mono"
-                                                />
-                                                {errors.min_stock && <p className="text-xs font-medium text-red-500">{errors.min_stock}</p>}
-                                            </div>
-                                        )}
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="weight" className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                                                Peso Bruto (KG)
+                                            </Label>
+                                            <Input 
+                                                id="weight" 
+                                                type="number"
+                                                step="0.001"
+                                                min="0"
+                                                value={data.weight} 
+                                                onChange={e => setData('weight', e.target.value)} 
+                                                placeholder="Ex: 0.500"
+                                                className="h-10 font-mono"
+                                            />
+                                            {errors.weight && <p className="text-xs font-medium text-red-500">{errors.weight}</p>}
+                                        </div>
                                     </div>
-
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="weight" className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                                            Peso Bruto (KG)
-                                        </Label>
-                                        <Input 
-                                            id="weight" 
-                                            type="number"
-                                            step="0.001"
-                                            min="0"
-                                            value={data.weight} 
-                                            onChange={e => setData('weight', e.target.value)} 
-                                            placeholder="Ex: 0.500"
-                                            className="h-10 font-mono"
-                                        />
-                                        {errors.weight && <p className="text-xs font-medium text-red-500">{errors.weight}</p>}
-                                    </div>
-                                </div>
+                                )}
 
                                 <div className="grid gap-2">
                                     <Label htmlFor="internal_notes" className="text-xs font-semibold uppercase tracking-wider text-blue-600">
@@ -572,7 +574,14 @@ export default function ProductEdit({ product, categories, units, brands }: Prop
                                             type="button"
                                             variant={data.type === 'service' ? 'default' : 'outline'}
                                             className="gap-2 text-xs h-9"
-                                            onClick={() => setData('type', 'service')}
+                                            onClick={() => setData(prev => ({
+                                                ...prev,
+                                                type: 'service',
+                                                track_stock: false,
+                                                min_stock: '0',
+                                                weight: '',
+                                                brand_id: ''
+                                            }))}
                                         >
                                             <Wrench className="h-4 w-4" /> Serviço
                                         </Button>
@@ -610,36 +619,38 @@ export default function ProductEdit({ product, categories, units, brands }: Prop
                                     {errors.category_id && <p className="text-xs font-medium text-red-500">{errors.category_id}</p>}
                                 </div>
 
-                                <div className="grid gap-2">
-                                    <div className="flex items-center justify-between">
-                                        <Label htmlFor="brand" className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                                            Marca
-                                        </Label>
-                                        <Button 
-                                            type="button" 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            className="h-6 px-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50/50"
-                                            onClick={() => setQuickCreateBrandOpen(true)}
+                                {data.type === 'product' && (
+                                    <div className="grid gap-2">
+                                        <div className="flex items-center justify-between">
+                                            <Label htmlFor="brand" className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                                                Marca
+                                            </Label>
+                                            <Button 
+                                                type="button" 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                className="h-6 px-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50/50"
+                                                onClick={() => setQuickCreateBrandOpen(true)}
+                                            >
+                                                <Plus className="h-3.5 w-3.5 mr-1" /> Criar Marca
+                                            </Button>
+                                        </div>
+                                        <Select 
+                                            value={data.brand_id} 
+                                            onValueChange={val => setData('brand_id', val)}
                                         >
-                                            <Plus className="h-3.5 w-3.5 mr-1" /> Criar Marca
-                                        </Button>
+                                            <SelectTrigger className="h-10">
+                                                <SelectValue placeholder="Selecione..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {brands.map(brand => (
+                                                    <SelectItem key={brand.id} value={brand.id.toString()}>{brand.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {errors.brand_id && <p className="text-xs font-medium text-red-500">{errors.brand_id}</p>}
                                     </div>
-                                    <Select 
-                                        value={data.brand_id} 
-                                        onValueChange={val => setData('brand_id', val)}
-                                    >
-                                        <SelectTrigger className="h-10">
-                                            <SelectValue placeholder="Selecione..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {brands.map(brand => (
-                                                <SelectItem key={brand.id} value={brand.id.toString()}>{brand.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.brand_id && <p className="text-xs font-medium text-red-500">{errors.brand_id}</p>}
-                                </div>
+                                )}
 
                                 <div className="grid gap-2">
                                     <div className="flex items-center justify-between">

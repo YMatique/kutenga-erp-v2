@@ -20,15 +20,15 @@
 ## Alertas
 - Ao criar, editar, remover deve mostrar notificação toast
 
-## Modal de delete 
-- antes de eliminar algo, deve primeiramente mostrar uma caixa de diálogo para confirmação
+## Modal de delete [feito]
+- antes de eliminar algo, deve primeiramente mostrar uma caixa de diálogo para confirmação 
 - Não usar alerta padrão do navegador
 
 ## Diferenciar produto e serviço ao gerar factura, cotação, pois um serviço não tem stock
 - Ao gerar factura, cotação ou qualquer outro documento comercial deve diferenciar o produto do serviço; serviço não sofre abate no stock.
 
-## Colocar os breadcrumb em todas as páginas
-- Verificar as páginas internas sem o breadcrum
+## Colocar os breadcrumb em todas as páginas [feito]
+- Verificar as páginas internas sem o breadcrum [feito]
 
 
 ## Criação de Usuários: CRUD
@@ -42,6 +42,7 @@
 
 ## Tela de bloqueio
 - Tela de bloquio quando passar muito tempo de inactividade
+- Deve ser uma tela diverente, não apenas um overlay
 
 ## Recuperação de senha e redefinição
 - permitir que senhas de usuários seja recuperável atraves de um link
