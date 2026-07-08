@@ -228,7 +228,7 @@ Show.layout = (page: any) => (
     <AppLayout breadcrumbs={[
         { title: 'Faturação', href: '#' },
         { title: 'Clientes', href: '/billing/customers' },
-        { title: page.props.customer.name, href: '#' },
+        { title: page.props?.customer?.name ?? 'Cliente', href: '#' },
     ]}>
         {page}
     </AppLayout>

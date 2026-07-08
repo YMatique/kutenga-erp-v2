@@ -14,8 +14,8 @@ export default function ReceiptsEdit({ document, ...props }: any) {
 }
 
 ReceiptsEdit.layout = (page: any) => {
-    const doc = page.props.document;
-    const label = doc.document_number || 'Rascunho';
+    const doc = page.props?.document;
+    const label = doc?.document_number || 'Rascunho';
     return (
         <AppLayout breadcrumbs={[
             { title: 'Faturação', href: '#' },

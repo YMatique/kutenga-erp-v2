@@ -247,7 +247,7 @@ export default function CustomerEdit({ customer }: Props) {
 }
 
 CustomerEdit.layout = (page: any) => (
-    <AppLayout breadcrumbs={breadcrumbs(page.props.customer.name)}>
+    <AppLayout breadcrumbs={breadcrumbs(page.props?.customer?.name ?? '')}>
         {page}
     </AppLayout>
 );

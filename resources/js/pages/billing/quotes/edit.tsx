@@ -14,8 +14,8 @@ export default function QuotesEdit({ document, ...props }: any) {
 }
 
 QuotesEdit.layout = (page: any) => {
-    const doc = page.props.document;
-    const label = doc.document_number || 'Rascunho';
+    const doc = page.props?.document;
+    const label = doc?.document_number || 'Rascunho';
     return (
         <AppLayout breadcrumbs={[
             { title: 'Faturação', href: '#' },
