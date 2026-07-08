@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/table';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useConfirmDelete } from '@/contexts/confirm-delete-context';
 import { PageHeader, StockBadge, TableCard, PrimaryButton, OutlineButton } from '@/components/ui/brand';
 
 interface Branch {
@@ -85,14 +86,15 @@ export default function BranchesIndex() {
         setOpen(true);
     };
 
+    const { confirmDelete } = useConfirmDelete();
+
     const deleteBranch = (id: number) => {
-        if (confirm('Tem certeza que deseja remover esta filial?')) {
-            import('@inertiajs/react').then(({ router }) => {
-                router.delete(`/branches/${id}`, {
-                    onSuccess: () => toast.success('Filial removida com sucesso!'),
-                });
-            });
-        }
+        confirmDelete({
+            url: `/branches/${id}`,
+            title: 'Remover Filial',
+            description: 'Tem certeza que deseja remover esta filial?',
+            onSuccess: () => toast.success('Filial removida com sucesso!'),
+        });
     };
 
     return (

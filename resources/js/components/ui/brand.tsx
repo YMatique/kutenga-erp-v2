@@ -1,5 +1,7 @@
 import { type ReactNode } from 'react';
+import * as React from 'react';
 import { cn } from '@/lib/utils';
+import { Slot } from '@radix-ui/react-slot';
 
 interface PageHeaderProps {
     title: string;
@@ -118,33 +120,30 @@ export function TableCard({ children, className }: { children: ReactNode; classN
     );
 }
 
+export interface BrandedButtonProps extends React.ComponentProps<"button"> {
+    asChild?: boolean;
+}
+
 /**
  * Branded outline button — for secondary actions.
  */
 export function OutlineButton({
-    children,
-    onClick,
     className,
-    type = 'button',
-}: {
-    children: ReactNode;
-    onClick?: () => void;
-    className?: string;
-    type?: 'button' | 'submit' | 'reset';
-}) {
+    asChild = false,
+    ...props
+}: BrandedButtonProps) {
+    const Comp = asChild ? Slot : "button";
     return (
-        <button
-            type={type}
-            onClick={onClick}
+        <Comp
             className={cn(
-                'inline-flex items-center gap-1.5 h-9 px-3.5 text-sm font-medium',
+                'inline-flex items-center gap-1.5 h-9 px-3.5 text-sm font-medium justify-center',
                 'border border-slate-200 bg-white text-slate-700 rounded-[4px]',
                 'hover:bg-slate-50 hover:border-slate-300 transition-colors',
+                'disabled:pointer-events-none disabled:opacity-50',
                 className,
             )}
-        >
-            {children}
-        </button>
+            {...props}
+        />
     );
 }
 
@@ -152,28 +151,21 @@ export function OutlineButton({
  * Branded primary button — mustard gold for CTA actions.
  */
 export function PrimaryButton({
-    children,
-    onClick,
     className,
-    type = 'button',
-}: {
-    children: ReactNode;
-    onClick?: () => void;
-    className?: string;
-    type?: 'button' | 'submit' | 'reset';
-}) {
+    asChild = false,
+    ...props
+}: BrandedButtonProps) {
+    const Comp = asChild ? Slot : "button";
     return (
-        <button
-            type={type}
-            onClick={onClick}
+        <Comp
             className={cn(
-                'inline-flex items-center gap-1.5 h-9 px-3.5 text-sm font-semibold',
+                'inline-flex items-center gap-1.5 h-9 px-3.5 text-sm font-semibold justify-center',
                 'bg-[#E8A020] text-white rounded-[4px]',
                 'hover:bg-[#d49218] transition-colors',
+                'disabled:pointer-events-none disabled:opacity-50',
                 className,
             )}
-        >
-            {children}
-        </button>
+            {...props}
+        />
     );
 }

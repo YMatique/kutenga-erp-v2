@@ -35,6 +35,7 @@ import { PageHeader, TableCard, PrimaryButton, StockBadge } from '@/components/u
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useConfirmDelete } from '@/contexts/confirm-delete-context';
 
 interface Category {
     id: number;
@@ -77,14 +78,15 @@ export default function ProductsIndex() {
         p.sku?.toLowerCase().includes(search.toLowerCase())
     );
 
+    const { confirmDelete } = useConfirmDelete();
+
     const deleteProduct = (id: number) => {
-        if (confirm('Tem certeza que deseja remover este item do catálogo?')) {
-            import('@inertiajs/react').then(({ router }) => {
-                router.delete(`/products/${id}`, {
-                    onSuccess: () => toast.success('Item removido com sucesso!'),
-                });
-            });
-        }
+        confirmDelete({
+            url: `/products/${id}`,
+            title: 'Remover Item',
+            description: 'Tem certeza que deseja remover este item do catálogo?',
+            onSuccess: () => toast.success('Item removido com sucesso!'),
+        });
     };
 
     const formatCurrency = (value: string) => {

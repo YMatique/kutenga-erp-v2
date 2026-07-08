@@ -32,7 +32,7 @@
 
 
 ## Criação de Usuários: CRUD
-- criação de usuários da loja e seus níveis de permissões
+- criação de usuários da empresa e seus níveis de permissões
 
 ## Configuração de Sistema: Configuração de empresa: 
 - dados, logo, impostos, smtp (personalizado), carimbo, etc

@@ -31,6 +31,7 @@ Route::inertia('/', 'index')->name('home');
 Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
     Route::post('context/switch', [ContextController::class, 'switch'])->name('context.switch');
+    Route::post('unlock-screen', [\App\Http\Controllers\LockScreenController::class, 'unlock'])->name('unlock.screen');
 
     // Catalog
     Route::resource('branches', BranchController::class);

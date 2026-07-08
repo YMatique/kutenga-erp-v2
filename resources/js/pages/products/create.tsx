@@ -41,6 +41,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { PrimaryButton, OutlineButton } from '@/components/ui/brand';
 
 interface Category {
     id: number;
@@ -186,7 +187,7 @@ export default function ProductCreate({ categories, units, brands }: Props) {
                     <div className="lg:col-span-2 flex flex-col gap-6">
                         
                         {/* INFORMAÇÕES BÁSICAS */}
-                        <Card className="shadow-sm border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                        <Card className="bg-white border border-slate-200 rounded-[4px] shadow-xs">
                             <CardHeader className="border-b py-4">
                                 <div className="flex items-center gap-2 text-slate-800 dark:text-white">
                                     <BookOpen className="h-5 w-5 text-slate-500" />
@@ -333,7 +334,7 @@ export default function ProductCreate({ categories, units, brands }: Props) {
                         </Card>
 
                         {/* PRECIFICAÇÃO */}
-                        <Card className="shadow-sm border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                        <Card className="bg-white border border-slate-200 rounded-[4px] shadow-xs">
                             <CardHeader className="border-b py-4">
                                 <div className="flex items-center gap-2 text-slate-800 dark:text-white">
                                     <Coins className="h-5 w-5 text-slate-500" />
@@ -464,7 +465,7 @@ export default function ProductCreate({ categories, units, brands }: Props) {
                     <div className="flex flex-col gap-6">
                         
                         {/* IMAGEM DO PRODUTO */}
-                        <Card className="shadow-sm border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
+                        <Card className="bg-white border border-slate-200 rounded-[4px] shadow-xs overflow-hidden">
                             <CardHeader className="border-b py-4">
                                 <div className="flex items-center gap-2 text-slate-800 dark:text-white">
                                     <ImageIcon className="h-5 w-5 text-slate-500" />
@@ -520,7 +521,7 @@ export default function ProductCreate({ categories, units, brands }: Props) {
                         </Card>
 
                         {/* CLASSIFICAÇÃO */}
-                        <Card className="shadow-sm border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                        <Card className="bg-white border border-slate-200 rounded-[4px] shadow-xs">
                             <CardHeader className="border-b py-4">
                                 <div className="flex items-center gap-2 text-slate-800 dark:text-white">
                                     <Layers className="h-5 w-5 text-slate-500" />
@@ -652,16 +653,16 @@ export default function ProductCreate({ categories, units, brands }: Props) {
 
                         {/* SUBMISSAO DE FORMULÁRIO */}
                         <div className="flex flex-col gap-2.5">
-                            <Button type="submit" className="w-full gap-2 py-6 text-base font-semibold shadow-xs" disabled={processing}>
+                            <PrimaryButton type="submit" className="w-full gap-2 h-12 text-base justify-center" disabled={processing}>
                                 <Save className="h-5 w-5" />
                                 {processing ? 'A gravar registo...' : 'Gravar Novo Item'}
-                            </Button>
+                            </PrimaryButton>
                             
-                            <Button variant="ghost" className="w-full text-slate-500 hover:text-slate-950 dark:hover:text-white" asChild>
+                            <OutlineButton className="w-full justify-center h-12 text-slate-500 hover:text-slate-950" asChild>
                                 <Link href="/products">
                                     Cancelar
                                 </Link>
-                            </Button>
+                            </OutlineButton>
                         </div>
                     </div>
                 </form>
@@ -695,12 +696,12 @@ export default function ProductCreate({ categories, units, brands }: Props) {
                             </div>
                         </div>
                         <DialogFooter className="gap-2 sm:gap-0">
-                            <Button type="button" variant="outline" onClick={() => setQuickCreateCatOpen(false)}>
+                            <OutlineButton onClick={() => setQuickCreateCatOpen(false)}>
                                 Cancelar
-                            </Button>
-                            <Button type="submit" disabled={catForm.processing}>
+                            </OutlineButton>
+                            <PrimaryButton type="submit" disabled={catForm.processing}>
                                 {catForm.processing ? 'A criar...' : 'Criar Categoria'}
-                            </Button>
+                            </PrimaryButton>
                         </DialogFooter>
                     </form>
                 </DialogContent>
@@ -733,12 +734,12 @@ export default function ProductCreate({ categories, units, brands }: Props) {
                             </div>
                         </div>
                         <DialogFooter className="gap-2 sm:gap-0">
-                            <Button type="button" variant="outline" onClick={() => setQuickCreateBrandOpen(false)}>
+                            <OutlineButton onClick={() => setQuickCreateBrandOpen(false)}>
                                 Cancelar
-                            </Button>
-                            <Button type="submit" disabled={brandForm.processing}>
+                            </OutlineButton>
+                            <PrimaryButton type="submit" disabled={brandForm.processing}>
                                 {brandForm.processing ? 'A criar...' : 'Criar Marca'}
-                            </Button>
+                            </PrimaryButton>
                         </DialogFooter>
                     </form>
                 </DialogContent>
@@ -786,12 +787,12 @@ export default function ProductCreate({ categories, units, brands }: Props) {
                             </div>
                         </div>
                         <DialogFooter className="gap-2 sm:gap-0">
-                            <Button type="button" variant="outline" onClick={() => setQuickCreateUnitOpen(false)}>
+                            <OutlineButton onClick={() => setQuickCreateUnitOpen(false)}>
                                 Cancelar
-                            </Button>
-                            <Button type="submit" disabled={unitForm.processing}>
+                            </OutlineButton>
+                            <PrimaryButton type="submit" disabled={unitForm.processing}>
                                 {unitForm.processing ? 'A criar...' : 'Criar Unidade'}
-                            </Button>
+                            </PrimaryButton>
                         </DialogFooter>
                     </form>
                 </DialogContent>

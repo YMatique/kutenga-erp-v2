@@ -26,6 +26,7 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { PrimaryButton, OutlineButton, KpiCard } from '@/components/ui/brand';
 
 interface Category {
     id: number;
@@ -101,12 +102,12 @@ export default function ProductShow() {
 
 
                 {/* Header */}
-                <div className="rounded-3xl border bg-white/80 p-6">
+                <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs p-6">
                     <div className="flex justify-between gap-6">
 
                         <div className="flex items-start gap-5">
 
-                            <div className="h-24 w-24 rounded-2xl overflow-hidden border bg-zinc-100 flex items-center justify-center">
+                            <div className="h-24 w-24 rounded-[4px] overflow-hidden border border-slate-200 bg-zinc-100 flex items-center justify-center">
                                 {product.image_path ? (
                                     <img
                                         src={product.image_path}
@@ -158,99 +159,52 @@ export default function ProductShow() {
                             </div>
                         </div>
 
-                        <div className="flex gap-3">
-                            <Link href="/products">
-                                <Button variant="outline">
-                                    <ArrowLeft className="h-4 w-4" />
+                        <div className="flex gap-2">
+                            <OutlineButton asChild>
+                                <Link href="/products">
+                                    <ArrowLeft className="h-4 w-4 mr-1" />
                                     Voltar
-                                </Button>
-                            </Link>
+                                </Link>
+                            </OutlineButton>
 
-                            <Link href={`/products/${product.id}/edit`}>
-                                <Button>
-                                    <Pencil className="h-4 w-4" />
+                            <PrimaryButton asChild>
+                                <Link href={`/products/${product.id}/edit`}>
+                                    <Pencil className="h-4 w-4 mr-1" />
                                     Editar
-                                </Button>
-                            </Link>
+                                </Link>
+                            </PrimaryButton>
                         </div>
                     </div>
                 </div>
 
                  {/* Metrics */}
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-
-                    <div className="rounded-2xl border bg-white/80 dark:bg-zinc-900/70 backdrop-blur-xl p-5">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">
-                                Preço de Venda
-                            </span>
-
-                            <Wallet className="h-4 w-4 text-zinc-400" />
-                        </div>
-
-                        <div className="mt-4">
-                            <h2 className="text-2xl font-bold tracking-tight">
-                                {formatCurrency(product.price)}
-                            </h2>
-                        </div>
-                    </div>
-
-                    <div className="rounded-2xl border bg-white/80 dark:bg-zinc-900/70 backdrop-blur-xl p-5">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">
-                                Custo
-                            </span>
-
-                            <ReceiptText className="h-4 w-4 text-zinc-400" />
-                        </div>
-
-                        <div className="mt-4">
-                            <h2 className="text-2xl font-bold tracking-tight">
-                                {formatCurrency(product.cost)}
-                            </h2>
-                        </div>
-                    </div>
-
-                    <div className="rounded-2xl border bg-white/80 dark:bg-zinc-900/70 backdrop-blur-xl p-5">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">
-                                Margem
-                            </span>
-
-                            <ShieldCheck className="h-4 w-4 text-zinc-400" />
-                        </div>
-
-                        <div className="mt-4">
-                            <h2 className="text-2xl font-bold tracking-tight">
-                                {margin}%
-                            </h2>
-
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Lucro estimado
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="rounded-2xl border bg-white/80 dark:bg-zinc-900/70 backdrop-blur-xl p-5">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">
-                                Controle de Estoque
-                            </span>
-
-                            <Boxes className="h-4 w-4 text-zinc-400" />
-                        </div>
-
-                        <div className="mt-4">
-                            <h2 className="text-2xl font-bold tracking-tight">
-                                {product.track_stock ? 'Ativado' : 'Desativado'}
-                            </h2>
-
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Estoque mínimo:{' '}
-                                {product.min_stock || 0}
-                            </p>
-                        </div>
-                    </div>
+                    <KpiCard
+                        label="Preço de Venda"
+                        value={formatCurrency(product.price)}
+                        icon={<Wallet className="h-4 w-4 text-zinc-400" />}
+                        accent="teal"
+                    />
+                    <KpiCard
+                        label="Custo"
+                        value={formatCurrency(product.cost)}
+                        icon={<ReceiptText className="h-4 w-4 text-zinc-400" />}
+                        accent="slate"
+                    />
+                    <KpiCard
+                        label="Margem"
+                        value={`${margin}%`}
+                        icon={<ShieldCheck className="h-4 w-4 text-zinc-400" />}
+                        accent="gold"
+                        description="Lucro estimado"
+                    />
+                    <KpiCard
+                        label="Controle de Estoque"
+                        value={product.track_stock ? 'Ativado' : 'Desativado'}
+                        icon={<Boxes className="h-4 w-4 text-zinc-400" />}
+                        accent={product.track_stock ? 'teal' : 'slate'}
+                        description={`Estoque mínimo: ${product.min_stock || 0}`}
+                    />
                 </div>
 
                 {/* Tabs */}
@@ -280,7 +234,7 @@ export default function ProductShow() {
                             <div className="xl:col-span-2 space-y-6">
 
                                 {/* General */}
-                                <div className="rounded-3xl border bg-white/80 dark:bg-zinc-900/70 backdrop-blur-xl p-6">
+                                <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs p-6">
                                     <div className="flex items-center gap-2 mb-5">
                                         <Info className="h-5 w-5 text-zinc-400" />
 
@@ -338,7 +292,7 @@ export default function ProductShow() {
                                 </div>
 
                                 {/* Notes */}
-                                <div className="rounded-3xl border bg-white/80 dark:bg-zinc-900/70 backdrop-blur-xl p-6">
+                                <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs p-6">
                                     <h3 className="text-lg font-semibold mb-4">
                                         Observações Internas
                                     </h3>
@@ -354,7 +308,7 @@ export default function ProductShow() {
                             <div className="space-y-6">
 
                                 {/* Tax */}
-                                <div className="rounded-3xl border bg-white/80 dark:bg-zinc-900/70 backdrop-blur-xl p-6">
+                                <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs p-6">
                                     <h3 className="text-lg font-semibold mb-5">
                                         Fiscal
                                     </h3>
@@ -401,7 +355,7 @@ export default function ProductShow() {
                                 </div>
 
                                 {/* Commercial */}
-                                <div className="rounded-3xl border bg-white/80 dark:bg-zinc-900/70 backdrop-blur-xl p-6">
+                                <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs p-6">
                                     <h3 className="text-lg font-semibold mb-5">
                                         Comercial
                                     </h3>
@@ -446,7 +400,7 @@ export default function ProductShow() {
                     {/* INVENTORY REAL */}
                     <TabsContent value="inventory">
 
-                        <div className="border rounded-xl p-6 bg-white">
+                        <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs p-6">
 
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-semibold">
@@ -466,7 +420,7 @@ export default function ProductShow() {
                                     stockByWarehouse.map((item) => (
                                         <div
                                             key={item.warehouse.id}
-                                            className="flex justify-between border p-4 rounded-lg"
+                                            className="flex justify-between border border-slate-200 p-4 rounded-[4px]"
                                         >
                                             <div>
                                                 <p className="font-medium">
@@ -496,7 +450,7 @@ export default function ProductShow() {
 
                     {/* ACTIVITY */}
                     <TabsContent value="activity">
-                        <div className="p-6 border rounded-xl text-center text-muted-foreground">
+                        <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs p-6 text-center text-muted-foreground">
                             Histórico futuro
                         </div>
                     </TabsContent>

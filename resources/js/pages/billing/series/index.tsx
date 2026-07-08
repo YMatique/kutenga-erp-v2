@@ -14,6 +14,7 @@ import {
     DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
 import { type BreadcrumbItem } from '@/types';
+import { useConfirmDelete } from '@/contexts/confirm-delete-context';
 
 interface Series {
     id: number;
@@ -107,10 +108,14 @@ export default function SeriesIndex({ series, filters }: Props) {
         });
     };
 
+    const { confirmDelete } = useConfirmDelete();
+
     const handleDelete = (id: number) => {
-        if (confirm('Tem a certeza que pretende eliminar esta série? Esta ação não pode ser desfeita.')) {
-            router.delete(`/billing/series/${id}`);
-        }
+        confirmDelete({
+            url: `/billing/series/${id}`,
+            title: 'Eliminar Série',
+            description: 'Tem a certeza que pretende eliminar esta série? Esta ação não pode ser desfeita.',
+        });
     };
 
     const hasActiveFilters = filters.search;

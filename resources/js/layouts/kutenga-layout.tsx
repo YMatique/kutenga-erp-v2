@@ -67,18 +67,24 @@ function KutengaLayoutContent({
     );
 }
 
+import { ConfirmDeleteProvider } from '@/contexts/confirm-delete-context';
+import { InactivityLock } from '@/components/inactivity-lock';
+
 export default function KutengaLayout({
     children,
     breadcrumbs = [],
 }: PropsWithChildren<{ breadcrumbs?: BreadcrumbItem[] }>) {
     const { sidebarOpen } = usePage<any>().props;
     return (
-        <TooltipProvider delayDuration={0}>
-            <SidebarProvider defaultOpen={sidebarOpen}>
-                <KutengaLayoutContent breadcrumbs={breadcrumbs}>
-                    {children}
-                </KutengaLayoutContent>
-            </SidebarProvider>
-        </TooltipProvider>
+        <ConfirmDeleteProvider>
+            <TooltipProvider delayDuration={0}>
+                <SidebarProvider defaultOpen={sidebarOpen}>
+                    <KutengaLayoutContent breadcrumbs={breadcrumbs}>
+                        {children}
+                    </KutengaLayoutContent>
+                    <InactivityLock />
+                </SidebarProvider>
+            </TooltipProvider>
+        </ConfirmDeleteProvider>
     );
 }

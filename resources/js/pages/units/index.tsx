@@ -24,6 +24,7 @@ import { PageHeader, TableCard, PrimaryButton } from '@/components/ui/brand';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useConfirmDelete } from '@/contexts/confirm-delete-context';
 
 interface Unit {
     id: number;
@@ -83,14 +84,15 @@ export default function UnitsIndex() {
         setOpen(true);
     };
 
+    const { confirmDelete } = useConfirmDelete();
+
     const deleteUnit = (id: number) => {
-        if (confirm('Deseja excluir esta unidade de medida?')) {
-            import('@inertiajs/react').then(({ router }) => {
-                router.delete(`/units/${id}`, {
-                    onSuccess: () => toast.success('Unidade removida!'),
-                });
-            });
-        }
+        confirmDelete({
+            url: `/units/${id}`,
+            title: 'Remover Unidade',
+            description: 'Deseja excluir esta unidade de medida?',
+            onSuccess: () => toast.success('Unidade removida!'),
+        });
     };
 
     return (

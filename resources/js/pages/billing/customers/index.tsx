@@ -9,6 +9,7 @@ import {
 import { PageHeader, TableCard, PrimaryButton, OutlineButton } from '@/components/ui/brand';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
+import { useConfirmDelete } from '@/contexts/confirm-delete-context';
 
 interface Customer {
     id: number;
@@ -57,10 +58,14 @@ export default function CustomerIndex({ customers, filters }: Props) {
         router.get('/billing/customers', {}, { preserveState: false });
     };
 
+    const { confirmDelete } = useConfirmDelete();
+
     const handleDelete = (id: number, name: string) => {
-        if (confirm(`Tem a certeza que pretende eliminar o cliente "${name}"?`)) {
-            router.delete(`/billing/customers/${id}`);
-        }
+        confirmDelete({
+            url: `/billing/customers/${id}`,
+            title: 'Eliminar Cliente',
+            description: `Tem a certeza que pretende eliminar o cliente "${name}"?`,
+        });
     };
 
     return (

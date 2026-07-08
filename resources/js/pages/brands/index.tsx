@@ -24,6 +24,7 @@ import { PageHeader, TableCard, PrimaryButton } from '@/components/ui/brand';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useConfirmDelete } from '@/contexts/confirm-delete-context';
 
 interface Brand {
     id: number;
@@ -77,14 +78,15 @@ export default function BrandsIndex() {
         setOpen(true);
     };
 
+    const { confirmDelete } = useConfirmDelete();
+
     const deleteBrand = (id: number) => {
-        if (confirm('Deseja excluir esta marca?')) {
-            import('@inertiajs/react').then(({ router }) => {
-                router.delete(`/brands/${id}`, {
-                    onSuccess: () => toast.success('Marca removida!'),
-                });
-            });
-        }
+        confirmDelete({
+            url: `/brands/${id}`,
+            title: 'Remover Marca',
+            description: 'Deseja excluir esta marca?',
+            onSuccess: () => toast.success('Marca removida!'),
+        });
     };
 
     return (

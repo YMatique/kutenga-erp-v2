@@ -41,6 +41,7 @@ import { PageHeader, TableCard, PrimaryButton } from '@/components/ui/brand';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useConfirmDelete } from '@/contexts/confirm-delete-context';
 
 interface Category {
     id: number;
@@ -108,14 +109,15 @@ export default function CategoriesIndex() {
         setOpen(true);
     };
 
+    const { confirmDelete } = useConfirmDelete();
+
     const deleteCategory = (id: number) => {
-        if (confirm('Deseja realmente remover esta categoria? Os produtos vinculados a ela ficarão sem categoria associada.')) {
-            import('@inertiajs/react').then(({ router }) => {
-                router.delete(`/categories/${id}`, {
-                    onSuccess: () => toast.success('Categoria removida com sucesso!'),
-                });
-            });
-        }
+        confirmDelete({
+            url: `/categories/${id}`,
+            title: 'Remover Categoria',
+            description: 'Deseja realmente remover esta categoria? Os produtos vinculados a ela ficarão sem categoria associada.',
+            onSuccess: () => toast.success('Categoria removida com sucesso!'),
+        });
     };
 
     return (
