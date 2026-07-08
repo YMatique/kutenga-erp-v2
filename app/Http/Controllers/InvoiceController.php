@@ -108,7 +108,7 @@ class InvoiceController extends Controller
         $companyId = $request->user()->company_id;
 
         $invoice = Invoice::where('company_id', $companyId)
-            ->with(['items', 'series', 'customer'])
+            ->with(['items', 'series', 'customer', 'company'])
             ->findOrFail($id);
 
         $warehouses = Warehouse::where('company_id', $companyId)->where('is_active', true)->get();

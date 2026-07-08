@@ -5,14 +5,19 @@ import { cn, toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
+import { edit as editCompany } from '@/routes/company-settings';
+import { index as usersIndex } from '@/routes/users';
+import { index as rolesIndex } from '@/routes/roles';
 import type { NavItem } from '@/types';
-import { User, Shield, Palette, Building2 } from 'lucide-react';
+import { User, Shield, Palette, Building2, Users, KeyRound } from 'lucide-react';
 
 const sidebarNavItems: NavItem[] = [
     { title: 'Perfil',      href: edit(),           icon: User },
     { title: 'Segurança',   href: editSecurity(),   icon: Shield },
     { title: 'Aparência',   href: editAppearance(), icon: Palette },
-    { title: 'Empresa',     href: '/settings/company', icon: Building2 },
+    { title: 'Empresa',     href: editCompany(),    icon: Building2 },
+    { title: 'Equipa',      href: usersIndex(),     icon: Users },
+    { title: 'Papéis',      href: rolesIndex(),     icon: KeyRound },
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {

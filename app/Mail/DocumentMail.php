@@ -65,7 +65,7 @@ class DocumentMail extends Mailable implements ShouldQueue
     public function attachments(): array
     {
         // Carregar relações necessárias caso tenham sido serializadas sem elas
-        $this->document->loadMissing(['items', 'series', 'customer']);
+        $this->document->loadMissing(['items', 'series', 'customer', 'company']);
 
         // Gerar PDF em buffer na memória do worker
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.document', ['document' => $this->document]);

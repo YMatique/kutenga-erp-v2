@@ -31,16 +31,17 @@
 - Verificar as páginas internas sem o breadcrum [feito]
 
 
-## Criação de Usuários: CRUD
-- criação de usuários da empresa e seus níveis de permissões
+## Criação de Usuários: CRUD [feito]
+- criação de usuários da empresa e seus níveis de permissões [feito]
 
-## Configuração de Sistema: Configuração de empresa: 
-- Dados, logo, impostos, smtp (personalizado), carimbo, etc
+## Configuração de Sistema: Configuração de empresa: [parcial]
+- Dados, logo, impostos, smtp (personalizado), carimbo, etc [feito]
+- [PENDENTE] Detalhes adicionais (ex: Contas Bancárias, Prefixos de Documentos, Prazos de Vencimento Padrão, Moeda Padrão)
 - Os dados da empresa devem ser únicos por empresa, por exemplo, o email, NUIT, telefone, etc
 - Esses dados podem ser usados por exemplo para envio de emails, etc.
 
-## Trabalhar roles e permissões
-- criação de papeis e permissões
+## Trabalhar roles e permissões [feito]
+- criação de papeis e permissões [feito]
 
 ## Tela de bloqueio
 - Tela de bloquio quando passar muito tempo de inactividade [feito]
@@ -60,4 +61,13 @@
 - Deve enviar um email de boas-vindas ao usuário 
 - Deve enviar um email de confirmação de cadastro
 
+## Fatura/Cotação [feito]
+- Melhorar o documento pdf de fatura e cotação: deixar um pouco mais customizado. [feito]
+- Cotação não precisa de colocar desconto [feito]
+- Ao criar uma fatura ou cotação, não deve permitir editar o preço, preço é editado noutra secção [feito]
+
+
+## Ver A Implementação de dark mode
+
+## 
 

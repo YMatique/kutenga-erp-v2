@@ -114,14 +114,17 @@ interface ItemRowProps {
     products: Product[];
     onChange: (index: number, field: keyof DocumentItem, value: string | number) => void;
     onRemove: (index: number) => void;
+    type: string;
 }
 
-function ItemRow({ item, index, products, onChange, onRemove }: ItemRowProps) {
+function ItemRow({ item, index, products, onChange, onRemove, type }: ItemRowProps) {
     const lineSubtotal = item.quantity * item.unit_price;
-    const lineDiscount = lineSubtotal * (item.discount_percent / 100);
+    const lineDiscount = type === 'CT' ? 0 : lineSubtotal * (item.discount_percent / 100);
     const lineTaxable = lineSubtotal - lineDiscount;
     const lineTax = lineTaxable * (item.tax_rate / 100);
     const lineTotal = lineTaxable + lineTax;
+
+    const isPriceReadOnly = type === 'FT' || type === 'CT' || type === 'FR';
 
     const handleProductSelect = (productId: string) => {
         const p = products.find((p) => p.id.toString() === productId);
@@ -165,12 +168,15 @@ function ItemRow({ item, index, products, onChange, onRemove }: ItemRowProps) {
             </td>
             <td className="p-2 w-28">
                 <Input type="number" min="0" step="0.01" className="h-8 text-sm text-right"
+                    disabled={isPriceReadOnly}
                     value={item.unit_price} onChange={(e) => onChange(index, 'unit_price', parseFloat(e.target.value) || 0)} />
             </td>
-            <td className="p-2 w-20">
-                <Input type="number" min="0" max="100" step="0.01" className="h-8 text-sm text-right"
-                    value={item.discount_percent} onChange={(e) => onChange(index, 'discount_percent', parseFloat(e.target.value) || 0)} />
-            </td>
+            {type !== 'CT' && (
+                <td className="p-2 w-20">
+                    <Input type="number" min="0" max="100" step="0.01" className="h-8 text-sm text-right"
+                        value={item.discount_percent} onChange={(e) => onChange(index, 'discount_percent', parseFloat(e.target.value) || 0)} />
+                </td>
+            )}
             <td className="p-2 w-20">
                 <Input type="number" min="0" step="0.01" className="h-8 text-sm text-right"
                     value={item.tax_rate} onChange={(e) => onChange(index, 'tax_rate', parseFloat(e.target.value) || 0)} />
@@ -255,7 +261,7 @@ export default function DocumentForm({ customers, products, series, type, docume
         return data.items.reduce(
             (acc, item) => {
                 const lineSubtotal = item.quantity * item.unit_price;
-                const lineDiscount = lineSubtotal * (item.discount_percent / 100);
+                const lineDiscount = type === 'CT' ? 0 : lineSubtotal * (item.discount_percent / 100);
                 const lineTaxable = lineSubtotal - lineDiscount;
                 const lineTax = lineTaxable * (item.tax_rate / 100);
                 return {
@@ -267,7 +273,7 @@ export default function DocumentForm({ customers, products, series, type, docume
             },
             { subtotal: 0, discount: 0, tax: 0, total: 0 }
         );
-    }, [data.items]);
+    }, [data.items, type]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -466,7 +472,9 @@ export default function DocumentForm({ customers, products, series, type, docume
                                             <th className="text-left p-2 pl-4 text-xs font-medium text-zinc-500">Produto / Descrição</th>
                                             <th className="text-right p-2 text-xs font-medium text-zinc-500">Qtd</th>
                                             <th className="text-right p-2 text-xs font-medium text-zinc-500">Preço Unit.</th>
-                                            <th className="text-right p-2 text-xs font-medium text-zinc-500">Desc. %</th>
+                                            {type !== 'CT' && (
+                                                <th className="text-right p-2 text-xs font-medium text-zinc-500">Desc. %</th>
+                                            )}
                                             <th className="text-right p-2 text-xs font-medium text-zinc-500">IVA %</th>
                                             <th className="text-right p-2 pr-4 text-xs font-medium text-zinc-500">Total (MZN)</th>
                                             <th className="p-2 w-10"></th>
@@ -475,7 +483,7 @@ export default function DocumentForm({ customers, products, series, type, docume
                                     <tbody>
                                         {data.items.map((item, index) => (
                                             <ItemRow key={index} item={item} index={index}
-                                                products={products} onChange={updateItem} onRemove={removeItem} />
+                                                products={products} onChange={updateItem} onRemove={removeItem} type={type} />
                                         ))}
                                     </tbody>
                                 </table>

@@ -127,7 +127,7 @@ class DocumentController extends Controller
         $companyId = $request->user()->company_id;
 
         $document = Document::where('company_id', $companyId)
-            ->with(['items', 'series', 'customer'])
+            ->with(['items', 'series', 'customer', 'company'])
             ->findOrFail($id);
 
         $warehouses = Warehouse::where('company_id', $companyId)->where('is_active', true)->get();
@@ -199,7 +199,7 @@ class DocumentController extends Controller
         $companyId = $request->user()->company_id;
 
         $document = Document::where('company_id', $companyId)
-            ->with(['items', 'series', 'customer'])
+            ->with(['items', 'series', 'customer', 'company'])
             ->findOrFail($id);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.document', compact('document'));
@@ -222,7 +222,7 @@ class DocumentController extends Controller
         $companyId = $request->user()->company_id;
 
         $document = Document::where('company_id', $companyId)
-            ->with(['items', 'series', 'customer'])
+            ->with(['items', 'series', 'customer', 'company'])
             ->findOrFail($id);
 
         $validated = $request->validate([

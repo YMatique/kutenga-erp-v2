@@ -84,8 +84,8 @@ const mainNavItems: NavItem[] = [
         title: 'Utilizadores',
         icon: Users,
         items: [
-            { title: 'Usuários', href: '/users' },
-            { title: 'Funções', href: '/roles' },
+            { title: 'Usuários', href: '/settings/users' },
+            { title: 'Funções', href: '/settings/roles' },
         ],
     },
     {

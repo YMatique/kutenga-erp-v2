@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import InputError from '@/components/input-error';
-import SettingsLayout from '@/layouts/settings/layout';
 import { Loader2 } from 'lucide-react';
 
 export default function CompanySettings({ company }: { company: any }) {
@@ -49,7 +48,7 @@ export default function CompanySettings({ company }: { company: any }) {
     };
 
     return (
-        <SettingsLayout>
+        <>
             <Head title="Configurações da Empresa" />
 
             <div className="space-y-10">
@@ -267,6 +266,6 @@ export default function CompanySettings({ company }: { company: any }) {
                     </div>
                 </form>
             </div>
-        </SettingsLayout>
+        </>
     );
 }

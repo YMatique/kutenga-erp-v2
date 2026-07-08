@@ -25,4 +25,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('settings/company', [\App\Http\Controllers\Settings\CompanySettingsController::class, 'edit'])->name('company-settings.edit');
     Route::post('settings/company', [\App\Http\Controllers\Settings\CompanySettingsController::class, 'update'])->name('company-settings.update');
     Route::post('settings/company/test-smtp', [\App\Http\Controllers\Settings\CompanySettingsController::class, 'testSmtp'])->name('company-settings.test-smtp');
+
+    Route::resource('settings/users', \App\Http\Controllers\Settings\UserController::class)->except(['create', 'show', 'edit']);
+    Route::resource('settings/roles', \App\Http\Controllers\Settings\RoleController::class)->except(['create', 'show', 'edit']);
 });

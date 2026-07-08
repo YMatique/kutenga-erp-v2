@@ -105,7 +105,7 @@ class QuoteController extends Controller
         $companyId = $request->user()->company_id;
 
         $quote = Quote::where('company_id', $companyId)
-            ->with(['items', 'series', 'customer'])
+            ->with(['items', 'series', 'customer', 'company'])
             ->findOrFail($id);
 
         return Inertia::render('billing/quotes/show', [

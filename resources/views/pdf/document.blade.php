@@ -240,12 +240,24 @@
     <table class="header-table">
         <tr>
             <td style="width: 50%; vertical-align: top;">
-                <div class="header-logo">Kutenga<span>ERP</span></div>
+                @if($document->company && $document->company->logo_path && file_exists(storage_path('app/public/' . $document->company->logo_path)))
+                    <div style="margin-bottom: 8px;">
+                        <img src="{{ storage_path('app/public/' . $document->company->logo_path) }}" style="max-height: 50px; max-width: 150px; object-fit: contain;">
+                    </div>
+                @else
+                    <div class="header-logo">{{ $document->company ? $document->company->name : 'Kutenga' }}<span>ERP</span></div>
+                @endif
                 <div class="header-issuer">
-                    <strong>Kutenga Solutions Lda.</strong><br>
-                    Av. 24 de Julho, Maputo<br>
-                    Moçambique<br>
-                    NUIT: 100200300
+                    @if($document->company)
+                        <strong>{{ $document->company->name }}</strong><br>
+                        {{ $document->company->address }}<br>
+                        NUIT: {{ $document->company->nuit }}
+                    @else
+                        <strong>Kutenga Solutions Lda.</strong><br>
+                        Av. 24 de Julho, Maputo<br>
+                        Moçambique<br>
+                        NUIT: 100200300
+                    @endif
                 </div>
             </td>
             <td class="header-title-box" style="width: 50%; vertical-align: top;">
@@ -283,16 +295,30 @@
         <tr>
             <td class="party-box" style="width: 50%;">
                 <div class="party-title">Entidade Emitente</div>
-                <div class="party-name">Kutenga Solutions Lda.</div>
-                <div class="party-details">
-                    Av. 24 de Julho, Maputo<br>
-                    Tel: +258 84 000 0000<br>
-                    Email: financeiro@kutenga.co<br>
-                    NUIT: 100200300
-                </div>
+                @if($document->company)
+                    <div class="party-name">{{ $document->company->name }}</div>
+                    <div class="party-details">
+                        {{ $document->company->address }}<br>
+                        @if($document->company->phone)
+                            Tel: {{ $document->company->phone }}<br>
+                        @endif
+                        @if($document->company->email)
+                            Email: {{ $document->company->email }}<br>
+                        @endif
+                        NUIT: {{ $document->company->nuit }}
+                    </div>
+                @else
+                    <div class="party-name">Kutenga Solutions Lda.</div>
+                    <div class="party-details">
+                        Av. 24 de Julho, Maputo<br>
+                        Tel: +258 84 000 0000<br>
+                        Email: financeiro@kutenga.co<br>
+                        NUIT: 100200300
+                    </div>
+                @endif
             </td>
             <td class="party-box" style="width: 50%; padding-left: 20px;">
-                <div class="party-title">Faturado A</div>
+                <div class="party-title">{{ $document->document_type === 'CT' ? 'Cliente' : 'Faturado A' }}</div>
                 <div class="party-name">{{ $document->customer_name }}</div>
                 <div class="party-details">
                     NUIT: {{ $document->customer_nuit }}<br>
@@ -315,10 +341,12 @@
         <thead>
             <tr>
                 <th class="item-row-num">#</th>
-                <th style="width: 45%;">Descrição</th>
+                <th style="width: {{ $document->document_type === 'CT' ? '55%' : '45%' }};">Descrição</th>
                 <th class="text-right" style="width: 10%;">Qtd</th>
                 <th class="text-right" style="width: 15%;">Preço Unit.</th>
-                <th class="text-right" style="width: 10%;">Desc.</th>
+                @if($document->document_type !== 'CT')
+                    <th class="text-right" style="width: 10%;">Desc.</th>
+                @endif
                 <th class="text-right" style="width: 10%;">IVA</th>
                 <th class="text-right" style="width: 15%;">Total</th>
             </tr>
@@ -335,9 +363,11 @@
                     </td>
                     <td class="text-right font-mono">{{ number_format($item->quantity, 2, ',', '.') }}</td>
                     <td class="text-right font-mono">{{ number_format($item->unit_price, 2, ',', '.') }}</td>
-                    <td class="text-right font-mono" style="color: #64748B;">
-                        {{ $item->discount_percent > 0 ? number_format($item->discount_percent, 2, ',', '.') . '%' : '—' }}
-                    </td>
+                    @if($document->document_type !== 'CT')
+                        <td class="text-right font-mono" style="color: #64748B;">
+                            {{ $item->discount_percent > 0 ? number_format($item->discount_percent, 2, ',', '.') . '%' : '—' }}
+                        </td>
+                    @endif
                     <td class="text-right font-mono" style="color: #64748B;">{{ number_format($item->tax_rate, 0) }}%</td>
                     <td class="text-right font-mono" style="font-weight: bold;">{{ number_format($item->total, 2, ',', '.') }}</td>
                 </tr>
@@ -349,7 +379,12 @@
     <table class="summary-wrapper-table">
         <tr>
             <td style="width: 50%; vertical-align: top;">
-                <!-- Left blank area -->
+                @if($document->company && $document->company->stamp_path && file_exists(storage_path('app/public/' . $document->company->stamp_path)))
+                    <div style="margin-top: 10px;">
+                        <div style="font-size: 8px; font-weight: bold; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Assinatura / Carimbo</div>
+                        <img src="{{ storage_path('app/public/' . $document->company->stamp_path) }}" style="max-height: 75px; max-width: 150px; object-fit: contain;">
+                    </div>
+                @endif
             </td>
             <td style="width: 50%; vertical-align: top;">
                 <table class="summary-table">
@@ -357,7 +392,7 @@
                         <td class="summary-label">Subtotal:</td>
                         <td class="summary-value font-mono">{{ number_format($document->subtotal, 2, ',', '.') }} MZN</td>
                     </tr>
-                    @if($document->discount_total > 0)
+                    @if($document->document_type !== 'CT' && $document->discount_total > 0)
                         <tr>
                             <td class="summary-label" style="color: #10B981;">Desconto:</td>
                             <td class="summary-value font-mono" style="color: #10B981;">- {{ number_format($document->discount_total, 2, ',', '.') }} MZN</td>

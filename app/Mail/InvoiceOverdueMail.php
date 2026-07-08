@@ -52,7 +52,7 @@ class InvoiceOverdueMail extends Mailable implements ShouldQueue
      */
     public function attachments(): array
     {
-        $this->document->loadMissing(['items', 'series', 'customer']);
+        $this->document->loadMissing(['items', 'series', 'customer', 'company']);
 
         // Gerar PDF em buffer
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.document', ['document' => $this->document]);

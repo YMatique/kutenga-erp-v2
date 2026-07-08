@@ -65,6 +65,13 @@ interface Document {
     has_physical_products?: boolean;
     created_at: string;
     updated_at: string;
+    company?: {
+        name: string;
+        nuit: string | null;
+        address: string | null;
+        phone: string | null;
+        email: string | null;
+    } | null;
 }
 
 interface Warehouse {
@@ -374,12 +381,20 @@ export default function DocumentShow({
                             <div className="grid grid-cols-2 gap-6 mb-6">
                                 <div>
                                     <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">Entidade Emitente</p>
-                                    <p className="font-bold text-zinc-800 dark:text-zinc-200 text-sm">Kutenga Solutions Lda.</p>
-                                    <p className="text-xs text-zinc-500 mt-1">Av. 24 de Julho, Maputo</p>
-                                    <p className="text-xs text-zinc-500">NUIT: 100200300</p>
+                                    <p className="font-bold text-zinc-800 dark:text-zinc-200 text-sm">
+                                        {doc.company?.name || 'Kutenga Solutions Lda.'}
+                                    </p>
+                                    <p className="text-xs text-zinc-500 mt-1">
+                                        {doc.company?.address || 'Av. 24 de Julho, Maputo'}
+                                    </p>
+                                    <p className="text-xs text-zinc-500">
+                                        NUIT: {doc.company?.nuit || '100200300'}
+                                    </p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">Faturado A</p>
+                                    <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+                                        {doc.document_type === 'CT' ? 'Cliente' : 'Faturado A'}
+                                    </p>
                                     <p className="font-bold text-zinc-800 dark:text-zinc-200 text-sm">{doc.customer_name}</p>
                                     <p className="text-xs text-zinc-500 mt-1">NUIT: <span className="font-mono">{doc.customer_nuit}</span></p>
                                     {doc.customer_address && <p className="text-xs text-zinc-500 mt-0.5">{doc.customer_address}</p>}

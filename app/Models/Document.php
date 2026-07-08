@@ -199,6 +199,11 @@ class Document extends Model
     {
         return $this->hasMany(PaymentAllocation::class, 'document_id');
     }
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
     public function customer()
     {
         return $this->belongsTo(Customer::class);
