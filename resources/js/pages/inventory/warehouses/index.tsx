@@ -113,7 +113,9 @@ export default function Index() {
                                         <Warehouse className="h-4 w-4 text-[#2DB8A0]" />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-sm font-semibold text-slate-900 truncate">{w.name}</p>
+                                        <Link href={`/inventory/warehouses/${w.id}`} className="text-sm font-semibold text-slate-900 hover:text-[#2DB8A0] transition-colors truncate block">
+                                            {w.name}
+                                        </Link>
                                         {w.code && (
                                             <p className="text-[11px] font-mono text-slate-400">{w.code}</p>
                                         )}
@@ -232,7 +234,9 @@ export default function Index() {
                                             {/* NOME */}
                                             <td className="px-4 py-3 font-medium text-slate-900">
                                                 <div className="flex items-center gap-2">
-                                                    {w.name}
+                                                    <Link href={`/inventory/warehouses/${w.id}`} className="hover:text-[#2DB8A0] transition-colors">
+                                                        {w.name}
+                                                    </Link>
                                                     {w.is_default && (
                                                         <Star className="h-3 w-3 text-[#E8A020]" />
                                                     )}

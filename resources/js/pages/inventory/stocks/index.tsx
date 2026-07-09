@@ -141,8 +141,10 @@ export default function Index({ stocks }: Props) {
                                             </td>
 
                                             {/* ARMAZÉM */}
-                                            <td className="px-4 py-3 text-slate-600">
-                                                {stock.warehouse.name}
+                                            <td className="px-4 py-3 text-slate-600 hover:text-[#2DB8A0] transition-colors">
+                                                <Link href={`/inventory/warehouses/${stock.warehouse.id}`}>
+                                                    {stock.warehouse.name}
+                                                </Link>
                                             </td>
 
                                             {/* QUANTIDADE */}

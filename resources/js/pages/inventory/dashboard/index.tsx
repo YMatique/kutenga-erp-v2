@@ -181,12 +181,15 @@ export default function InventoryDashboard() {
                                     warehouseSummary.map((warehouse: any) => (
                                         <div
                                             key={warehouse.id}
-                                            className="flex items-center justify-between rounded-[4px] border border-slate-100 bg-slate-50/50 px-4 py-3"
+                                            className="flex items-center justify-between rounded-[4px] border border-slate-100 bg-slate-50/50 px-4 py-3 hover:border-[#2DB8A0]/40 transition-all"
                                         >
                                             <div className="min-w-0">
-                                                <div className="text-sm font-semibold text-slate-900 truncate">
+                                                <Link
+                                                    href={`/inventory/warehouses/${warehouse.id}`}
+                                                    className="text-sm font-semibold text-slate-900 hover:text-[#2DB8A0] transition-colors truncate block"
+                                                >
                                                     {warehouse.name}
-                                                </div>
+                                                </Link>
                                                 <div className="text-xs text-slate-400 mt-0.5">
                                                     {warehouse.products} produto{warehouse.products !== 1 ? 's' : ''}
                                                 </div>
@@ -249,8 +252,12 @@ export default function InventoryDashboard() {
                                             <TableCell className="py-3 font-medium text-slate-900 text-sm">
                                                 {movement.product?.name ?? '—'}
                                             </TableCell>
-                                            <TableCell className="py-3 text-slate-500 text-sm">
-                                                {movement.warehouse?.name ?? '—'}
+                                            <TableCell className="py-3 text-slate-500 text-sm hover:text-[#2DB8A0] transition-colors">
+                                                {movement.warehouse ? (
+                                                    <Link href={`/inventory/warehouses/${movement.warehouse.id}`}>
+                                                        {movement.warehouse.name}
+                                                    </Link>
+                                                ) : '—'}
                                             </TableCell>
                                             <TableCell className="py-3">
                                                 <span className={`inline-flex items-center text-[11px] font-medium px-2 py-1 rounded-[4px] ${typeInfo.color}`}>

@@ -6,16 +6,16 @@ import { Textarea } from '@/components/ui/textarea';
 import InputError from '@/components/input-error';
 import { Loader2, Building2 } from 'lucide-react';
 
-export default function Onboarding() {
+export default function Onboarding({ existingCompany }: { existingCompany?: any }) {
     const { auth } = usePage<any>().props;
 
     const { data, setData, post, processing, errors } = useForm({
-        company_name: '',
-        nuit: '',
-        email: auth?.user?.email || '',
-        phone: '',
-        address: '',
-        default_currency: 'MZN',
+        company_name: existingCompany?.name || '',
+        nuit: existingCompany?.nuit || '',
+        email: existingCompany?.email || auth?.user?.email || '',
+        phone: existingCompany?.phone || '',
+        address: existingCompany?.address || '',
+        default_currency: existingCompany?.default_currency || 'MZN',
     });
 
     const submit = (e: React.FormEvent) => {
@@ -23,19 +23,23 @@ export default function Onboarding() {
         post('/onboarding');
     };
 
+    const isCompletion = !!existingCompany;
+
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-            <Head title="Bem-vindo - Configurar Empresa" />
+            <Head title={isCompletion ? "Completar Perfil" : "Bem-vindo - Configurar Empresa"} />
 
             <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
                 <div className="mx-auto h-12 w-12 bg-[#2DB8A0]/10 rounded-full flex items-center justify-center mb-4">
                     <Building2 className="h-6 w-6 text-[#2DB8A0]" />
                 </div>
                 <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-                    Bem-vindo ao Kutenga ERP!
+                    {isCompletion ? "Completar Registo" : "Bem-vindo ao Kutenga ERP!"}
                 </h2>
                 <p className="mt-2 text-sm text-slate-600">
-                    Para começares a usar o sistema, precisamos de configurar o perfil da tua empresa.
+                    {isCompletion 
+                        ? "A tua empresa não tem todos os dados obrigatórios preenchidos. Por favor, conclui o processo para usar o ERP." 
+                        : "Para começares a usar o sistema, precisamos de configurar o perfil da tua empresa."}
                 </p>
             </div>
 
