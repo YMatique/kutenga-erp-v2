@@ -61,6 +61,8 @@
 - No onbording pedir informações mais completas da empresa, como: NUIT, número de telefone, email, morada, moeda oficial, etc [feito]
 - Deve enviar um email de boas-vindas ao usuário [feito]
 - Deve enviar um email de confirmação de cadastro [feito]
+- **[Pendente]** Melhorar o UI para usar o logo real da aplicação em vez de ícones genéricos.
+- **[Pendente]** Transformar o Onboarding num fluxo por etapas (Step-by-step Wizard), incluindo a recolha de configurações opcionais da empresa.
 
 ## Fatura/Cotação [feito]
 - Melhorar o documento pdf de fatura e cotação: deixar um pouco mais customizado. [feito]
