@@ -2,56 +2,41 @@ import { Head, Link } from '@inertiajs/react'
 import AppLayout from '@/layouts/app-layout';
 import {
     ArrowLeft,
-    Box,
-    Landmark,
-    PackageCheck,
-    History,
+    Pencil,
+    Warehouse as WarehouseIcon,
+    Package,
+    Boxes,
     Calendar,
     User,
-    Tag,
-    Hash,
-    Layers,
-    DollarSign,
-    AlertCircle,
+    MapPin,
+    Star,
     Info,
-    Warehouse as WarehouseIcon,
-    Pencil
+    History,
+    FileText,
+    CheckCircle,
+    XCircle
 } from 'lucide-react'
 import {
     PageHeader,
     TableCard,
     OutlineButton,
     KpiCard,
-    StockBadge
 } from '@/components/ui/brand'
 import { cn } from '@/lib/utils'
-
-interface Warehouse {
-    id: number
-    name: string
-    code?: string | null
-}
-
-interface Stock {
-    id: number
-    quantity: number
-    warehouse: Warehouse
-}
 
 interface Product {
     id: number
     name: string
     sku?: string | null
-    barcode?: string | null
-    type: string
-    track_stock: boolean
-    min_stock?: number | null
-    price: number | string
-    cost: number | string
-    status: 'active' | 'inactive'
     category?: { name: string } | null
     brand?: { name: string } | null
     unit?: { name: string } | null
+}
+
+interface Stock {
+    id: number
+    quantity: number
+    product: Product
 }
 
 interface UserType {
@@ -65,33 +50,29 @@ interface Movement {
     quantity: number
     created_at: string
     notes?: string | null
-    warehouse: { name: string; code?: string | null }
+    product: { name: string; sku?: string | null }
     user?: UserType | null
 }
 
+interface Warehouse {
+    id: number
+    name: string
+    code?: string | null
+    address?: string | null
+    description?: string | null
+    is_default: boolean
+    is_active: boolean
+}
+
 interface Props {
-    product: Product
+    warehouse: Warehouse
     stocks: Stock[]
     movements: Movement[]
 }
 
-function resolveStockStatus(
-    qty: number,
-    minStock: number,
-): 'in_stock' | 'low' | 'out_of_stock' {
-    if (qty <= 0) return 'out_of_stock'
-    if (qty <= minStock) return 'low'
-    return 'in_stock'
-}
-
-export default function Show({ product, stocks, movements }: Props) {
-    const totalStock = stocks.reduce((sum, s) => sum + Number(s.quantity), 0)
-    const minStockVal = product.min_stock ?? 5
-    const status = resolveStockStatus(totalStock, minStockVal)
-
-    const formatCurrency = (val: string | number) => {
-        return Number(val).toLocaleString('pt-MZ', { style: 'currency', currency: 'MZN' });
-    }
+export default function Show({ warehouse, stocks, movements }: Props) {
+    const totalQty = stocks.reduce((sum, s) => sum + Number(s.quantity), 0)
+    const totalProducts = stocks.length
 
     const formatDate = (dateStr: string) => {
         try {
@@ -140,25 +121,25 @@ export default function Show({ product, stocks, movements }: Props) {
 
     return (
         <>
-            <Head title={`Stock - ${product.name}`} />
+            <Head title={`Armazém - ${warehouse.name}`} />
 
             <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
                 {/* PAGE HEADER */}
                 <PageHeader
-                    title={product.name}
-                    subtitle="Disponibilidade, distribuição e histórico de movimentações por produto"
+                    title={warehouse.name}
+                    subtitle={`Detalhes completos e inventário do armazém ${warehouse.code ? `(${warehouse.code})` : ''}`}
                     actions={
                         <div className="flex gap-2">
-                            <Link href="/inventory/stocks">
+                            <Link href="/inventory/warehouses">
                                 <OutlineButton>
                                     <ArrowLeft className="h-4 w-4" />
                                     Voltar
                                 </OutlineButton>
                             </Link>
-                            <Link href={`/products/${product.id}/edit`}>
+                            <Link href={`/inventory/warehouses/${warehouse.id}/edit`}>
                                 <OutlineButton className="border-[#2DB8A0]/30 hover:border-[#2DB8A0] text-slate-800">
                                     <Pencil className="h-4 w-4 text-[#2DB8A0]" />
-                                    Editar Produto
+                                    Editar Armazém
                                 </OutlineButton>
                             </Link>
                         </div>
@@ -167,98 +148,98 @@ export default function Show({ product, stocks, movements }: Props) {
 
                 {/* MAIN GRID */}
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                    {/* LEFT COLUMN: PRODUCT INFO CARD */}
+                    {/* LEFT COLUMN: INFO CARD */}
                     <div className="lg:col-span-1 space-y-4">
                         <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs p-5 space-y-4">
                             <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
                                 <Info className="h-4 w-4 text-slate-400" />
-                                <h3 className="text-sm font-semibold text-slate-800">Detalhes do Produto</h3>
+                                <h3 className="text-sm font-semibold text-slate-800">Informações Gerais</h3>
                             </div>
 
-                            {product.sku && (
+                            <div>
+                                <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Nome</label>
+                                <p className="text-sm text-slate-800 font-medium">{warehouse.name}</p>
+                            </div>
+
+                            {warehouse.code && (
                                 <div>
-                                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">SKU</label>
-                                    <p className="text-sm font-mono text-slate-800">{product.sku}</p>
+                                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Código</label>
+                                    <p className="text-sm font-mono text-slate-800">{warehouse.code}</p>
                                 </div>
                             )}
 
-                            {product.barcode && (
-                                <div>
-                                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Código de Barras</label>
-                                    <p className="text-sm font-mono text-slate-800">{product.barcode}</p>
+                            <div>
+                                <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Localização / Endereço</label>
+                                <div className="text-sm text-slate-700 mt-0.5">
+                                    {warehouse.address ? (
+                                        <span className="flex items-start gap-1.5">
+                                            <MapPin className="h-4 w-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                                            {warehouse.address}
+                                        </span>
+                                    ) : 'Não informada'}
                                 </div>
-                            )}
+                            </div>
 
                             <div>
-                                <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Categoria</label>
-                                <p className="text-sm text-slate-700 font-medium">
-                                    {product.category?.name || <span className="text-slate-400">Sem categoria</span>}
+                                <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Descrição</label>
+                                <p className="text-xs text-slate-500 italic mt-0.5">
+                                    {warehouse.description || 'Sem descrição.'}
                                 </p>
                             </div>
 
-                            <div>
-                                <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Marca</label>
-                                <p className="text-sm text-slate-700 font-medium">
-                                    {product.brand?.name || <span className="text-slate-400">Sem marca</span>}
-                                </p>
-                            </div>
-
-                            <div>
-                                <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Preço de Venda</label>
-                                <p className="text-sm text-slate-800 font-semibold">{formatCurrency(product.price)}</p>
-                            </div>
-
-                            <div>
-                                <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Custo Unitário</label>
-                                <p className="text-sm text-slate-800">{formatCurrency(product.cost)}</p>
-                            </div>
-
-                            <div className="pt-2 border-t border-slate-100 space-y-2 text-xs">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-slate-500">Unidade</span>
-                                    <span className="font-semibold text-slate-700">{product.unit?.name || 'unidade'}</span>
+                            <div className="pt-2 border-t border-slate-100 space-y-2">
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-slate-500">Estado</span>
+                                    {warehouse.is_active ? (
+                                        <span className="inline-flex items-center gap-1 font-semibold text-[#2DB8A0]">
+                                            <CheckCircle className="h-3 w-3" /> Ativo
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1 font-semibold text-red-500">
+                                            <XCircle className="h-3 w-3" /> Inativo
+                                        </span>
+                                    )}
                                 </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-slate-500">Rastrear Stock</span>
-                                    <span className={cn('font-semibold', product.track_stock ? 'text-[#2DB8A0]' : 'text-slate-400')}>
-                                        {product.track_stock ? 'Sim' : 'Não'}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-slate-500">Stock Mínimo Alerta</span>
-                                    <span className="font-semibold font-mono text-slate-700">{minStockVal}</span>
+
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-slate-500">Armazém Padrão</span>
+                                    {warehouse.is_default ? (
+                                        <span className="inline-flex items-center gap-1 font-semibold text-[#E8A020]">
+                                            <Star className="h-3 w-3 fill-current" /> Sim
+                                        </span>
+                                    ) : (
+                                        <span className="text-slate-400">Não</span>
+                                    )}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN: STOCK POSITION AND MOVEMENTS */}
+                    {/* RIGHT COLUMN: KPIS & DATA TABLES */}
                     <div className="lg:col-span-3 space-y-6">
                         {/* KPIS */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <KpiCard
-                                label="Stock Total Acumulado"
-                                value={`${totalStock} ${product.unit?.name || 'un'}`}
-                                icon={<PackageCheck className="h-5 w-5" />}
-                                accent={status === 'out_of_stock' ? 'red' : status === 'low' ? 'orange' : 'teal'}
-                                description="Soma de todos os armazéns"
+                                label="Produtos Vinculados"
+                                value={totalProducts}
+                                icon={<Package className="h-5 w-5" />}
+                                accent="teal"
+                                description="Total de itens com registo neste armazém"
                             />
-                            <div className="bg-white border border-slate-200 rounded-[4px] px-5 py-4 shadow-xs flex items-center justify-between">
-                                <div>
-                                    <p className="text-[12px] font-medium text-slate-500 uppercase tracking-wide mb-2">Estado do Stock</p>
-                                    <StockBadge status={status} />
-                                </div>
-                                <div className="h-9 w-9 rounded-[4px] bg-slate-100 text-slate-500 flex items-center justify-center">
-                                    <AlertCircle className="h-5 w-5" />
-                                </div>
-                            </div>
+                            <KpiCard
+                                label="Quantidade Total em Stock"
+                                value={totalQty.toLocaleString('pt-MZ')}
+                                icon={<Boxes className="h-5 w-5" />}
+                                accent="gold"
+                                description="Soma acumulada de quantidades"
+                            />
                         </div>
 
-                        {/* POSITION BY WAREHOUSE TABLE */}
+                        {/* PRODUCTS IN STOCK TABLE */}
                         <div className="space-y-3">
                             <div className="flex items-center gap-2">
-                                <Landmark className="h-5 w-5 text-slate-700" />
-                                <h2 className="text-base font-semibold text-slate-800">Posição por Local de Armazenamento</h2>
+                                <WarehouseIcon className="h-5 w-5 text-slate-700" />
+                                <h2 className="text-base font-semibold text-slate-800">Produtos no Armazém</h2>
                             </div>
 
                             <TableCard>
@@ -266,15 +247,18 @@ export default function Show({ product, stocks, movements }: Props) {
                                     <thead className="bg-slate-50 border-b border-slate-100">
                                         <tr>
                                             <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                                                Armazém
+                                                Produto
                                             </th>
                                             <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                                                Código
+                                                SKU
+                                            </th>
+                                            <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                                Categoria
                                             </th>
                                             <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                                                Quantidade em Stock
+                                                Quantidade
                                             </th>
-                                            <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 w-[120px]">
+                                            <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 w-[100px]">
                                                 Ação
                                             </th>
                                         </tr>
@@ -282,10 +266,10 @@ export default function Show({ product, stocks, movements }: Props) {
                                     <tbody>
                                         {stocks.length === 0 ? (
                                             <tr>
-                                                <td colSpan={4}>
+                                                <td colSpan={5}>
                                                     <div className="flex flex-col items-center justify-center gap-2 py-12 text-slate-400">
-                                                        <WarehouseIcon className="h-8 w-8 text-slate-300" />
-                                                        <p className="text-sm font-medium">Este produto não possui registo de stock em nenhum armazém.</p>
+                                                        <Package className="h-8 w-8 text-slate-300" />
+                                                        <p className="text-sm font-medium">Nenhum produto com stock registado neste armazém.</p>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -296,20 +280,29 @@ export default function Show({ product, stocks, movements }: Props) {
                                                     className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
                                                 >
                                                     <td className="px-4 py-3 font-medium text-slate-900">
-                                                        {stock.warehouse.name}
+                                                        {stock.product.name}
                                                     </td>
-                                                    <td className="px-4 py-3 font-mono text-xs text-slate-500">
-                                                        {stock.warehouse.code || <span className="text-slate-300">—</span>}
+                                                    <td className="px-4 py-3">
+                                                        {stock.product.sku ? (
+                                                            <span className="font-mono text-[11px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-[4px]">
+                                                                {stock.product.sku}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-slate-400">—</span>
+                                                        )}
                                                     </td>
-                                                    <td className="px-4 py-3 text-right font-mono font-semibold text-slate-900 text-base">
-                                                        {Number(stock.quantity).toLocaleString('pt-MZ')} {product.unit?.name || 'un'}
+                                                    <td className="px-4 py-3 text-slate-600 text-xs">
+                                                        {stock.product.category?.name || 'Sem Categoria'}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right font-mono font-semibold text-slate-800">
+                                                        {Number(stock.quantity).toLocaleString('pt-MZ')} {stock.product.unit?.name || 'un'}
                                                     </td>
                                                     <td className="px-4 py-3 text-right">
                                                         <Link
-                                                            href={`/inventory/warehouses/${stock.warehouse.id}`}
+                                                            href={`/inventory/stocks/${stock.product.id}`}
                                                             className="inline-flex items-center gap-1 h-7 px-2 text-xs font-medium border border-slate-200 bg-white text-[#2DB8A0] rounded-[4px] hover:bg-slate-50 transition-colors"
                                                         >
-                                                            Ver Armazém
+                                                            Detalhes
                                                         </Link>
                                                     </td>
                                                 </tr>
@@ -335,7 +328,7 @@ export default function Show({ product, stocks, movements }: Props) {
                                                 Data
                                             </th>
                                             <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                                                Armazém
+                                                Produto
                                             </th>
                                             <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                                                 Tipo
@@ -357,7 +350,7 @@ export default function Show({ product, stocks, movements }: Props) {
                                                 <td colSpan={6}>
                                                     <div className="flex flex-col items-center justify-center gap-2 py-12 text-slate-400">
                                                         <History className="h-8 w-8 text-slate-300" />
-                                                        <p className="text-sm font-medium">Nenhum movimento recente registado para este produto.</p>
+                                                        <p className="text-sm font-medium">Nenhum movimento recente registado.</p>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -370,8 +363,13 @@ export default function Show({ product, stocks, movements }: Props) {
                                                     <td className="px-4 py-2.5 font-mono text-slate-600">
                                                         {formatDate(mov.created_at)}
                                                     </td>
-                                                    <td className="px-4 py-2.5 text-slate-800 font-medium">
-                                                        {mov.warehouse.name}
+                                                    <td className="px-4 py-2.5 font-medium text-slate-900">
+                                                        {mov.product.name}
+                                                        {mov.product.sku && (
+                                                            <span className="block text-[10px] text-slate-400 font-mono">
+                                                                SKU: {mov.product.sku}
+                                                            </span>
+                                                        )}
                                                     </td>
                                                     <td className="px-4 py-2.5">
                                                         {getMovementBadge(mov.type)}
@@ -406,8 +404,8 @@ export default function Show({ product, stocks, movements }: Props) {
 Show.layout = (page: any) => (
     <AppLayout breadcrumbs={[
         { title: 'Inventário', href: '#' },
-        { title: 'Stock Geral', href: '/inventory/stocks' },
-        { title: page.props?.product?.name ?? 'Detalhes', href: '#' },
+        { title: 'Armazéns', href: '/inventory/warehouses' },
+        { title: page.props?.warehouse?.name ?? 'Detalhes', href: '#' },
     ]}>
         {page}
     </AppLayout>

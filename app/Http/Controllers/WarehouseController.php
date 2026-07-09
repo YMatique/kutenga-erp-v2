@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Warehouse;
+use App\Models\ProductStock;
+use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -11,7 +13,33 @@ class WarehouseController extends Controller
     public function index()
     {
         return Inertia::render('inventory/warehouses/index', [
-            'warehouses' => Warehouse::latest()->get(),
+            'warehouses' => Warehouse::withCount('stocks as products_count')
+                ->withSum('stocks as total_quantity', 'quantity')
+                ->latest()
+                ->get()
+                ->map(function ($w) {
+                    $w->total_quantity = (float) ($w->total_quantity ?? 0);
+                    return $w;
+                }),
+        ]);
+    }
+
+    public function show(Warehouse $warehouse)
+    {
+        $stocks = ProductStock::with(['product.category', 'product.brand', 'product.unit'])
+            ->where('warehouse_id', $warehouse->id)
+            ->get();
+
+        $movements = StockMovement::with(['product', 'user'])
+            ->where('warehouse_id', $warehouse->id)
+            ->latest()
+            ->take(10)
+            ->get();
+
+        return Inertia::render('inventory/warehouses/show', [
+            'warehouse' => $warehouse,
+            'stocks' => $stocks,
+            'movements' => $movements,
         ]);
     }
 

@@ -10,6 +10,7 @@ import {
     Plus,
     Pencil,
     Star,
+    Eye,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -149,6 +150,13 @@ export default function Index() {
                             {/* Actions */}
                             <div className="flex items-center gap-2 pt-1">
                                 <Link
+                                    href={`/inventory/warehouses/${w.id}`}
+                                    className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-medium border border-slate-200 bg-white text-slate-700 rounded-[4px] hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                                >
+                                    <Eye className="h-3 w-3" />
+                                    Ver Detalhes
+                                </Link>
+                                <Link
                                     href={`/inventory/warehouses/${w.id}/edit`}
                                     className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-medium border border-slate-200 bg-white text-slate-700 rounded-[4px] hover:bg-slate-50 hover:border-slate-300 transition-colors"
                                 >
@@ -276,13 +284,22 @@ export default function Index() {
 
                                             {/* AÇÕES */}
                                             <td className="px-4 py-3 text-right">
-                                                <Link
-                                                    href={`/inventory/warehouses/${w.id}/edit`}
-                                                    className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium border border-slate-200 bg-white text-slate-700 rounded-[4px] hover:bg-slate-50 hover:border-slate-300 transition-colors"
-                                                >
-                                                    <Pencil className="h-3 w-3" />
-                                                    Editar
-                                                </Link>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <Link
+                                                        href={`/inventory/warehouses/${w.id}`}
+                                                        className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium border border-slate-200 bg-white text-slate-700 rounded-[4px] hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                                                    >
+                                                        <Eye className="h-3.5 w-3.5" />
+                                                        Ver
+                                                    </Link>
+                                                    <Link
+                                                        href={`/inventory/warehouses/${w.id}/edit`}
+                                                        className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium border border-slate-200 bg-white text-slate-700 rounded-[4px] hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                                                    >
+                                                        <Pencil className="h-3 w-3" />
+                                                        Editar
+                                                    </Link>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
