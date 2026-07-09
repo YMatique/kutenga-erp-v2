@@ -2,7 +2,6 @@ import { Head, Link } from '@inertiajs/react';
 import KutengaLayout from '@/Layouts/kutenga-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
 
 export default function History({ shifts }: any) {
     return (
@@ -45,10 +44,10 @@ export default function History({ shifts }: any) {
                                         </Badge>
                                     </td>
                                     <td className="px-6 py-4">
-                                        {format(new Date(shift.opened_at), 'dd/MM/yyyy HH:mm')}
+                                        {new Date(shift.opened_at).toLocaleString('pt-MZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                     </td>
                                     <td className="px-6 py-4">
-                                        {shift.closed_at ? format(new Date(shift.closed_at), 'dd/MM/yyyy HH:mm') : '-'}
+                                        {shift.closed_at ? new Date(shift.closed_at).toLocaleString('pt-MZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         {parseFloat(shift.starting_cash).toLocaleString('pt-MZ', { minimumFractionDigits: 2 })}

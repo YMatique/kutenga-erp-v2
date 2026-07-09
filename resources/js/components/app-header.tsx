@@ -34,8 +34,8 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
 
             {/* Left: sidebar toggle + breadcrumbs */}
             <div className="flex items-center gap-2 min-w-0">
-                <SidebarTrigger className="text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md h-8 w-8 flex-shrink-0 transition-colors" />
-                <div className="h-4 w-px bg-slate-200 mx-1 hidden md:block flex-shrink-0" />
+                <SidebarTrigger className="text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-zinc-800 rounded-md h-8 w-8 flex-shrink-0 transition-colors" />
+                <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800 mx-1 hidden md:block flex-shrink-0" />
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             </div>
 
@@ -44,7 +44,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md"
+                    className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-zinc-800 rounded-md"
                 >
                     <Search className="h-4 w-4" />
                 </Button>
@@ -55,7 +55,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                     variant="ghost"
                     size="icon"
                     onClick={toggleTheme}
-                    className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400 rounded-md"
+                    className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-zinc-800 dark:text-slate-400 rounded-md"
                     title={resolvedAppearance === 'dark' ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
                 >
                     {resolvedAppearance === 'dark' ? (
@@ -65,13 +65,13 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                     )}
                 </Button>
 
-                <div className="w-px h-4 bg-slate-200 mx-1" />
+                <div className="w-px h-4 bg-slate-200 dark:bg-zinc-800 mx-1" />
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button
                             variant="ghost"
-                            className="h-8 px-1.5 gap-2 rounded-md hover:bg-slate-100"
+                            className="h-8 px-1.5 gap-2 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-800"
                         >
                             <Avatar className="h-6 w-6 rounded-md overflow-hidden flex-shrink-0">
                                 <AvatarImage src={auth.user?.avatar} alt={auth.user?.name} />
@@ -79,7 +79,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                     {getInitials(auth.user?.name ?? '')}
                                 </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm font-medium text-slate-700 hidden sm:block max-w-[120px] truncate">
+                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 hidden sm:block max-w-[120px] truncate">
                                 {auth.user?.name}
                             </span>
                         </Button>

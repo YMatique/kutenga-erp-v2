@@ -1,17 +1,18 @@
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import PosLayout from '@/Layouts/pos-layout';
 import { useState, useMemo } from 'react';
-import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Landmark } from 'lucide-react';
+import { Search, ShoppingCart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import PaymentModal from './Components/PaymentModal';
+import ProductCard from './Components/ProductCard';
+import CartItemRow from './Components/CartItemRow';
 
 interface Product {
     id: number;
     name: string;
-    sale_price: number;
+    sale_price: number | string;
     image_url?: string;
     category_id: number;
     tax_rate: number;
@@ -74,7 +75,11 @@ export default function PosIndex({ shift, categories, products }: any) {
         let subtotal = 0;
         let tax = 0;
         cart.forEach(item => {
-            const lineTotal = item.sale_price * item.quantity;
+            const salePrice = typeof item.sale_price === 'number' 
+                ? item.sale_price 
+                : parseFloat(item.sale_price || '0');
+                
+            const lineTotal = salePrice * item.quantity;
             subtotal += lineTotal;
             tax += lineTotal * (item.tax_rate / 100);
         });
@@ -102,7 +107,7 @@ export default function PosIndex({ shift, categories, products }: any) {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        <ScrollArea className="w-full whitespace-nowrap">
+                        <div className="w-full overflow-x-auto whitespace-nowrap pb-2">
                             <div className="flex w-max space-x-2 p-1">
                                 <Button
                                     variant={selectedCategory === null ? 'default' : 'outline'}
@@ -122,41 +127,18 @@ export default function PosIndex({ shift, categories, products }: any) {
                                     </Button>
                                 ))}
                             </div>
-                        </ScrollArea>
+                        </div>
                     </div>
 
                     {/* Products Grid */}
-                    <ScrollArea className="flex-1 p-4 bg-neutral-50">
+                    <div className="flex-1 overflow-y-auto p-4 bg-neutral-50">
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                             {filteredProducts.map((product: Product) => (
-                                <div
-                                    key={product.id}
-                                    className="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden cursor-pointer hover:shadow-md hover:border-blue-400 transition-all flex flex-col group"
-                                    onClick={() => addToCart(product)}
-                                >
-                                    <div className="h-32 bg-neutral-100 relative flex items-center justify-center p-4">
-                                        {product.image_url ? (
-                                            <img src={product.image_url} alt={product.name} className="max-h-full object-contain mix-blend-multiply" />
-                                        ) : (
-                                            <div className="text-neutral-300 font-bold text-4xl uppercase opacity-20">
-                                                {product.name.substring(0, 2)}
-                                            </div>
-                                        )}
-                                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Badge variant="secondary" className="bg-white shadow-sm font-bold text-blue-600">
-                                                +{product.tax_rate}% IVA
-                                            </Badge>
-                                        </div>
-                                    </div>
-                                    <div className="p-3 flex-1 flex flex-col justify-between">
-                                        <h3 className="font-medium text-neutral-900 line-clamp-2 text-sm" title={product.name}>
-                                            {product.name}
-                                        </h3>
-                                        <div className="mt-2 text-lg font-bold text-blue-600">
-                                            {parseFloat(product.sale_price.toString()).toLocaleString('pt-MZ', { style: 'currency', currency: 'MZN' })}
-                                        </div>
-                                    </div>
-                                </div>
+                                <ProductCard 
+                                    key={product.id} 
+                                    product={product} 
+                                    onClick={addToCart} 
+                                />
                             ))}
                             {filteredProducts.length === 0 && (
                                 <div className="col-span-full py-20 text-center text-neutral-500">
@@ -164,7 +146,7 @@ export default function PosIndex({ shift, categories, products }: any) {
                                 </div>
                             )}
                         </div>
-                    </ScrollArea>
+                    </div>
                 </div>
 
                 {/* Right Side: Cart */}
@@ -179,7 +161,7 @@ export default function PosIndex({ shift, categories, products }: any) {
                         </Badge>
                     </div>
 
-                    <ScrollArea className="flex-1 p-2">
+                    <div className="flex-1 overflow-y-auto p-2">
                         {cart.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-neutral-400 py-20">
                                 <ShoppingCart className="w-16 h-16 mb-4 opacity-20" />
@@ -187,41 +169,17 @@ export default function PosIndex({ shift, categories, products }: any) {
                             </div>
                         ) : (
                             <div className="space-y-2">
-                                {cart.map((item, index) => (
-                                    <div key={item.cart_id} className="bg-white border border-neutral-100 rounded-lg p-3 shadow-sm flex flex-col gap-2 relative group hover:border-neutral-300">
-                                        <div className="flex justify-between items-start gap-2">
-                                            <div className="flex-1 font-medium text-sm text-neutral-900 leading-tight">
-                                                {item.name}
-                                            </div>
-                                            <div className="font-bold text-sm shrink-0">
-                                                {((item.sale_price + (item.sale_price * item.tax_rate / 100)) * item.quantity).toLocaleString('pt-MZ', { minimumFractionDigits: 2 })}
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <div className="text-xs text-neutral-500">
-                                                {parseFloat(item.sale_price.toString()).toLocaleString('pt-MZ', { minimumFractionDigits: 2 })} / un
-                                            </div>
-                                            <div className="flex items-center gap-1 bg-neutral-100 rounded-md p-0.5">
-                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-neutral-600 hover:bg-white hover:shadow-sm" onClick={() => updateQuantity(item.cart_id, -1)}>
-                                                    <Minus className="w-3 h-3" />
-                                                </Button>
-                                                <div className="w-8 text-center font-medium text-sm">{item.quantity}</div>
-                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-neutral-600 hover:bg-white hover:shadow-sm" onClick={() => updateQuantity(item.cart_id, 1)}>
-                                                    <Plus className="w-3 h-3" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                        <button 
-                                            onClick={() => removeFromCart(item.cart_id)}
-                                            className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 hover:text-white shadow-sm"
-                                        >
-                                            <Trash2 className="w-3 h-3" />
-                                        </button>
-                                    </div>
+                                {cart.map((item) => (
+                                    <CartItemRow 
+                                        key={item.cart_id} 
+                                        item={item} 
+                                        onUpdateQuantity={updateQuantity}
+                                        onRemove={removeFromCart}
+                                    />
                                 ))}
                             </div>
                         )}
-                    </ScrollArea>
+                    </div>
 
                     {/* Totals & Checkout */}
                     <div className="border-t border-neutral-200 bg-neutral-50 p-4 space-y-4">

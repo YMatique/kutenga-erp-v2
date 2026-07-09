@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Banknote, CreditCard, Landmark, Printer, CheckCircle } from 'lucide-react';
-import axios from 'axios';
 import { toast } from 'sonner';
 
 interface PaymentModalProps {
@@ -48,16 +47,32 @@ export default function PaymentModal({ isOpen, onClose, total, cart, onSuccess }
                 discount_percent: 0
             }));
 
-            const response = await axios.post('/pos/sales', {
-                items: formattedCart,
-                payment_method: method,
-                amount_paid: parseFloat(amountPaid)
+            const token = document.cookie.split('; ').find(row => row.startsWith('XSRF-TOKEN='))?.split('=')[1] || '';
+            
+            const response = await fetch('/pos/sales', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-XSRF-TOKEN': decodeURIComponent(token)
+                },
+                body: JSON.stringify({
+                    items: formattedCart,
+                    payment_method: method,
+                    amount_paid: parseFloat(amountPaid)
+                })
             });
 
-            setSuccessData(response.data.document);
+            const responseData = await response.json();
+
+            if (!response.ok) {
+                throw new Error(responseData.error || 'Erro ao processar venda.');
+            }
+
+            setSuccessData(responseData.document);
             toast.success('Venda concluída com sucesso!');
         } catch (error: any) {
-            toast.error(error.response?.data?.error || 'Erro ao processar venda.');
+            toast.error(error.message || 'Erro ao processar venda.');
         } finally {
             setIsProcessing(false);
         }

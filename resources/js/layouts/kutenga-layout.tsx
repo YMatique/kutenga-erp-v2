@@ -25,11 +25,11 @@ function KutengaLayoutContent({
     }, [props.flash]);
 
     return (
-        <div className="min-h-screen w-full bg-slate-50 font-sans antialiased text-slate-900 flex flex-col overflow-x-hidden">
+        <div className="min-h-screen w-full bg-background font-sans antialiased text-foreground flex flex-col overflow-x-hidden">
 
             {/* Floating top header */}
             <header className="fixed top-3 left-3 right-3 z-[60] transition-all duration-300 ease-in-out">
-                <div className="h-14 border border-slate-200/80 rounded-[4px] bg-white/60 backdrop-blur-xl px-4 flex items-center shadow-xs">
+                <div className="h-14 border border-border rounded-[4px] bg-card/60 backdrop-blur-xl px-4 flex items-center shadow-xs">
                     <AppHeader breadcrumbs={breadcrumbs} />
                 </div>
             </header>
