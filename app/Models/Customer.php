@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use App\Traits\HasAudit;
+use App\Traits\HasAudit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,7 +12,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Customer extends Model
 {
-   use SoftDeletes /* , HasAudit */, LogsActivity;
+    use SoftDeletes, /*HasAudit,*/ LogsActivity;
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -24,7 +24,15 @@ class Customer extends Model
 
     protected $table = 'customers';
     protected $fillable = [
-        'company_id', 'name', 'nuit', 'email', 'phone', 'address', 'credit_limit', 'balance', 'is_active'
+        'company_id',
+        'name',
+        'nuit',
+        'email',
+        'phone',
+        'address',
+        'credit_limit',
+        'balance',
+        'is_active'
     ];
 
     public function contacts(): HasMany

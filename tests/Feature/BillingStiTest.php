@@ -49,7 +49,7 @@ class BillingStiTest extends TestCase
             'password' => bcrypt('password'),
         ]);
 
-        Auth::login($this->user);
+        $this->actingAs($this->user);
 
         $this->warehouse = Warehouse::create([
             'company_id' => $this->company->id,
@@ -208,9 +208,30 @@ class BillingStiTest extends TestCase
     public function test_credit_note_emission_increases_stock_and_decreases_customer_balance()
     {
         // Setup existing balance by making customer balance positive first
-        $this->customer->update(['balance' => 500.00]);
+        $this->customer->update(['balance' => 268.00]);
 
+        // 1. Emitir fatura original
+        $invoice = $this->billingService->createDraft([
+            'customer_id' => $this->customer->id,
+            'customer_name' => $this->customer->name,
+            'customer_nuit' => $this->customer->nuit,
+            'document_type' => 'FT',
+            'series_id' => $this->series->id,
+            'items' => [
+                [
+                    'product_id' => $this->product->id,
+                    'product_name' => $this->product->name,
+                    'quantity' => 2,
+                    'unit_price' => 100.00,
+                    'tax_rate' => 16.00,
+                ]
+            ]
+        ], $this->company->id);
+        $invoice = $this->billingService->confirmAndEmit($invoice->id, $this->warehouse);
+
+        // 2. Emitir nota de crédito referenciando a fatura
         $creditNote = $this->billingService->createDraft([
+            'referenced_document_id' => $invoice->id,
             'customer_id' => $this->customer->id,
             'customer_name' => $this->customer->name,
             'customer_nuit' => $this->customer->nuit,
@@ -231,13 +252,13 @@ class BillingStiTest extends TestCase
 
         $confirmedCreditNote = $this->billingService->confirmAndEmit($creditNote->id, $this->warehouse);
 
-        // Balance should decrease by 232.00 (500 - 232 = 268)
+        // Balance should decrease back to 268.00 (268 + 232 - 232 = 268)
         $this->customer->refresh();
         $this->assertEquals(268.00, $this->customer->balance);
 
-        // Stock should increase from 10 to 12
+        // Stock should return to 10 (10 - 2 + 2 = 10)
         $currentStock = $this->stockService->getStock($this->product, $this->warehouse);
-        $this->assertEquals(12.00, $currentStock);
+        $this->assertEquals(10.00, $currentStock);
     }
 
     public function test_invoice_payment_and_cancellation_status_transitions()

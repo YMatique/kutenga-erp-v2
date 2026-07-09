@@ -1,22 +1,21 @@
-import { Head } from '@inertiajs/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, History } from 'lucide-react';
+import React, { useState } from 'react';
+import { Head, router } from '@inertiajs/react';
+import { History, Search, X, ShieldAlert } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import {
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
+import { PageHeader, TableCard, OutlineButton } from '@/components/ui/brand';
+import { cn } from '@/lib/utils';
+import { type BreadcrumbItem } from '@/types';
+
 export interface PaginatedData<T> {
     data: T[];
     current_page: number;
-    first_page_url: string;
-    from: number;
     last_page: number;
-    last_page_url: string;
-    next_page_url: string | null;
-    path: string;
     per_page: number;
-    prev_page_url: string | null;
-    to: number;
     total: number;
+    links: { url: string | null; label: string; active: boolean }[];
 }
 
 export interface Activity {
@@ -32,18 +31,63 @@ export interface Activity {
     created_at_human: string;
 }
 
-export default function Audits({ activities }: { activities: PaginatedData<Activity> }) {
-    
+interface Props {
+    activities: PaginatedData<Activity>;
+    filters?: { search?: string };
+}
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Configurações', href: '#' },
+    { title: 'Auditoria', href: '/settings/audits' },
+];
+
+export default function Audits({ activities, filters }: Props) {
+    const [search, setSearch] = useState(filters?.search ?? '');
+
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearch(value);
+        const timeout = setTimeout(() => {
+            router.get('/settings/audits', { search: value }, { preserveState: true, replace: true });
+        }, 400);
+        return () => clearTimeout(timeout);
+    };
+
+    const clearSearch = () => {
+        setSearch('');
+        router.get('/settings/audits', {}, { preserveState: false });
+    };
+
     const getActionBadge = (description: string) => {
         switch (description) {
             case 'created':
-                return <Badge variant="default" className="bg-green-500 hover:bg-green-600">Criado</Badge>;
+                return (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px] bg-green-100 text-green-700">
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                        Criado
+                    </span>
+                );
             case 'updated':
-                return <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">Atualizado</Badge>;
+                return (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px] bg-blue-100 text-blue-700">
+                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500 flex-shrink-0" />
+                        Atualizado
+                    </span>
+                );
             case 'deleted':
-                return <Badge variant="destructive">Eliminado</Badge>;
+                return (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px] bg-red-100 text-red-700">
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                        Eliminado
+                    </span>
+                );
             default:
-                return <Badge variant="outline">{description}</Badge>;
+                return (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px] bg-slate-100 text-slate-700">
+                        <span className="h-1.5 w-1.5 rounded-full bg-slate-500 flex-shrink-0" />
+                        {description}
+                    </span>
+                );
         }
     };
 
@@ -59,109 +103,150 @@ export default function Audits({ activities }: { activities: PaginatedData<Activ
     };
 
     return (
-        <div className="flex flex-col gap-8 max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-            <Head title="Auditoria e Logs" />
+        <>
+            <Head title="Auditoria" />
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-                        <History className="h-6 w-6 text-[#2DB8A0]" />
-                        Auditoria de Sistema
-                    </h1>
-                    <p className="text-slate-500 mt-1">
-                        Histórico completo de todas as ações realizadas pelos utilizadores no sistema.
-                    </p>
+            <div className="p-6 space-y-4 bg-slate-50 min-h-screen">
+                <PageHeader
+                    title="Auditoria de Sistema"
+                    subtitle="Histórico completo de todas as ações realizadas pelos utilizadores no sistema."
+                />
+
+                {/* FILTERS BAR */}
+                <div className="flex items-center gap-3">
+                    <div className="relative flex-1 max-w-sm">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <Input
+                            className="pl-9 bg-white border-slate-200 rounded-[4px] h-9 text-sm focus-visible:ring-[#2DB8A0]/30"
+                            placeholder="Pesquisar logs..."
+                            value={search}
+                            onChange={handleSearch}
+                        />
+                    </div>
+                    {filters?.search && (
+                        <OutlineButton onClick={clearSearch}>
+                            <X className="h-3.5 w-3.5" />
+                            Limpar
+                        </OutlineButton>
+                    )}
+                    <span className="text-xs text-slate-400 font-medium ml-auto">
+                        {activities.total} registo{activities.total !== 1 ? 's' : ''}
+                    </span>
                 </div>
-            </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Últimas Atividades</CardTitle>
-                    <CardDescription>
-                        A visualizar os logs mais recentes da tua empresa.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="border rounded-md">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Data / Hora</TableHead>
-                                    <TableHead>Utilizador</TableHead>
-                                    <TableHead>Ação</TableHead>
-                                    <TableHead>Registo</TableHead>
-                                    <TableHead>Detalhes</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {activities.data.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center text-slate-500">
-                                            Nenhuma atividade registada ainda.
-                                        </TableCell>
+                {/* TABLE CARD */}
+                <TableCard>
+                    {activities.data.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 gap-3">
+                            <div className="h-12 w-12 rounded-[4px] bg-slate-100 flex items-center justify-center">
+                                <ShieldAlert className="h-6 w-6 text-slate-400" />
+                            </div>
+                            <div className="text-center">
+                                <p className="text-sm font-medium text-slate-600">Nenhuma atividade registada</p>
+                                <p className="text-xs text-slate-400 mt-0.5">As ações dos utilizadores aparecerão aqui.</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="bg-slate-50 border-b border-slate-100 hover:bg-slate-50">
+                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">
+                                            Data / Hora
+                                        </TableHead>
+                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">
+                                            Utilizador
+                                        </TableHead>
+                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">
+                                            Ação
+                                        </TableHead>
+                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">
+                                            Registo Afetado
+                                        </TableHead>
+                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold text-right">
+                                            Detalhes
+                                        </TableHead>
                                     </TableRow>
-                                ) : (
-                                    activities.data.map((log: Activity) => (
-                                        <TableRow key={log.id}>
-                                            <TableCell>
-                                                <div className="font-medium">{log.created_at}</div>
-                                                <div className="text-xs text-slate-500">{log.created_at_human}</div>
+                                </TableHeader>
+                                <TableBody>
+                                    {activities.data.map((log: Activity) => (
+                                        <TableRow
+                                            key={log.id}
+                                            className="hover:bg-slate-50/50 transition-colors border-b border-slate-100"
+                                        >
+                                            <TableCell className="py-3">
+                                                <div className="font-medium text-sm text-slate-900">{log.created_at}</div>
+                                                <div className="text-[10px] font-mono text-slate-400 mt-0.5 uppercase tracking-wider">{log.created_at_human}</div>
                                             </TableCell>
+                                            
                                             <TableCell>
-                                                <div className="font-medium">{log.causer_name}</div>
+                                                <div className="font-medium text-sm text-slate-700">{log.causer_name}</div>
                                                 {log.causer_email && <div className="text-xs text-slate-500">{log.causer_email}</div>}
                                             </TableCell>
+                                            
                                             <TableCell>
                                                 {getActionBadge(log.description)}
                                             </TableCell>
+                                            
                                             <TableCell>
-                                                <span className="font-medium text-slate-700">
+                                                <span className="font-semibold text-sm text-slate-700">
                                                     {getSubjectName(log.subject_type)}
                                                 </span>
-                                                <span className="text-xs text-slate-500 ml-1">#{log.subject_id}</span>
+                                                <span className="text-xs text-slate-400 ml-1 font-mono">#{log.subject_id}</span>
                                             </TableCell>
-                                            <TableCell className="text-xs text-slate-500">
-                                                {/* Se tiver dados antigos/novos, mostramos um resumo */}
-                                                {log.properties?.old && Object.keys(log.properties.old).length > 0 && (
-                                                    <span>Alterou {Object.keys(log.properties.old).length} campos</span>
-                                                )}
-                                                {log.description === 'created' && <span>Criação original</span>}
+                                            
+                                            <TableCell className="text-right">
+                                                <span className="text-xs text-slate-500">
+                                                    {log.properties?.old && Object.keys(log.properties.old).length > 0 ? (
+                                                        <span className="inline-flex items-center gap-1">
+                                                            Alterou <strong className="text-slate-700">{Object.keys(log.properties.old).length}</strong> campos
+                                                        </span>
+                                                    ) : log.description === 'created' ? (
+                                                        'Criação original'
+                                                    ) : (
+                                                        'Sem detalhes'
+                                                    )}
+                                                </span>
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
+                                    ))}
+                                </TableBody>
+                            </Table>
 
-                    {/* Paginação */}
-                    {activities.total > activities.per_page && (
-                        <div className="flex items-center justify-between mt-4">
-                            <div className="text-sm text-slate-500">
-                                A mostrar <span className="font-medium">{activities.from}</span> a <span className="font-medium">{activities.to}</span> de <span className="font-medium">{activities.total}</span> resultados
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    disabled={!activities.prev_page_url}
-                                    onClick={() => window.location.href = activities.prev_page_url || '#'}
-                                >
-                                    <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
-                                </Button>
-                                <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    disabled={!activities.next_page_url}
-                                    onClick={() => window.location.href = activities.next_page_url || '#'}
-                                >
-                                    Seguinte <ChevronRight className="h-4 w-4 ml-1" />
-                                </Button>
-                            </div>
-                        </div>
+                            {/* PAGINAÇÃO */}
+                            {activities.last_page > 1 && (
+                                <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100">
+                                    <p className="text-xs text-slate-400">
+                                        Página {activities.current_page} de {activities.last_page}
+                                    </p>
+                                    <div className="flex gap-1">
+                                        {activities.links?.map((link, i) => (
+                                            <button
+                                                key={i}
+                                                disabled={!link.url}
+                                                onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
+                                                className={cn(
+                                                    'px-3 py-1.5 text-xs rounded-[4px] border transition-colors',
+                                                    link.active
+                                                        ? 'bg-[#1A2332] text-white border-transparent font-semibold'
+                                                        : !link.url
+                                                            ? 'text-slate-300 border-transparent cursor-not-allowed'
+                                                            : 'border-slate-200 text-slate-600 hover:bg-slate-50 bg-white',
+                                                )}
+                                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     )}
-                </CardContent>
-            </Card>
-        </div>
+                </TableCard>
+            </div>
+        </>
     );
 }
+
+Audits.layout = {
+    breadcrumbs,
+};
