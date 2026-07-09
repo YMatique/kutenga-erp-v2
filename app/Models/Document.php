@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Traits\HasAudit;
+// use App\Traits\HasAudit;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,14 +16,14 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Document extends Model
 {
-    use SoftDeletes, HasAudit, LogsActivity;
+    use SoftDeletes /* , HasAudit */, LogsActivity;
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+            ->dontLogEmptyChanges();
     }
 
     protected $table = 'documents';

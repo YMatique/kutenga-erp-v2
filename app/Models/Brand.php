@@ -3,14 +3,14 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
-use App\Traits\HasAudit;
+// use App\Traits\HasAudit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Brand extends Model
 {
-    use SoftDeletes, HasAudit, BelongsToCompany;
+    use SoftDeletes /* , HasAudit */, BelongsToCompany;
 
     protected $fillable = [
         'company_id',

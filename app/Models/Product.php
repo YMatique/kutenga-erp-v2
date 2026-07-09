@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
-use App\Traits\HasAudit;
+// use App\Traits\HasAudit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,14 +13,14 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Product extends Model
 {
-    use SoftDeletes, HasAudit, BelongsToCompany, LogsActivity;
+    use SoftDeletes /* , HasAudit */, BelongsToCompany, LogsActivity;
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+            ->dontLogEmptyChanges();
     }
 
     protected $fillable = [

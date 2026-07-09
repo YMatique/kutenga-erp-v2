@@ -30,7 +30,7 @@ class User extends Authenticatable
         return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+            ->dontLogEmptyChanges();
     }
 
     public function company(): BelongsTo

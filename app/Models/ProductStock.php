@@ -3,12 +3,12 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
-use App\Traits\HasAudit;
+// use App\Traits\HasAudit;
 use Illuminate\Database\Eloquent\Model;
 
 class ProductStock extends Model
 {
-        use BelongsToCompany;//, HasAudit;
+        use BelongsToCompany;// /* , HasAudit */;
     //
     protected $fillable = [
         'company_id',
