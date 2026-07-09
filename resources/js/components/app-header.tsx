@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import { Search } from 'lucide-react';
+import { Search, Sun, Moon } from 'lucide-react';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { useInitials } from '@/hooks/use-initials';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem } from '@/types';
 import { NotificationsDropdown } from '@/components/notifications-dropdown';
+import { useAppearance } from '@/hooks/use-appearance';
 
 type Props = {
     breadcrumbs?: BreadcrumbItem[];
@@ -22,6 +23,11 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
     const page = usePage<any>();
     const { auth, notifications } = page.props;
     const getInitials = useInitials();
+    const { resolvedAppearance, updateAppearance } = useAppearance();
+
+    const toggleTheme = () => {
+        updateAppearance(resolvedAppearance === 'dark' ? 'light' : 'dark');
+    };
 
     return (
         <div className="flex w-full items-center justify-between gap-4">
@@ -44,6 +50,20 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                 </Button>
 
                 <NotificationsDropdown notifications={notifications || []} />
+
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleTheme}
+                    className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400 rounded-md"
+                    title={resolvedAppearance === 'dark' ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
+                >
+                    {resolvedAppearance === 'dark' ? (
+                        <Sun className="h-4 w-4 text-amber-500" />
+                    ) : (
+                        <Moon className="h-4 w-4" />
+                    )}
+                </Button>
 
                 <div className="w-px h-4 bg-slate-200 mx-1" />
 

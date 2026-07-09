@@ -96,6 +96,7 @@ class Document extends Model
         'source_module',
         'notes',
         'referenced_document_id',
+        'pos_shift_id',
         'created_by',
         'updated_by'
     ];
@@ -229,5 +230,10 @@ class Document extends Model
     public function rectifiedDocuments(): HasMany
     {
         return $this->hasMany(Document::class, 'referenced_document_id');
+    }
+
+    public function posShift(): BelongsTo
+    {
+        return $this->belongsTo(PosShift::class, 'pos_shift_id');
     }
 }

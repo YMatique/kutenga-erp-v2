@@ -17,7 +17,7 @@ export function InactivityLock() {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // 1 minutes of inactivity limit
-    const INACTIVITY_LIMIT = 1 * 60 * 1000;
+    const INACTIVITY_LIMIT = 5 * 60 * 1000;
 
     const resetTimer = () => {
         if (locked) return;
