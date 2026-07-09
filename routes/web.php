@@ -11,6 +11,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\CreditNoteController;
+use App\Http\Controllers\DebitNoteController;
 use App\Http\Controllers\InventoryDashboardController;
 use App\Http\Controllers\InventoryOpeningController;
 use App\Http\Controllers\ProductController;
@@ -44,6 +45,18 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     Route::resource('categories', CategoryController::class);
     Route::resource('units', UnitController::class);
     Route::resource('brands', BrandController::class);
+
+    // Settings
+    Route::prefix('settings')->group(function () {
+        Route::get('profile', [ProfileController::class, 'edit'])->name('settings.profile.edit');
+        Route::patch('profile', [ProfileController::class, 'update'])->name('settings.profile.update');
+        Route::delete('profile', [ProfileController::class, 'destroy'])->name('settings.profile.destroy');
+
+        Route::get('company', [\App\Http\Controllers\CompanySettingsController::class, 'edit'])->name('settings.company.edit');
+        Route::patch('company', [\App\Http\Controllers\CompanySettingsController::class, 'update'])->name('settings.company.update');
+
+        Route::get('audits', [\App\Http\Controllers\AuditLogController::class, 'index'])->name('settings.audits');
+    });
 
     // Inventory
     Route::prefix('/inventory')->group(function () {
@@ -105,6 +118,11 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
         Route::resource('credit-notes', CreditNoteController::class);
         Route::post('credit-notes/{id}/confirm', [CreditNoteController::class, 'confirm'])->name('credit-notes.confirm');
         Route::post('credit-notes/{id}/cancel', [CreditNoteController::class, 'cancel'])->name('credit-notes.cancel');
+
+        // Notas de Débito (ND)
+        Route::resource('debit-notes', DebitNoteController::class);
+        Route::post('debit-notes/{id}/confirm', [DebitNoteController::class, 'confirm'])->name('debit-notes.confirm');
+        Route::post('debit-notes/{id}/cancel', [DebitNoteController::class, 'cancel'])->name('debit-notes.cancel');
 
         // Rotas de Clientes
         Route::resource('customers', CustomerController::class);

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import { Plus, Trash2, Save, ReceiptText, AlertCircle, PackageSearch, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -70,6 +70,7 @@ interface DBDocument {
     issue_date: string;
     due_date: string;
     notes: string | null;
+    referenced_document_id: number | null;
     items: DBItem[];
 }
 
@@ -83,6 +84,7 @@ interface Props {
     submitRoute: string;
     method: 'post' | 'put';
     cancelRoute: string;
+    invoices?: any[];
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -115,16 +117,18 @@ interface ItemRowProps {
     onChange: (index: number, field: keyof DocumentItem, value: string | number) => void;
     onRemove: (index: number) => void;
     type: string;
+    maxQuantity?: number;
+    isProductDisabled?: boolean;
 }
 
-function ItemRow({ item, index, products, onChange, onRemove, type }: ItemRowProps) {
+function ItemRow({ item, index, products, onChange, onRemove, type, maxQuantity, isProductDisabled }: ItemRowProps) {
     const lineSubtotal = item.quantity * item.unit_price;
     const lineDiscount = type === 'CT' ? 0 : lineSubtotal * (item.discount_percent / 100);
     const lineTaxable = lineSubtotal - lineDiscount;
     const lineTax = lineTaxable * (item.tax_rate / 100);
     const lineTotal = lineTaxable + lineTax;
 
-    const isPriceReadOnly = type === 'FT' || type === 'CT' || type === 'FR';
+    const isPriceReadOnly = type === 'FT' || type === 'CT' || type === 'FR' || isProductDisabled;
 
     const handleProductSelect = (productId: string) => {
         const p = products.find((p) => p.id.toString() === productId);
@@ -140,31 +144,55 @@ function ItemRow({ item, index, products, onChange, onRemove, type }: ItemRowPro
     return (
         <tr className="border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
             <td className="p-2 min-w-[200px]">
-                <Select value={item.product_id} onValueChange={handleProductSelect}>
-                    <SelectTrigger className="h-8 text-sm">
-                        <SelectValue placeholder="Selecionar produto…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {products.map((p) => (
-                            <SelectItem key={p.id} value={p.id.toString()}>
-                                <span className="font-medium">{p.name}</span>
-                                {p.sku && <span className="text-zinc-400 ml-1 text-xs">({p.sku})</span>}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                {!item.product_id && (
-                    <Input
-                        className="h-8 text-sm mt-1"
-                        placeholder="ou escreva o nome…"
-                        value={item.product_name}
-                        onChange={(e) => onChange(index, 'product_name', e.target.value)}
-                    />
+                {isProductDisabled ? (
+                    <div className="font-medium px-2 py-1 text-sm bg-zinc-50 dark:bg-zinc-800/50 rounded border border-zinc-200 dark:border-zinc-700">
+                        {item.product_name}
+                        {item.product_sku && (
+                            <span className="text-zinc-400 dark:text-zinc-500 ml-1 text-xs block font-mono">
+                                SKU: {item.product_sku}
+                            </span>
+                        )}
+                    </div>
+                ) : (
+                    <>
+                        <Select value={item.product_id} onValueChange={handleProductSelect}>
+                            <SelectTrigger className="h-8 text-sm">
+                                <SelectValue placeholder="Selecionar produto…" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {products.map((p) => (
+                                    <SelectItem key={p.id} value={p.id.toString()}>
+                                        <span className="font-medium">{p.name}</span>
+                                        {p.sku && <span className="text-zinc-400 ml-1 text-xs">({p.sku})</span>}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {!item.product_id && (
+                            <Input
+                                className="h-8 text-sm mt-1"
+                                placeholder="ou escreva o nome…"
+                                value={item.product_name}
+                                onChange={(e) => onChange(index, 'product_name', e.target.value)}
+                            />
+                        )}
+                    </>
                 )}
             </td>
             <td className="p-2 w-24">
                 <Input type="number" min="0.001" step="0.001" className="h-8 text-sm text-right"
-                    value={item.quantity} onChange={(e) => onChange(index, 'quantity', parseFloat(e.target.value) || 0)} />
+                    value={item.quantity} onChange={(e) => {
+                        let val = parseFloat(e.target.value) || 0;
+                        if (type === 'NC' && maxQuantity !== undefined && val > maxQuantity) {
+                            val = maxQuantity;
+                        }
+                        onChange(index, 'quantity', val);
+                    }} />
+                {type === 'NC' && maxQuantity !== undefined && (
+                    <div className="text-[10px] text-zinc-400 dark:text-zinc-500 text-right font-medium">
+                        Máx: {maxQuantity}
+                    </div>
+                )}
             </td>
             <td className="p-2 w-28">
                 <Input type="number" min="0" step="0.01" className="h-8 text-sm text-right"
@@ -174,28 +202,32 @@ function ItemRow({ item, index, products, onChange, onRemove, type }: ItemRowPro
             {type !== 'CT' && (
                 <td className="p-2 w-20">
                     <Input type="number" min="0" max="100" step="0.01" className="h-8 text-sm text-right"
+                        disabled={isProductDisabled}
                         value={item.discount_percent} onChange={(e) => onChange(index, 'discount_percent', parseFloat(e.target.value) || 0)} />
                 </td>
             )}
             <td className="p-2 w-20">
                 <Input type="number" min="0" step="0.01" className="h-8 text-sm text-right"
+                    disabled={isProductDisabled}
                     value={item.tax_rate} onChange={(e) => onChange(index, 'tax_rate', parseFloat(e.target.value) || 0)} />
             </td>
             <td className="p-2 w-32 text-right font-mono text-sm font-semibold text-zinc-800 dark:text-zinc-200 pr-4">
                 {fmt(lineTotal)}
             </td>
             <td className="p-2 w-10">
-                <Button type="button" variant="ghost" size="sm"
-                    className="h-8 w-8 p-0 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                    onClick={() => onRemove(index)}>
-                    <Trash2 size={14} />
-                </Button>
+                {!isProductDisabled && (
+                    <Button type="button" variant="ghost" size="sm"
+                        className="h-8 w-8 p-0 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        onClick={() => onRemove(index)}>
+                        <Trash2 size={14} />
+                    </Button>
+                )}
             </td>
         </tr>
     );
 }
 
-export default function DocumentForm({ customers, products, series, type, document, submitRoute, method, cancelRoute }: Props) {
+export default function DocumentForm({ customers, products, series, type, document, submitRoute, method, cancelRoute, invoices }: Props) {
     const { data, setData, submit, processing, errors } = useForm({
         customer_id: document?.customer_id?.toString() ?? '',
         customer_name: document?.customer_name ?? '',
@@ -208,6 +240,7 @@ export default function DocumentForm({ customers, products, series, type, docume
         issue_date: document?.issue_date ?? today(),
         due_date: document?.due_date ?? addDays(today(), 30),
         notes: document?.notes ?? '',
+        referenced_document_id: document?.referenced_document_id?.toString() ?? '',
         items: document?.items?.map(item => ({
             product_id: item.product_id?.toString() ?? '',
             product_name: item.product_name,
@@ -222,6 +255,48 @@ export default function DocumentForm({ customers, products, series, type, docume
 
     const isEdit = method === 'put';
     const formTitle = isEdit ? `Editar ${TYPE_LABELS[type] ?? type}` : `Novo ${TYPE_LABELS[type] ?? type}`;
+
+    const handleInvoiceSelect = useCallback((invoiceId: string) => {
+        const inv = invoices?.find((i) => i.id.toString() === invoiceId);
+        if (inv) {
+            setData((prev) => ({
+                ...prev,
+                referenced_document_id: invoiceId,
+                customer_id: inv.customer_id?.toString() ?? '',
+                customer_name: inv.customer_name,
+                customer_nuit: inv.customer_nuit ?? '',
+                customer_phone: inv.customer_phone ?? '',
+                customer_email: inv.customer_email ?? '',
+                customer_address: inv.customer_address ?? '',
+                items: inv.items.map((item: any) => ({
+                    product_id: item.product_id?.toString() ?? '',
+                    product_name: item.product_name,
+                    product_sku: item.product_sku ?? '',
+                    product_barcode: item.product_barcode ?? '',
+                    quantity: parseFloat(item.quantity) || 1,
+                    unit_price: parseFloat(item.unit_price) || 0,
+                    tax_rate: parseFloat(item.tax_rate) || 16,
+                    discount_percent: parseFloat(item.discount_percent) || 0,
+                })),
+            }));
+        } else {
+            setData('referenced_document_id', invoiceId);
+        }
+    }, [invoices, setData]);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const refId = params.get('referenced_document_id');
+        if (refId && invoices && invoices.length > 0 && !data.referenced_document_id) {
+            handleInvoiceSelect(refId);
+        }
+    }, [invoices, handleInvoiceSelect]);
+
+    const refInvoice = useMemo(() => {
+        return invoices?.find((i) => i.id.toString() === data.referenced_document_id);
+    }, [invoices, data.referenced_document_id]);
+
+    const isCustomerDisabled = !!data.referenced_document_id && (type === 'NC' || type === 'ND');
 
     const handleCustomerChange = useCallback((customerId: string) => {
         const c = customers.find((c) => c.id.toString() === customerId);
@@ -325,6 +400,29 @@ export default function DocumentForm({ customers, products, series, type, docume
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
+                            {(type === 'NC' || type === 'ND') && (
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="referenced_document_id" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                                        Fatura Retificada / Associada <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Select
+                                        value={data.referenced_document_id}
+                                        onValueChange={handleInvoiceSelect}
+                                        disabled={isEdit}
+                                    >
+                                        <SelectTrigger id="referenced_document_id">
+                                            <SelectValue placeholder="Selecionar fatura a retificar…" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {invoices?.map((inv) => (
+                                                <SelectItem key={inv.id} value={inv.id.toString()}>
+                                                    {inv.document_number} — {inv.customer_name} ({fmt(parseFloat(inv.grand_total))} MZN)
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
                             <div className="space-y-1.5">
                                 <Label htmlFor="series_id" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
                                     Série Documental <span className="text-red-500">*</span>
@@ -385,7 +483,7 @@ export default function DocumentForm({ customers, products, series, type, docume
                                 <Label htmlFor="customer_select" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
                                     Cliente Registado
                                 </Label>
-                                <Select value={data.customer_id} onValueChange={handleCustomerChange}>
+                                <Select value={data.customer_id} onValueChange={handleCustomerChange} disabled={isCustomerDisabled}>
                                     <SelectTrigger id="customer_select">
                                         <SelectValue placeholder="Selecionar cliente da lista…" />
                                     </SelectTrigger>
@@ -407,7 +505,7 @@ export default function DocumentForm({ customers, products, series, type, docume
                                     </Label>
                                     <Input id="customer_name" value={data.customer_name}
                                         onChange={(e) => setData('customer_name', e.target.value)}
-                                        placeholder="Nome do cliente" />
+                                        placeholder="Nome do cliente" disabled={isCustomerDisabled} />
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label htmlFor="customer_nuit" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
@@ -415,26 +513,26 @@ export default function DocumentForm({ customers, products, series, type, docume
                                     </Label>
                                     <Input id="customer_nuit" value={data.customer_nuit}
                                         onChange={(e) => setData('customer_nuit', e.target.value)}
-                                        placeholder="000000000" className="font-mono" />
+                                        placeholder="000000000" className="font-mono" disabled={isCustomerDisabled} />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1.5">
                                     <Label htmlFor="customer_phone" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Telefone</Label>
                                     <Input id="customer_phone" value={data.customer_phone}
-                                        onChange={(e) => setData('customer_phone', e.target.value)} placeholder="+258..." />
+                                        onChange={(e) => setData('customer_phone', e.target.value)} placeholder="+258..." disabled={isCustomerDisabled} />
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label htmlFor="customer_email" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Email</Label>
                                     <Input id="customer_email" type="email" value={data.customer_email}
-                                        onChange={(e) => setData('customer_email', e.target.value)} placeholder="email@..." />
+                                        onChange={(e) => setData('customer_email', e.target.value)} placeholder="email@..." disabled={isCustomerDisabled} />
                                 </div>
                             </div>
                             <div className="space-y-1.5">
                                 <Label htmlFor="customer_address" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Morada</Label>
                                 <Input id="customer_address" value={data.customer_address}
                                     onChange={(e) => setData('customer_address', e.target.value)}
-                                    placeholder="Cidade, Bairro, Rua..." />
+                                    placeholder="Cidade, Bairro, Rua..." disabled={isCustomerDisabled} />
                             </div>
                         </CardContent>
                     </Card>
@@ -451,18 +549,22 @@ export default function DocumentForm({ customers, products, series, type, docume
                                     {data.items.length}
                                 </span>
                             </CardTitle>
-                            <Button type="button" variant="outline" size="sm" onClick={addItem} className="gap-1.5">
-                                <Plus size={14} />
-                                Adicionar Linha
-                            </Button>
+                            {!data.referenced_document_id && (
+                                <Button type="button" variant="outline" size="sm" onClick={addItem} className="gap-1.5">
+                                    <Plus size={14} />
+                                    Adicionar Linha
+                                </Button>
+                            )}
                         </div>
                     </CardHeader>
                     <CardContent className="p-0">
                         {data.items.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12 text-center cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors rounded-b-xl"
-                                onClick={addItem}>
+                                onClick={!data.referenced_document_id ? addItem : undefined}>
                                 <PackageSearch className="text-zinc-300 dark:text-zinc-600 mb-2" size={36} />
-                                <p className="text-zinc-400 dark:text-zinc-500 text-sm">Clique para adicionar a primeira linha</p>
+                                <p className="text-zinc-400 dark:text-zinc-500 text-sm">
+                                    {data.referenced_document_id ? 'Selecione uma fatura acima para carregar as linhas' : 'Clique para adicionar a primeira linha'}
+                                </p>
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
@@ -481,10 +583,24 @@ export default function DocumentForm({ customers, products, series, type, docume
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {data.items.map((item, index) => (
-                                            <ItemRow key={index} item={item} index={index}
-                                                products={products} onChange={updateItem} onRemove={removeItem} type={type} />
-                                        ))}
+                                        {data.items.map((item, index) => {
+                                            const maxQty = type === 'NC' && refInvoice && refInvoice.items[index]
+                                                ? parseFloat(refInvoice.items[index].quantity)
+                                                : undefined;
+                                            return (
+                                                <ItemRow
+                                                    key={index}
+                                                    item={item}
+                                                    index={index}
+                                                    products={products}
+                                                    onChange={updateItem}
+                                                    onRemove={removeItem}
+                                                    type={type}
+                                                    maxQuantity={maxQty}
+                                                    isProductDisabled={!!data.referenced_document_id}
+                                                />
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>

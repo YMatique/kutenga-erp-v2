@@ -11,9 +11,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Services\Inventory\StockService;
 use App\Models\Warehouse;
 
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
+
 class Document extends Model
 {
-    use SoftDeletes, HasAudit;
+    use SoftDeletes, HasAudit, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $table = 'documents';
 
@@ -84,6 +95,7 @@ class Document extends Model
         'payment_status',
         'source_module',
         'notes',
+        'referenced_document_id',
         'created_by',
         'updated_by'
     ];
@@ -207,5 +219,15 @@ class Document extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function referencedDocument(): BelongsTo
+    {
+        return $this->belongsTo(Document::class, 'referenced_document_id');
+    }
+
+    public function rectifiedDocuments(): HasMany
+    {
+        return $this->hasMany(Document::class, 'referenced_document_id');
     }
 }

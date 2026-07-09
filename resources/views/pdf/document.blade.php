@@ -273,7 +273,10 @@
                         <strong>Vencimento:</strong> {{ $document->due_date ? $document->due_date->format('d/m/Y') : '—' }}<br>
                     @endif
                     @if($document->series)
-                        <strong>Série:</strong> {{ $document->series->code }}
+                        <strong>Série:</strong> {{ $document->series->code }}<br>
+                    @endif
+                    @if($document->referencedDocument)
+                        <strong>Retifica o doc.:</strong> {{ $document->referencedDocument->document_number }}
                     @endif
                 </div>
 

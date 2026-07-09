@@ -72,6 +72,8 @@ interface Document {
         phone: string | null;
         email: string | null;
     } | null;
+    referenced_document_id?: number | null;
+    referenced_document?: Document | null;
 }
 
 interface Warehouse {
@@ -206,6 +208,19 @@ export default function DocumentShow({
                                 )}
                             </h1>
                         </div>
+                        {doc.referenced_document && (
+                            <p className="text-xs text-zinc-500 mb-1">
+                                {doc.document_type === 'NC' ? 'Retifica o documento: ' : 'Retificativo do documento: '}
+                                <Link
+                                    href={doc.referenced_document.document_type === 'FR' 
+                                        ? `/billing/receipts/${doc.referenced_document.id}` 
+                                        : `/billing/invoices/${doc.referenced_document.id}`}
+                                    className="font-mono font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                                >
+                                    {doc.referenced_document.document_number}
+                                </Link>
+                            </p>
+                        )}
                         <div className="flex items-center gap-2">
                             <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium ${status.className}`}>
                                 {status.icon} {status.label}
@@ -223,6 +238,21 @@ export default function DocumentShow({
                         <Printer size={14} />
                         Imprimir
                     </Button>
+
+                    {(type === 'FT' || type === 'FR') && !isDraft && !isCancelled && (
+                        <>
+                            <Link href={`/billing/credit-notes/create?referenced_document_id=${doc.id}`}>
+                                <Button variant="outline" size="sm" className="gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-900 dark:text-amber-400 dark:hover:bg-amber-950/20">
+                                    Emitir Nota de Crédito
+                                </Button>
+                            </Link>
+                            <Link href={`/billing/debit-notes/create?referenced_document_id=${doc.id}`}>
+                                <Button variant="outline" size="sm" className="gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-900 dark:text-blue-400 dark:hover:bg-blue-950/20">
+                                    Emitir Nota de Débito
+                                </Button>
+                            </Link>
+                        </>
+                    )}
 
                     <a href={`/billing/documents/${doc.id}/pdf`} target="_blank" rel="noopener noreferrer" className="inline-block">
                         <Button variant="outline" size="sm" className="gap-1.5 border-zinc-200 text-zinc-700 hover:bg-zinc-50 font-medium">
@@ -386,6 +416,12 @@ export default function DocumentShow({
                                     <p className="font-mono text-sm text-blue-600 dark:text-blue-400 mt-0.5">
                                         {doc.document_number ?? 'RASCUNHO'}
                                     </p>
+                                    {doc.referenced_document && (
+                                        <p className="text-xs text-zinc-500 mt-0.5">
+                                            {doc.document_type === 'NC' ? 'Retifica: ' : 'Ref: '}
+                                            <span className="font-mono font-semibold">{doc.referenced_document.document_number}</span>
+                                        </p>
+                                    )}
                                     <p className="text-xs text-zinc-500 mt-1 flex items-center gap-1 justify-end">
                                         <Calendar size={11} /> Emissão: {formatDate(doc.issue_date)}
                                     </p>

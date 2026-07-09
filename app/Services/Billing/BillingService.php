@@ -67,6 +67,7 @@ class BillingService
                 'issue_date' => $payload['issue_date'] ?? date('Y-m-d'),
                 'due_date' => $payload['due_date'] ?? date('Y-m-d'),
                 'notes' => $payload['notes'] ?? null,
+                'referenced_document_id' => $payload['referenced_document_id'] ?? null,
                 'created_by' => Auth::id(),
             ]);
 
@@ -161,6 +162,41 @@ class BillingService
 
             if ($document->status !== 'draft') {
                 throw new Exception("Este documento já se encontra emitido ou cancelado.");
+            }
+
+            // Validar regras de retificação para NC e ND
+            if (in_array($document->document_type, ['NC', 'ND'])) {
+                if (empty($document->referenced_document_id)) {
+                    throw new Exception("Documento de Referência obrigatório para " . ($document->document_type === 'NC' ? 'Nota de Crédito' : 'Nota de Débito') . ".");
+                }
+
+                $referencedDoc = Document::findOrFail($document->referenced_document_id);
+                if ($referencedDoc->company_id !== $document->company_id) {
+                    throw new Exception("O documento retificado deve pertencer à mesma empresa.");
+                }
+
+                if (!in_array($referencedDoc->document_type, ['FT', 'FR'])) {
+                    throw new Exception("Apenas Faturas (FT) ou Faturas-Recibo (FR) podem ser retificadas.");
+                }
+
+                if (in_array($referencedDoc->status, ['draft', 'cancelled'])) {
+                    throw new Exception("O documento retificado deve estar emitido (Confirmado ou Pago).");
+                }
+
+                // Para Nota de Crédito (NC), validar valor máximo acumulado
+                if ($document->document_type === 'NC') {
+                    $alreadyCredited = Document::where('referenced_document_id', $referencedDoc->id)
+                        ->where('document_type', 'NC')
+                        ->where('status', '!=', 'cancelled')
+                        ->where('id', '!=', $document->id)
+                        ->sum('grand_total');
+
+                    $remainingToCredit = $referencedDoc->grand_total - $alreadyCredited;
+                    
+                    if (round((float) $document->grand_total, 2) > round((float) $remainingToCredit, 2)) {
+                        throw new Exception("O valor total da Nota de Crédito (" . number_format($document->grand_total, 2, ',', '.') . " MZN) excede o valor restante da fatura retificada (" . number_format($remainingToCredit, 2, ',', '.') . " MZN).");
+                    }
+                }
             }
 
             // Tranca e obtém o sequencial correto da série ativa
@@ -353,6 +389,7 @@ class BillingService
                 'issue_date' => $payload['issue_date'] ?? $document->issue_date,
                 'due_date' => $payload['due_date'] ?? $document->due_date,
                 'notes' => $payload['notes'] ?? null,
+                'referenced_document_id' => $payload['referenced_document_id'] ?? null,
             ]);
 
             // Limpa os itens antigos e insere os novos

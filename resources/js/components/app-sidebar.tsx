@@ -60,6 +60,7 @@ const mainNavItems: NavItem[] = [
             { title: 'Faturas a Crédito', href: '/billing/invoices' },
             { title: 'Faturas-Recibo', href: '/billing/receipts' },
             { title: 'Notas de Crédito', href: '/billing/credit-notes' },
+            { title: 'Notas de Débito', href: '/billing/debit-notes' },
             { title: 'Clientes', href: '/billing/customers' },
             { title: 'Pagamentos', href: '/payments' },
         ],
@@ -92,8 +93,8 @@ const mainNavItems: NavItem[] = [
         title: 'Configurações',
         icon: Settings,
         items: [
-            { title: 'Sistema', href: '/settings' },
-            { title: 'Auditoria', href: '/audit' },
+            { title: 'Sistema', href: '/settings/company' },
+            { title: 'Auditoria', href: '/settings/audits' },
         ],
     },
 ];

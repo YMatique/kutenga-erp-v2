@@ -29,6 +29,7 @@ class RoleAndPermissionSeeder extends Seeder
             'invoice.view',
             'catalog.edit',
             'catalog.view',
+            'audits.view',
         ];
 
         foreach ($permissions as $permission) {

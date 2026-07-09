@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
-use App\Models\CreditNote;
+use App\Models\DebitNote;
+use App\Models\Document;
 use App\Models\DocumentSeries;
 use App\Models\Product;
 use App\Models\Warehouse;
@@ -12,7 +13,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class CreditNoteController extends Controller
+class DebitNoteController extends Controller
 {
     protected BillingService $billingService;
 
@@ -25,7 +26,7 @@ class CreditNoteController extends Controller
     {
         $companyId = $request->user()->company_id;
 
-        $notes = CreditNote::where('company_id', $companyId)
+        $notes = DebitNote::where('company_id', $companyId)
             ->with(['series', 'customer', 'referencedDocument'])
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -43,11 +44,11 @@ class CreditNoteController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return Inertia::render('billing/credit-notes/index', [
+        return Inertia::render('billing/debit-notes/index', [
             'documents' => $notes,
             'filters' => $request->only(['search', 'status']),
-            'type' => 'NC',
-            'title' => 'Notas de Crédito'
+            'type' => 'ND',
+            'title' => 'Notas de Débito'
         ]);
     }
 
@@ -67,13 +68,13 @@ class CreditNoteController extends Controller
             ->with('items')
             ->get();
 
-        return Inertia::render('billing/credit-notes/create', [
+        return Inertia::render('billing/debit-notes/create', [
             'customers' => $customers,
             'products' => $products,
             'series' => $series,
             'warehouses' => $warehouses,
             'invoices' => $invoices,
-            'type' => 'NC'
+            'type' => 'ND'
         ]);
     }
 
@@ -104,28 +105,28 @@ class CreditNoteController extends Controller
             'items.*.discount_percent' => 'nullable|numeric|between:0,100',
         ]);
 
-        $validated['document_type'] = 'NC';
+        $validated['document_type'] = 'ND';
 
         $document = $this->billingService->createDraft($validated, $companyId);
 
-        return redirect()->route('billing.credit-notes.show', $document->id)
-            ->with('success', 'Rascunho de nota de crédito criado com sucesso!');
+        return redirect()->route('billing.debit-notes.show', $document->id)
+            ->with('success', 'Rascunho de nota de débito criado com sucesso!');
     }
 
     public function show(Request $request, $id): Response
     {
         $companyId = $request->user()->company_id;
 
-        $note = CreditNote::where('company_id', $companyId)
+        $note = DebitNote::where('company_id', $companyId)
             ->with(['items', 'series', 'customer', 'referencedDocument'])
             ->findOrFail($id);
 
         $warehouses = Warehouse::where('company_id', $companyId)->where('is_active', true)->get();
 
-        return Inertia::render('billing/credit-notes/show', [
+        return Inertia::render('billing/debit-notes/show', [
             'document' => $note,
             'warehouses' => $warehouses,
-            'type' => 'NC'
+            'type' => 'ND'
         ]);
     }
 
@@ -133,7 +134,7 @@ class CreditNoteController extends Controller
     {
         $companyId = $request->user()->company_id;
 
-        $note = CreditNote::where('company_id', $companyId)
+        $note = DebitNote::where('company_id', $companyId)
             ->with(['items', 'referencedDocument'])
             ->findOrFail($id);
 
@@ -153,14 +154,14 @@ class CreditNoteController extends Controller
             ->with('items')
             ->get();
 
-        return Inertia::render('billing/credit-notes/edit', [
+        return Inertia::render('billing/debit-notes/edit', [
             'document' => $note,
             'customers' => $customers,
             'products' => $products,
             'series' => $series,
             'warehouses' => $warehouses,
             'invoices' => $invoices,
-            'type' => 'NC'
+            'type' => 'ND'
         ]);
     }
 
@@ -192,29 +193,19 @@ class CreditNoteController extends Controller
 
         $this->billingService->updateDraft($id, $validated);
 
-        return redirect()->route('billing.credit-notes.show', $id)
-            ->with('success', 'Rascunho de nota de crédito atualizado com sucesso!');
+        return redirect()->route('billing.debit-notes.show', $id)
+            ->with('success', 'Rascunho de nota de débito atualizado com sucesso!');
     }
 
     public function confirm(Request $request, $id)
     {
         $companyId = $request->user()->company_id;
-        $note = CreditNote::where('company_id', $companyId)->findOrFail($id);
-
-        $hasPhysicalProducts = $note->has_physical_products;
-
-        $validated = $request->validate([
-            'warehouse_id' => $hasPhysicalProducts ? 'required|exists:warehouses,id' : 'nullable|exists:warehouses,id',
-        ]);
+        $note = DebitNote::where('company_id', $companyId)->findOrFail($id);
 
         try {
-            $warehouse = null;
-            if (!empty($validated['warehouse_id'])) {
-                $warehouse = Warehouse::where('company_id', $companyId)->findOrFail($validated['warehouse_id']);
-            }
-            $this->billingService->confirmAndEmit($note->id, $warehouse);
+            $this->billingService->confirmAndEmit($note->id, null);
 
-            return redirect()->back()->with('success', 'Nota de Crédito emitida oficialmente e stock atualizado!');
+            return redirect()->back()->with('success', 'Nota de Débito emitida oficialmente e saldos atualizados!');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }
@@ -224,7 +215,7 @@ class CreditNoteController extends Controller
     {
         try {
             $this->billingService->cancel($id);
-            return redirect()->back()->with('success', 'Nota de Crédito cancelada com sucesso!');
+            return redirect()->back()->with('success', 'Nota de Débito cancelada com sucesso!');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }

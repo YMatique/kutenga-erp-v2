@@ -28,4 +28,12 @@ class DebitNote extends Document
             $customer->increment('balance', $this->grand_total);
         }
     }
+
+    public function reverseFinancial(): void
+    {
+        if ($this->customer_id) {
+            $customer = Customer::findOrFail($this->customer_id);
+            $customer->decrement('balance', $this->grand_total);
+        }
+    }
 }
