@@ -17,6 +17,7 @@ createInertiaApp({
                 return null;
             case name === 'index':
                 return null;
+
             case name.startsWith('onboarding'):
                 return null;
             case name.startsWith('auth/'):

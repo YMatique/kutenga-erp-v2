@@ -7,32 +7,75 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\PosShift;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PosShiftController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
-        $shifts = PosShift::where('company_id', $user->company_id)
-            ->with(['user'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
-            
+        $user    = Auth::user();
+        $company = $user->company_id;
+
+        $shifts = PosShift::where('company_id', $company)
+            ->with(['user:id,name', 'branch:id,name'])
+            ->withCount('documents')
+            ->withSum('documents', 'grand_total')
+            ->orderBy('opened_at', 'desc')
+            ->paginate(20)
+            ->through(function ($shift) {
+                return [
+                    'id'             => $shift->id,
+                    'status'         => $shift->status,
+                    'operator'       => $shift->user?->name ?? '—',
+                    'branch'         => $shift->branch?->name ?? '—',
+                    'opened_at'      => $shift->opened_at,
+                    'closed_at'      => $shift->closed_at,
+                    'starting_cash'  => (float) $shift->starting_cash,
+                    'ending_cash'    => $shift->ending_cash !== null ? (float) $shift->ending_cash : null,
+                    'documents_count'=> $shift->documents_count,
+                    'sales_total'    => (float) ($shift->documents_sum_grand_total ?? 0),
+                ];
+            });
+
+        $stats = [
+            'total_shifts' => PosShift::where('company_id', $company)->count(),
+            'open_shifts'  => PosShift::where('company_id', $company)->where('status', 'open')->count(),
+            'today_sales'  => (float) DB::table('documents')
+                ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
+                ->where('pos_shifts.company_id', $company)
+                ->whereDate('documents.created_at', today())
+                ->whereNull('documents.deleted_at')
+                ->sum('documents.grand_total'),
+            'month_sales'  => (float) DB::table('documents')
+                ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
+                ->where('pos_shifts.company_id', $company)
+                ->whereMonth('documents.created_at', now()->month)
+                ->whereYear('documents.created_at', now()->year)
+                ->whereNull('documents.deleted_at')
+                ->sum('documents.grand_total'),
+        ];
+
+        $myOpenShift = PosShift::where('company_id', $company)
+            ->where('user_id', $user->id)
+            ->where('status', 'open')
+            ->first();
+
         return Inertia::render('pos/Shifts/History', [
-            'shifts' => $shifts,
+            'shifts'      => $shifts,
+            'stats'       => $stats,
+            'myOpenShift' => $myOpenShift,
         ]);
     }
 
     public function create()
     {
         $user = Auth::user();
-        
-        // Se já tiver turno aberto, redireciona
+
         $openShift = PosShift::where('user_id', $user->id)
             ->where('company_id', $user->company_id)
             ->where('status', 'open')
             ->first();
-            
+
         if ($openShift) {
             return redirect()->route('pos.index');
         }
@@ -47,23 +90,22 @@ class PosShiftController extends Controller
         ]);
 
         $user = Auth::user();
-        
-        // Verifica se já existe turno aberto para o utilizador
+
         $openShift = PosShift::where('user_id', $user->id)
             ->where('company_id', $user->company_id)
             ->where('status', 'open')
             ->first();
-            
+
         if ($openShift) {
             return redirect()->route('pos.index')->with('error', 'Já possui um turno aberto.');
         }
 
         PosShift::create([
-            'company_id' => $user->company_id,
-            'branch_id' => $user->branch_id ?? 1, // fallback se não estiver num branch
-            'user_id' => $user->id,
-            'status' => 'open',
-            'opened_at' => now(),
+            'company_id'   => $user->company_id,
+            'branch_id'    => $user->branch_id ?? 1,
+            'user_id'      => $user->id,
+            'status'       => 'open',
+            'opened_at'    => now(),
             'starting_cash' => $request->starting_cash,
         ]);
 
@@ -73,19 +115,22 @@ class PosShiftController extends Controller
     public function showClose()
     {
         $user = Auth::user();
-        
+
         $openShift = PosShift::where('user_id', $user->id)
             ->where('company_id', $user->company_id)
             ->where('status', 'open')
-            ->with(['documents'])
+            ->with(['documents.items'])
             ->firstOrFail();
 
-        // Calculate sales totals
-        $salesTotal = $openShift->documents()->sum('grand_total');
-        
+        $salesTotal    = (float) $openShift->documents()->sum('grand_total');
+        $totalDocs     = $openShift->documents()->count();
+        $expectedCash  = (float) $openShift->starting_cash + $salesTotal;
+
         return Inertia::render('pos/Shifts/Close', [
-            'shift' => $openShift,
-            'salesTotal' => $salesTotal,
+            'shift'        => $openShift,
+            'salesTotal'   => $salesTotal,
+            'totalDocs'    => $totalDocs,
+            'expectedCash' => $expectedCash,
         ]);
     }
 
@@ -93,7 +138,7 @@ class PosShiftController extends Controller
     {
         $request->validate([
             'ending_cash' => 'required|numeric|min:0',
-            'notes' => 'nullable|string',
+            'notes'       => 'nullable|string',
         ]);
 
         if ($shift->user_id !== Auth::id() || $shift->status !== 'open') {
@@ -101,12 +146,12 @@ class PosShiftController extends Controller
         }
 
         $shift->update([
-            'status' => 'closed',
-            'closed_at' => now(),
+            'status'      => 'closed',
+            'closed_at'   => now(),
             'ending_cash' => $request->ending_cash,
-            'notes' => $request->notes,
+            'notes'       => $request->notes,
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Turno fechado com sucesso.');
+        return redirect()->route('pos.shifts.index')->with('success', 'Turno fechado com sucesso!');
     }
 }

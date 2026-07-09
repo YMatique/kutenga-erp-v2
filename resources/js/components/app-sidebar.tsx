@@ -69,8 +69,9 @@ const mainNavItems: NavItem[] = [
         title: 'Ponto de Venda',
         icon: ShoppingCart,
         items: [
-            { title: 'Caixa', href: '/pos' },
-            { title: 'Sessões', href: '/pos/sessions' },
+            { title: 'Ir para o POS', href: '/pos' },
+            { title: 'Turnos / Sessões', href: '/pos/shifts' },
+            { title: 'Abrir Turno', href: '/pos/shifts/open' },
         ],
     },
     {

@@ -70,9 +70,10 @@
 - Ao criar uma fatura ou cotação, não deve permitir editar o preço, preço é editado noutra secção [feito]
 
 
-## Ver A Implementação de dark mode [feito]
+## Ver A Implementação de dark mode 
 - A lógica de dark mode está completamente operacional a nível de CSS (ficheiro `resources/css/app.css` com variáveis sob `.dark`) e React (usando o custom hook `useAppearance`).
 - Para facilitar a experiência do utilizador, adicionámos um botão alternador (Toggle de Sol/Lua) no cabeçalho global (`AppHeader`) ao lado das notificações para poder alternar rapidamente entre modo claro e escuro a partir de qualquer página, além das configurações já existentes nas definições de aparência.
+- Todas as páginas deve aplicar o conceito de dark mode, os componentes, etc
 
 ## Relatórios
 
