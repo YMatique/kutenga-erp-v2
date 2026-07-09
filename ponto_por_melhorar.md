@@ -57,10 +57,10 @@
 
 ## Trabalhar nas Telas de Auditoria
 
-## Onbording
-- No onbording pedir informações mais completas da empresa, como: NUIT, número de telefone, email, morada, moeda oficial, etc
-- Deve enviar um email de boas-vindas ao usuário 
-- Deve enviar um email de confirmação de cadastro
+## Onbording [feito]
+- No onbording pedir informações mais completas da empresa, como: NUIT, número de telefone, email, morada, moeda oficial, etc [feito]
+- Deve enviar um email de boas-vindas ao usuário [feito]
+- Deve enviar um email de confirmação de cadastro [feito]
 
 ## Fatura/Cotação [feito]
 - Melhorar o documento pdf de fatura e cotação: deixar um pouco mais customizado. [feito]
@@ -72,3 +72,9 @@
 
 ## Relatórios
 
+
+## Quanto às Imagens
+- Na página de produtos, deve especificar o tamanho recomendável de imagem
+- Para logotipos, carimbos, etc, deve especificar tambem o tamanho da imagem para o usuário fazer upload de imagens que não quebrarão o layout
+ 
+ ## Criar uma página de documentação do sistema

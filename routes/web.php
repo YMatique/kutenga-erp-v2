@@ -30,6 +30,11 @@ use Laravel\Fortify\Features;
 Route::inertia('/', 'index')->name('home');
 Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    
+    // Onboarding
+    Route::get('/onboarding', [\App\Http\Controllers\OnboardingController::class, 'index'])->name('onboarding.index');
+    Route::post('/onboarding', [\App\Http\Controllers\OnboardingController::class, 'store'])->name('onboarding.store');
+
     Route::post('context/switch', [ContextController::class, 'switch'])->name('context.switch');
     Route::post('unlock-screen', [\App\Http\Controllers\LockScreenController::class, 'unlock'])->name('unlock.screen');
 
