@@ -134,16 +134,23 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     // POS
     Route::prefix('pos')->name('pos.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Pos\PosController::class, 'index'])->name('index');
-        
+
         Route::get('/shifts', [\App\Http\Controllers\Pos\PosShiftController::class, 'index'])->name('shifts.index');
         Route::get('/shifts/open', [\App\Http\Controllers\Pos\PosShiftController::class, 'create'])->name('shifts.create');
         Route::post('/shifts/open', [\App\Http\Controllers\Pos\PosShiftController::class, 'store'])->name('shifts.store');
-        
+
         Route::get('/shifts/close', [\App\Http\Controllers\Pos\PosShiftController::class, 'showClose'])->name('shifts.showClose');
         Route::post('/shifts/{shift}/close', [\App\Http\Controllers\Pos\PosShiftController::class, 'close'])->name('shifts.close');
-        
+
+        // Detalhe de turno
+        Route::get('/shifts/{shift}', [\App\Http\Controllers\Pos\PosShiftController::class, 'show'])->name('shifts.show');
+
+        // Relatórios
+        Route::get('/reports', [\App\Http\Controllers\Pos\PosReportController::class, 'index'])->name('reports.index');
+
         Route::post('/sales', [\App\Http\Controllers\Pos\PosSaleController::class, 'store'])->name('sales.store');
     });
+
 
     // Users
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\SystemNotificationController::class, 'markAsRead'])->name('notifications.read');

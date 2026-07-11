@@ -24,16 +24,16 @@ class PosShiftController extends Controller
             ->paginate(20)
             ->through(function ($shift) {
                 return [
-                    'id'             => $shift->id,
-                    'status'         => $shift->status,
-                    'operator'       => $shift->user?->name ?? '—',
-                    'branch'         => $shift->branch?->name ?? '—',
-                    'opened_at'      => $shift->opened_at,
-                    'closed_at'      => $shift->closed_at,
-                    'starting_cash'  => (float) $shift->starting_cash,
-                    'ending_cash'    => $shift->ending_cash !== null ? (float) $shift->ending_cash : null,
-                    'documents_count'=> $shift->documents_count,
-                    'sales_total'    => (float) ($shift->documents_sum_grand_total ?? 0),
+                    'id'              => $shift->id,
+                    'status'          => $shift->status,
+                    'operator'        => $shift->user?->name ?? '—',
+                    'branch'          => $shift->branch?->name ?? '—',
+                    'opened_at'       => $shift->opened_at,
+                    'closed_at'       => $shift->closed_at,
+                    'starting_cash'   => (float) $shift->starting_cash,
+                    'ending_cash'     => $shift->ending_cash !== null ? (float) $shift->ending_cash : null,
+                    'documents_count' => $shift->documents_count,
+                    'sales_total'     => (float) ($shift->documents_sum_grand_total ?? 0),
                 ];
             });
 
@@ -66,6 +66,51 @@ class PosShiftController extends Controller
             'myOpenShift' => $myOpenShift,
         ]);
     }
+
+    public function show(PosShift $shift)
+    {
+        $user = Auth::user();
+        if ($shift->company_id !== $user->company_id) abort(403);
+
+        $shift->load(['user:id,name', 'branch:id,name', 'documents.items']);
+
+        $documents = $shift->documents->map(function ($doc) {
+            return [
+                'id'              => $doc->id,
+                'number'          => $doc->number ?? ($doc->series?->prefix . '/' . $doc->sequence_number),
+                'status'          => $doc->status,
+                'subtotal'        => (float) $doc->subtotal,
+                'tax_total'       => (float) $doc->tax_total,
+                'grand_total'     => (float) $doc->grand_total,
+                'created_at'      => $doc->created_at,
+                'items_count'     => $doc->items->count(),
+            ];
+        });
+
+        $summary = [
+            'total_docs'   => $documents->count(),
+            'sales_total'  => $documents->sum('grand_total'),
+            'tax_total'    => $documents->sum('tax_total'),
+            'subtotal'     => $documents->sum('subtotal'),
+            'starting_cash' => (float) $shift->starting_cash,
+            'ending_cash'   => $shift->ending_cash !== null ? (float) $shift->ending_cash : null,
+        ];
+
+        return Inertia::render('pos/Shifts/Show', [
+            'shift'     => [
+                'id'         => $shift->id,
+                'status'     => $shift->status,
+                'operator'   => $shift->user?->name ?? '—',
+                'branch'     => $shift->branch?->name ?? '—',
+                'opened_at'  => $shift->opened_at,
+                'closed_at'  => $shift->closed_at,
+                'notes'      => $shift->notes,
+            ],
+            'documents' => $documents,
+            'summary'   => $summary,
+        ]);
+    }
+
 
     public function create()
     {

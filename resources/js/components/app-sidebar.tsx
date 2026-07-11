@@ -72,6 +72,7 @@ const mainNavItems: NavItem[] = [
             { title: 'Ir para o POS', href: '/pos' },
             { title: 'Turnos / Sessões', href: '/pos/shifts' },
             { title: 'Abrir Turno', href: '/pos/shifts/open' },
+            { title: 'Relatórios', href: '/pos/reports' },
         ],
     },
     {
