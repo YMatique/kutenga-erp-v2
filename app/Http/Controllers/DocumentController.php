@@ -204,8 +204,16 @@ class DocumentController extends Controller
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.document', compact('document'));
 
-        // Configurar folha A4 e margens padrão
-        $pdf->setPaper('a4', 'portrait');
+        // Se for Fatura-Recibo (FR), usar formato de impressora térmica (80mm = ~226pt)
+        if ($document->document_type === 'FR' && $request->get('format') !== 'a4') {
+            $itemCount = count($document->items);
+            // Altura dinâmica estimada para caber todo o conteúdo do rolo térmico sem quebrar página
+            $height = 250 + ($itemCount * 35) + ($document->notes ? 50 : 0);
+            $pdf->setPaper([0, 0, 226, $height], 'portrait');
+        } else {
+            // Configurar folha A4 e margens padrão
+            $pdf->setPaper('a4', 'portrait');
+        }
 
         // Formata o nome do arquivo, ex: FT_2026_0012.pdf
         $name = $document->document_number ?: "{$document->document_type}_draft_{$document->id}";

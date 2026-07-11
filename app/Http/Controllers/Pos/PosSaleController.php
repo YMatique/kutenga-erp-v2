@@ -46,26 +46,32 @@ class PosSaleController extends Controller
         ]);
 
         // Default "Consumidor Final" customer
-        $customer = Customer::where('company_id', $companyId)->where('customer_nuit', '999999999')->first();
+        $customer = Customer::where('company_id', $companyId)->where('nuit', '999999999')->first();
         if (!$customer) {
             $customer = Customer::create([
                 'company_id' => $companyId,
                 'name' => 'Consumidor Final',
-                'customer_nuit' => '999999999',
+                'nuit' => '999999999',
                 'is_active' => true,
             ]);
         }
 
-        // Default POS series (should ideally be configured, picking first active FR series for now)
-        $series = DocumentSeries::where('company_id', $companyId)->where('document_type', 'FR')->where('is_active', true)->first();
+        // Default POS series (should ideally be configured, picking first active series for now)
+        $series = DocumentSeries::where('company_id', $companyId)
+            ->where('year', date('Y'))
+            ->where('is_active', true)
+            ->first();
         if (!$series) {
-            return response()->json(['error' => 'Nenhuma série de Fatura-Recibo ativa encontrada.'], 400);
+            $series = DocumentSeries::where('company_id', $companyId)->where('is_active', true)->first();
+        }
+        if (!$series) {
+            return response()->json(['error' => 'Nenhuma série ativa encontrada.'], 400);
         }
 
         $documentData = [
             'customer_id' => $customer->id,
             'customer_name' => $customer->name,
-            'customer_nuit' => $customer->customer_nuit,
+            'customer_nuit' => $customer->nuit,
             'series_id' => $series->id,
             'issue_date' => now()->toDateString(),
             'due_date' => now()->toDateString(),
@@ -99,7 +105,8 @@ class PosSaleController extends Controller
             PaymentAllocation::create([
                 'payment_id' => $payment->id,
                 'document_id' => $document->id,
-                'amount' => $document->grand_total,
+                'amount_allocated' => $document->grand_total,
+                'created_by' => $user->id,
             ]);
 
             $document->update(['payment_status' => 'paid']);
