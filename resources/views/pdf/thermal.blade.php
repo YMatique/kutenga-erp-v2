@@ -8,165 +8,696 @@
         'GR' => 'Guia de Remessa',
     ];
 @endphp
+
 <!DOCTYPE html>
 <html lang="pt-PT">
+
 <head>
     <meta charset="UTF-8">
-    <title>Recibo {{ $document->document_number ?? 'Rascunho' }}</title>
+
+    <title>
+        {{ $document->document_number ?? 'Rascunho' }}
+    </title>
+
     <style>
         @page {
+            size: 80mm auto;
             margin: 0;
         }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Courier New', 'Courier', monospace;
-            font-size: 10px;
-            color: #000000;
-            line-height: 1.3;
+
+            width: 80mm;
+
             margin: 0;
-            padding: 8px 10px;
-            width: 206px; /* 226pt - 20pt padding */
+
+            padding: 3mm;
+
+            font-family:
+                "Courier New",
+                Courier,
+                monospace;
+
+            font-size: 10px;
+
+            color: #000;
+
+            line-height: 1.35;
+
         }
-        .c { text-align: center; }
-        .r { text-align: right; }
-        .b { font-weight: bold; }
-        .logo { font-size: 12px; font-weight: bold; margin-bottom: 2px; text-transform: uppercase; }
-        .issuer-details { font-size: 8px; margin-bottom: 4px; }
-        .title { font-size: 10px; font-weight: bold; margin: 8px 0 2px 0; text-transform: uppercase; }
-        .doc-num { font-size: 11px; font-weight: bold; margin-bottom: 4px; }
-        .meta { font-size: 8px; margin-bottom: 4px; }
-        .sep { border-top: 1px dashed #000000; margin: 6px 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 4px; }
-        td, th { padding: 2px 0; vertical-align: top; font-size: 9px; }
-        .summary-table td { padding: 1.5px 0; }
-        .tot-label { font-size: 10px; font-weight: bold; }
-        .tot-val { font-size: 11px; font-weight: bold; }
-        .foot { font-size: 7.5px; text-align: center; margin-top: 12px; }
-        .badge-draft {
-            border: 1px dashed #000;
-            padding: 1px 3px;
-            font-size: 8px;
+
+
+        .center {
+            text-align: center;
+        }
+
+
+        .right {
+            text-align: right;
+        }
+
+
+        .bold {
             font-weight: bold;
+        }
+
+
+        .company-name {
+
+            font-size: 14px;
+
+            font-weight: bold;
+
             text-transform: uppercase;
-            display: inline-block;
+
+        }
+
+
+        .company-info {
+
+            font-size: 8px;
+
+            margin-top: 3px;
+
+        }
+
+
+        .document-title {
+
+            font-size: 12px;
+
+            font-weight: bold;
+
+            text-transform: uppercase;
+
+            margin-top: 8px;
+
+        }
+
+
+        .document-number {
+
+            font-size: 12px;
+
+            font-weight: bold;
+
+        }
+
+
+        .meta {
+
+            font-size: 8px;
+
             margin-top: 4px;
+
+        }
+
+
+        .separator {
+
+            border-top: 1px dashed #000;
+
+            margin: 6px 0;
+
+        }
+
+
+        .customer {
+
+            font-size: 9px;
+
+        }
+
+
+        table {
+
+            width: 100%;
+
+            border-collapse: collapse;
+
+        }
+
+
+        th {
+
+            font-size: 8px;
+
+            border-bottom: 1px dashed #000;
+
+            padding-bottom: 3px;
+
+            text-align: left;
+
+        }
+
+
+        td {
+
+            font-size: 9px;
+
+            padding: 2px 0;
+
+            vertical-align: top;
+
+        }
+
+
+        .product {
+
+            font-weight: bold;
+
+        }
+
+
+        .item-info {
+
+            font-size: 8px;
+
+        }
+
+
+        .summary td {
+
+            padding: 2px 0;
+
+        }
+
+
+        .total {
+
+            border-top: 1px dashed #000;
+
+            font-size: 11px;
+
+            font-weight: bold;
+
+        }
+
+
+        .status {
+
+            margin-top: 5px;
+
+            text-align: center;
+
+            font-size: 8px;
+
+            font-weight: bold;
+
+            border: 1px dashed #000;
+
+            padding: 3px;
+
+        }
+
+
+        .cancelled {
+
+            margin-top: 5px;
+
+            text-align: center;
+
+            font-weight: bold;
+
+        }
+
+
+        .footer {
+
+            margin-top: 10px;
+
+            text-align: center;
+
+            font-size: 8px;
+
         }
     </style>
+
 </head>
+
+
 <body>
-    <div class="c logo">{{ $document->company ? $document->company->name : 'Kutenga' }}</div>
-    <div class="c issuer-details">
-        @if($document->company)
-            @if($document->company->address)
-                {!! nl2br(e($document->company->address)) !!}<br>
+
+
+    {{-- EMPRESA --}}
+
+    <div class="center">
+
+        <div class="company-name">
+
+            {{ $document->company?->name ?? 'Kutenga' }}
+
+        </div>
+
+
+        <div class="company-info">
+
+
+            @if($document->company)
+
+                @if($document->company->address)
+
+                    {!! nl2br(e($document->company->address)) !!}
+
+                    <br>
+
+                @endif
+
+
+                @if($document->company->phone)
+
+                    Tel:
+                    {{ $document->company->phone }}
+
+                    <br>
+
+                @endif
+
+
+                NUIT:
+                {{ $document->company->nuit }}
+
+
+            @else
+
+                Kutenga Solutions Lda.
+
+                <br>
+
+                NUIT: 100200300
+
             @endif
-            @if($document->company->phone)
-                Tel: {{ $document->company->phone }}<br>
-            @endif
-            NUIT: {{ $document->company->nuit }}
-        @else
-            Kutenga Solutions Lda.<br>
-            Av. 24 de Julho, Maputo<br>
-            Tel: +258 84 000 0000<br>
-            NUIT: 100200300
-        @endif
+
+
+        </div>
+
     </div>
 
-    <div class="sep"></div>
 
-    <div class="c title">{{ $typeLabels[$document->document_type] ?? 'Fatura-Recibo' }}</div>
-    <div class="c doc-num">{{ $document->document_number ?? 'RASCUNHO' }}</div>
-    <div class="c meta">
-        Emissão: {{ $document->issue_date ? $document->issue_date->format('d/m/Y') : now()->format('d/m/Y') }}<br>
-        @if($document->series)
-            Série: {{ $document->series->code }}
-        @endif
+
+    <div class="separator"></div>
+
+
+
+    {{-- DOCUMENTO --}}
+
+
+    <div class="center">
+
+
+        <div class="document-title">
+
+            {{ $typeLabels[$document->document_type] ?? 'Fatura-Recibo' }}
+
+        </div>
+
+
+        <div class="document-number">
+
+            {{ $document->document_number ?? 'RASCUNHO' }}
+
+        </div>
+
+
+
+        <div class="meta">
+
+
+            Data:
+
+            {{ $document->issue_date
+    ? $document->issue_date->format('d/m/Y H:i')
+    : now()->format('d/m/Y H:i')
+            }}
+
+
+
+            @if($document->series)
+
+                <br>
+
+                Série:
+                {{ $document->series->code }}
+
+            @endif
+
+
+        </div>
+
+
     </div>
+
+
 
     @if($document->status === 'draft')
-        <div class="c">
-            <span class="badge-draft">Rascunho (Sem Valor Fiscal)</span>
+
+        <div class="status">
+
+            RASCUNHO - SEM VALOR FISCAL
+
         </div>
+
+
     @elseif($document->status === 'cancelled')
-        <div class="c b" style="margin-top: 4px; text-transform: uppercase;">
+
+
+        <div class="cancelled">
+
             *** DOCUMENTO CANCELADO ***
+
         </div>
+
+
     @endif
 
-    <div class="sep"></div>
 
-    <!-- Customer -->
-    <div class="meta">
-        <strong>Cliente:</strong> {{ $document->customer_name }}<br>
-        <strong>NUIT:</strong> {{ $document->customer_nuit }}<br>
+
+    <div class="separator"></div>
+
+
+
+    {{-- CLIENTE --}}
+
+
+    <div class="customer">
+
+
+        <strong>Cliente:</strong>
+
+        {{ $document->customer_name }}
+
+
+        <br>
+
+
+        <strong>NUIT:</strong>
+
+        {{ $document->customer_nuit }}
+
+
+
         @if($document->customer_address)
-            <strong>Endereço:</strong> {{ $document->customer_address }}
+
+            <br>
+
+
+            <strong>Endereço:</strong>
+
+            {{ $document->customer_address }}
+
         @endif
+
+
     </div>
 
-    <div class="sep"></div>
 
-    <!-- Items -->
+
+    <div class="separator"></div>
+
+
+
+    {{-- PRODUTOS --}}
+
+
     <table>
+
+
         <thead>
-            <tr style="border-bottom: 1px dashed #000000;">
-                <th align="left" style="width: 50%">Artigo</th>
-                <th align="right" style="width: 20%">Qtd</th>
-                <th align="right" style="width: 30%">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($document->items as $item)
-                <tr>
-                    <td>
-                        {{ $item->product_name }}
-                        @if($item->discount_percent > 0)
-                            <br><small style="font-size: 7.5px;">Desc: {{ number_format($item->discount_percent, 1, ',', '.') }}%</small>
-                        @endif
-                    </td>
-                    <td align="right">{{ number_format($item->quantity, 0, ',', '.') }}</td>
-                    <td align="right">{{ number_format($item->total, 2, ',', '.') }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
 
-    <div class="sep"></div>
 
-    <!-- Totals -->
-    <table class="summary-table">
-        <tr>
-            <td style="width: 60%">Subtotal:</td>
-            <td align="right" class="b">{{ number_format($document->subtotal, 2, ',', '.') }} MT</td>
-        </tr>
-        @if($document->discount_total > 0)
             <tr>
-                <td>Desconto:</td>
-                <td align="right" class="b">-{{ number_format($document->discount_total, 2, ',', '.') }} MT</td>
+
+                <th>
+                    Artigo
+                </th>
+
+
+                <th class="right">
+                    Total
+                </th>
+
+
             </tr>
-        @endif
-        <tr>
-            <td>IVA:</td>
-            <td align="right" class="b">{{ number_format($document->tax_total, 2, ',', '.') }} MT</td>
-        </tr>
-        <tr style="border-top: 1px dashed #000000;">
-            <td class="tot-label">TOTAL:</td>
-            <td align="right" class="tot-val">{{ number_format($document->grand_total, 2, ',', '.') }} MT</td>
-        </tr>
+
+
+        </thead>
+
+
+        <tbody>
+
+
+            @foreach($document->items as $item)
+
+
+                <tr>
+
+
+                    <td colspan="2" class="product">
+
+
+                        {{ $item->product_name }}
+
+
+                    </td>
+
+
+                </tr>
+
+
+
+                <tr>
+
+
+                    <td>
+
+
+                        <span class="item-info">
+
+
+                            {{ number_format($item->quantity, 2, ',', '.') }}
+
+                            x
+
+                            {{ number_format($item->unit_price, 2, ',', '.') }}
+
+
+                            @if($item->discount_percent > 0)
+
+                                <br>
+
+                                Desc:
+
+                                {{ number_format($item->discount_percent, 2, ',', '.') }}%
+
+                            @endif
+
+
+                        </span>
+
+
+                    </td>
+
+
+                    <td class="right">
+
+
+                        {{ number_format($item->total, 2, ',', '.') }}
+
+
+                    </td>
+
+
+                </tr>
+
+
+            @endforeach
+
+
+        </tbody>
+
+
     </table>
+
+
+
+    <div class="separator"></div>
+
+
+
+    {{-- TOTAIS --}}
+
+
+    <table class="summary">
+
+
+        <tr>
+
+            <td>
+                Subtotal
+            </td>
+
+            <td class="right">
+
+                {{ number_format($document->subtotal, 2, ',', '.') }}
+
+                MT
+
+            </td>
+
+        </tr>
+
+
+
+        @if($document->discount_total > 0)
+
+
+            <tr>
+
+
+                <td>
+                    Desconto
+                </td>
+
+
+                <td class="right">
+
+                    -
+
+                    {{ number_format($document->discount_total, 2, ',', '.') }}
+
+                    MT
+
+                </td>
+
+
+            </tr>
+
+
+        @endif
+
+
+
+        <tr>
+
+
+            <td>
+                IVA
+            </td>
+
+
+            <td class="right">
+
+                {{ number_format($document->tax_total, 2, ',', '.') }}
+
+                MT
+
+            </td>
+
+
+        </tr>
+
+
+
+        <tr class="total">
+
+
+            <td>
+
+                TOTAL
+
+            </td>
+
+
+            <td class="right">
+
+
+                {{ number_format($document->grand_total, 2, ',', '.') }}
+
+                MT
+
+
+            </td>
+
+
+        </tr>
+
+
+    </table>
+
+
 
     @if($document->notes)
-        <div class="sep"></div>
-        <div class="meta">
-            <strong>Obs:</strong> {{ $document->notes }}
+
+
+        <div class="separator"></div>
+
+
+        <div class="customer">
+
+
+            <strong>Obs:</strong>
+
+            {{ $document->notes }}
+
+
         </div>
+
+
     @endif
 
-    <div class="sep"></div>
 
-    <div class="foot">
-        <strong>Kutenga ERP</strong><br>
-        Software certificado nº 342/AGT<br>
-        Obrigado pela sua preferência!
+
+    <div class="separator"></div>
+
+
+
+    {{-- FUTURO HASH / QR CODE --}}
+
+
+    {{--
+
+    HASH:
+    {{ $document->hash }}
+
+    --}}
+
+
+    {{--
+
+    QR CODE
+
+    Implementar futuramente
+
+    --}}
+
+
+
+    <div class="footer">
+
+
+        <strong>Kutenga ERP</strong>
+
+
+        <br>
+
+
+        Software certificado nº 342/AGT
+
+
+        <br>
+
+
+        Obrigado pela preferência!
+
+
     </div>
+
+
 </body>
+
+
 </html>
