@@ -77,7 +77,7 @@ export default function CompanySettings({ company }: { company: any }) {
         <>
             <Head title="Configurações da Empresa" />
 
-            <div className="space-y-6">
+            <div className="space-y-4">
                 <form onSubmit={submit} className="space-y-8">
                     <Tabs defaultValue="geral" className="w-full">
                         <TabsList className="grid w-full grid-cols-3 mb-8">

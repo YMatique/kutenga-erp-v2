@@ -1,4 +1,5 @@
-import KutengaLayout from '@/Layouts/kutenga-layout';
+// import KutengaLayout from '@/Layouts/kutenga-layout';
+import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,10 +43,11 @@ export default function History({ shifts, stats, myOpenShift }: any) {
     };
 
     return (
-        <KutengaLayout breadcrumbs={[{ title: 'POS', href: '/pos' }, { title: 'Turnos' }]}>
+        // <KutengaLayout breadcrumbs={[{ title: 'POS', href: '/pos' }, { title: 'Turnos' }]}>
+        <>
             <Head title="Gestão de Turnos POS" />
 
-            <div className="p-6 space-y-6 max-w-7xl mx-auto">
+            <div className="space-y-4 mx-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
@@ -220,6 +222,7 @@ export default function History({ shifts, stats, myOpenShift }: any) {
                     )}
                 </div>
             </div>
-        </KutengaLayout>
+        {/* </KutengaLayout> */}
+        </>
     );
 }

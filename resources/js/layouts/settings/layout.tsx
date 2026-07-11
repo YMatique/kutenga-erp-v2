@@ -24,7 +24,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
 
     return (
-        <div className="p-6">
+        <div className="">
             {/* Page header */}
             <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs px-6 py-4 mb-6">
                 <h1 className="text-[18px] font-semibold text-slate-900 leading-tight">Definições</h1>

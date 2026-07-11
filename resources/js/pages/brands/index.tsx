@@ -93,7 +93,7 @@ export default function BrandsIndex() {
         <>
             <Head title="Marcas" />
 
-            <div className="p-6 space-y-4 bg-slate-50 min-h-screen">
+            <div className=" space-y-4 bg-slate-50 ">
                 {/* PAGE HEADER */}
                 <PageHeader
                     title="Marcas"

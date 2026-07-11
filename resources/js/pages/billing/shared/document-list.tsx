@@ -111,7 +111,7 @@ export default function DocumentList({ documents, filters, type, title, createHr
     return (
         <>
             <Head title={title} />
-            <div className="p-6 space-y-4">
+            <div className="space-y-4">
                 {/* Page Header */}
                 <div className="flex items-center justify-between bg-white border border-slate-200 rounded-[4px] shadow-xs px-6 py-4">
                     <div className="flex items-center gap-3">

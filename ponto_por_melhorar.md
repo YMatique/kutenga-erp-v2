@@ -76,10 +76,29 @@
 - Todas as páginas deve aplicar o conceito de dark mode, os componentes, etc
 
 ## Relatórios
-
+- Colocar tela de relatórios com opção de exportar em pdf
 
 ## Quanto às Imagens
 - Na página de produtos, deve especificar o tamanho recomendável de imagem
 - Para logotipos, carimbos, etc, deve especificar tambem o tamanho da imagem para o usuário fazer upload de imagens que não quebrarão o layout
  
  ## Criar uma página de documentação do sistema
+
+## Rever o HasAudit
+- O trait HasAudit havia forçado que em cada model tivesse o created_by, updated_by, cancelled_by e quanto removo o trait, quase que algumas coisas não funcionam.
+
+ ## Padrão de Telas de Produtos, Faturação
+ - Deve conter cards estatísticos no topo, com informações relevantes para a página em causa, por exemplo, na página de produtos, deve mostrar o número de produtos cadastrados, o número de produtos com estoque baixo, o número de produtos com estoque zerado, etc
+ - Algumas delas deve conter por exemplo filtros
+
+ ## Tabelas
+ - Todas as tabelas devem usar paginação
+
+ ## Customização de código
+ - Evitar um controller lord: separação de responsabilidade da aplicação
+ - Organizar o código em dominio, em vez de todos controllers, models estarem na raíz, pode se criar diretórios por exemplo: Inventory/models/, Inventory/controllers/, Inventory/requests/, etc.
+
+## Customização de algumas views
+- Página de séries deve estar visivel no sidebar e rever as bordas e a estética da página para seguir o modelo padrão do app
+- Na tela de criar, ver, editar documentos, as bordas devem seguir o padrão
+- Página de ajuste de stock (criar, ver) deve ser customizada para seguir o padrao, os cards, as bordas, etc

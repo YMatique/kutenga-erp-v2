@@ -106,7 +106,7 @@ export default function Audits({ activities, filters }: Props) {
         <>
             <Head title="Auditoria" />
 
-            <div className="p-6 space-y-4 bg-slate-50 min-h-screen">
+            <div className=" space-y-4 bg-slate-50 ">
                 <PageHeader
                     title="Auditoria de Sistema"
                     subtitle="Histórico completo de todas as ações realizadas pelos utilizadores no sistema."

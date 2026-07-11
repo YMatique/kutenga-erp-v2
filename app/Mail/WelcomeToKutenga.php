@@ -34,7 +34,7 @@ class WelcomeToKutenga extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Bem-vindo ao Kutenga ERP 🎉',
+            subject: 'Bem-vindo ao Kutenga ERP',
         );
     }
 

@@ -23,7 +23,7 @@ export default function OpenShift() {
         ]}>
             <Head title="Abrir Turno" />
 
-            <div className="p-6 flex items-center justify-center min-h-[calc(100vh-10rem)]">
+            <div className="flex items-center justify-center min-h-[calc(100vh-10rem)]">
                 <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-10 w-full max-w-md">
                     <div className="text-center mb-8">
                         <div className="bg-blue-100 text-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-md shadow-blue-100">

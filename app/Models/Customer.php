@@ -12,7 +12,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Customer extends Model
 {
-    use SoftDeletes, /*HasAudit,*/ LogsActivity;
+    use SoftDeletes, HasAudit, LogsActivity;
 
     public function getActivitylogOptions(): LogOptions
     {

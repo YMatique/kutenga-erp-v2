@@ -142,7 +142,7 @@ export default function Show({ product, stocks, movements }: Props) {
         <>
             <Head title={`Stock - ${product.name}`} />
 
-            <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
+            <div className=" space-y-6 bg-slate-50 ">
                 {/* PAGE HEADER */}
                 <PageHeader
                     title={product.name}

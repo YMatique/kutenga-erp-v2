@@ -102,7 +102,7 @@ export default function Show({ adjustment }: ShowProps) {
         <>
             <Head title={`Ajuste de Stock #${adjustment.id}`} />
 
-            <div className="p-6 space-y-6  mx-auto">
+            <div className="space-y-4  mx-auto">
 
                 {/* CABEÇALHO */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-5">

@@ -28,7 +28,7 @@ function KutengaLayoutContent({
         <div className="min-h-screen w-full bg-background font-sans antialiased text-foreground flex flex-col overflow-x-hidden">
 
             {/* Floating top header */}
-            <header className="fixed top-3 left-3 right-3 z-[60] transition-all duration-300 ease-in-out">
+            <header className="fixed top-2 left-2 right-2 z-[60] transition-all duration-300 ease-in-out">
                 <div className="h-14 border border-border rounded-[4px] bg-card/60 backdrop-blur-xl px-4 flex items-center shadow-xs">
                     <AppHeader breadcrumbs={breadcrumbs} />
                 </div>
@@ -39,7 +39,7 @@ function KutengaLayoutContent({
                 {/* Dark navy sidebar panel */}
                 <aside
                     className={cn(
-                        'fixed top-[4.5rem] left-3 bottom-3 z-50 transition-all duration-300 ease-in-out',
+                        'fixed top-[5rem] left-2 bottom-3 z-50 transition-all duration-300 ease-in-out',
                         sidebarOpen ? 'w-64' : 'w-[4.5rem]',
                         isMobile && !sidebarOpen && '-left-full',
                     )}
@@ -52,7 +52,7 @@ function KutengaLayoutContent({
                 {/* Main content area */}
                 <main
                     className={cn(
-                        'pt-[4.5rem] transition-all duration-300 ease-in-out w-full min-h-screen',
+                        'pt-[5rem] transition-all duration-300 ease-in-out w-full min-h-screen',
                         isMobile ? 'pl-3 pr-3 pb-3' : sidebarOpen ? 'pl-[17.25rem] pr-3 pb-3' : 'pl-[5.75rem] pr-3 pb-3',
                     )}
                 >

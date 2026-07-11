@@ -19,5 +19,7 @@
 - Deve haver um botão para especificar o método de pagamento
 
 ## Deve ter uma tela de resumo de vendas por turno
+- Nessa tela deve ter detalhes de um determinado turno: produtos vendidos, caixa, etc
+
 ## Cada turno deve ter um histórico de todas as vendas
-## Deve ter uma tela de fecho de caixa
+

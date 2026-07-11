@@ -17,7 +17,8 @@ createInertiaApp({
                 return null;
             case name === 'index':
                 return null;
-
+            case name === 'pos/Index':
+                return null; // POS has its own full-screen layout
             case name.startsWith('onboarding'):
                 return null;
             case name.startsWith('auth/'):

@@ -54,7 +54,7 @@ export default function Index({
     return (
         <>
             <Head title="Inventário Inicial" />
-            <div className="p-6 space-y-4">
+            <div className=" space-y-4">
                 <PageHeader
                     title="Inventário Inicial"
                     subtitle="Registe o stock de abertura para os seus produtos"

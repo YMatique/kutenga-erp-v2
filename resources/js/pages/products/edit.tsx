@@ -186,7 +186,7 @@ export default function ProductEdit({ product, categories, units, brands }: Prop
         <>
             <Head title={`Editar - ${product.name}`} />
 
-            <div className="p-6 space-y-6  mx-auto">
+            <div className="space-y-4  mx-auto">
                 
                 {/* CABEÇALHO */}
                 <div className="flex items-center gap-4 border-b pb-5">

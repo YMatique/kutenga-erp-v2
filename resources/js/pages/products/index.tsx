@@ -98,7 +98,7 @@ export default function ProductsIndex() {
         <>
             <Head title="Catálogo de Itens" />
 
-            <div className="p-6 space-y-4 bg-slate-50 min-h-screen">
+            <div className=" space-y-4 bg-slate-50">
                 {/* PAGE HEADER */}
                 <PageHeader
                     title="Catálogo de Itens"

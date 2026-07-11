@@ -23,10 +23,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 
 const movementLabels: Record<string, { label: string; color: string }> = {
-    opening:    { label: 'Stock Inicial', color: 'bg-slate-100 text-slate-600' },
-    in:         { label: 'Entrada',       color: 'bg-[#2DB8A0]/10 text-[#2DB8A0]' },
-    out:        { label: 'Saída',         color: 'bg-red-50 text-red-600' },
-    adjustment: { label: 'Ajuste',        color: 'bg-[#E8A020]/10 text-[#E8A020]' },
+    opening: { label: 'Stock Inicial', color: 'bg-slate-100 text-slate-600' },
+    in: { label: 'Entrada', color: 'bg-[#2DB8A0]/10 text-[#2DB8A0]' },
+    out: { label: 'Saída', color: 'bg-red-50 text-red-600' },
+    adjustment: { label: 'Ajuste', color: 'bg-[#E8A020]/10 text-[#E8A020]' },
 };
 
 export default function InventoryDashboard() {
@@ -45,7 +45,7 @@ export default function InventoryDashboard() {
         <>
             <Head title="Inventário — Dashboard" />
 
-            <div className="p-6 space-y-4">
+            <div className="space-y-4">
                 {/* Page Header */}
                 <PageHeader
                     title="Gestão de Inventário"
