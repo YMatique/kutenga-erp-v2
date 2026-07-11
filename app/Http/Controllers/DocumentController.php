@@ -202,15 +202,15 @@ class DocumentController extends Controller
             ->with(['items', 'series', 'customer', 'company'])
             ->findOrFail($id);
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.document', compact('document'));
-
         // Se for Fatura-Recibo (FR), usar formato de impressora térmica (80mm = ~226pt)
         if ($document->document_type === 'FR' && $request->get('format') !== 'a4') {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.thermal', compact('document'));
             $itemCount = count($document->items);
             // Altura dinâmica estimada para caber todo o conteúdo do rolo térmico sem quebrar página
             $height = 250 + ($itemCount * 35) + ($document->notes ? 50 : 0);
             $pdf->setPaper([0, 0, 226, $height], 'portrait');
         } else {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.document', compact('document'));
             // Configurar folha A4 e margens padrão
             $pdf->setPaper('a4', 'portrait');
         }
