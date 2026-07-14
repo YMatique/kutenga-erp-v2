@@ -1,12 +1,13 @@
-import KutengaLayout from '@/Layouts/kutenga-layout';
+import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PageHeader } from '@/components/ui/brand';
 import {
     LogOut, Calculator, ShoppingBag, Receipt,
-    CheckCircle2, ArrowRight, AlertTriangle
+    CheckCircle2, AlertTriangle
 } from 'lucide-react';
 
 export default function CloseShift({ shift, salesTotal, totalDocs, expectedCash }: any) {
@@ -17,7 +18,7 @@ export default function CloseShift({ shift, salesTotal, totalDocs, expectedCash 
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('pos.shifts.close', shift.id));
+        post(`/pos/shifts/${shift.id}/close`);
     };
 
     const counted = parseFloat(data.ending_cash || '0');
@@ -35,64 +36,58 @@ export default function CloseShift({ shift, salesTotal, totalDocs, expectedCash 
         });
 
     return (
-        <KutengaLayout breadcrumbs={[
-            { title: 'POS', href: '/pos' },
-            { title: 'Turnos', href: '/pos/shifts' },
-            { title: 'Fechar Turno' }
-        ]}>
+        <>
             <Head title="Fechar Turno" />
 
-            <div className="p-6 max-w-5xl mx-auto space-y-6">
-                <div>
-                    <h1 className="text-2xl font-bold text-neutral-900">Fechar Turno #{shift.id}</h1>
-                    <p className="text-sm text-neutral-500 mt-1">
-                        Aberto em {fmtTime(shift.opened_at)}
-                    </p>
-                </div>
+            <div className="space-y-6">
+                <PageHeader
+                    title={`Fechar Turno #${shift.id}`}
+                    subtitle={`Aberto em ${fmtTime(shift.opened_at)}`}
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Left: Resumo do sistema */}
                     <div className="space-y-4">
-                        <h2 className="font-semibold text-neutral-800">Resumo do Turno</h2>
+                        <h2 className="font-semibold text-slate-700 text-sm uppercase tracking-wide">Resumo do Turno</h2>
 
-                        <div className="bg-white rounded-xl border border-neutral-200 shadow-sm divide-y divide-neutral-100">
+                        <div className="bg-white rounded-[4px] border border-slate-200 shadow-xs divide-y divide-slate-100">
                             <div className="flex items-center justify-between px-5 py-4">
-                                <div className="flex items-center gap-3 text-neutral-600">
-                                    <div className="p-2 bg-blue-50 rounded-lg">
-                                        <Calculator className="w-4 h-4 text-blue-500" />
+                                <div className="flex items-center gap-3 text-slate-600">
+                                    <div className="p-2 bg-[#2DB8A0]/10 rounded-[4px]">
+                                        <Calculator className="w-4 h-4 text-[#2DB8A0]" />
                                     </div>
                                     <span className="text-sm">Fundo de Maneio</span>
                                 </div>
-                                <span className="font-semibold">{fmt(parseFloat(shift.starting_cash))} MT</span>
+                                <span className="font-semibold text-slate-900">{fmt(parseFloat(shift.starting_cash))} MT</span>
                             </div>
 
                             <div className="flex items-center justify-between px-5 py-4">
-                                <div className="flex items-center gap-3 text-neutral-600">
-                                    <div className="p-2 bg-green-50 rounded-lg">
-                                        <Receipt className="w-4 h-4 text-green-500" />
+                                <div className="flex items-center gap-3 text-slate-600">
+                                    <div className="p-2 bg-emerald-50 rounded-[4px]">
+                                        <Receipt className="w-4 h-4 text-emerald-600" />
                                     </div>
                                     <div>
                                         <span className="text-sm block">Total de Vendas</span>
-                                        <span className="text-xs text-neutral-400">{totalDocs} {totalDocs === 1 ? 'documento' : 'documentos'}</span>
+                                        <span className="text-xs text-slate-400">{totalDocs} {totalDocs === 1 ? 'documento' : 'documentos'}</span>
                                     </div>
                                 </div>
-                                <span className="font-semibold text-green-600">+{fmt(salesTotal)} MT</span>
+                                <span className="font-semibold text-emerald-600">+{fmt(salesTotal)} MT</span>
                             </div>
 
-                            <div className="flex items-center justify-between px-5 py-5 bg-neutral-50 rounded-b-xl">
+                            <div className="flex items-center justify-between px-5 py-5 bg-slate-50 rounded-b-[4px]">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-purple-50 rounded-lg">
-                                        <ShoppingBag className="w-4 h-4 text-purple-500" />
+                                    <div className="p-2 bg-[#E8A020]/10 rounded-[4px]">
+                                        <ShoppingBag className="w-4 h-4 text-[#E8A020]" />
                                     </div>
-                                    <span className="font-semibold text-neutral-800">Total Esperado em Caixa</span>
+                                    <span className="font-semibold text-slate-800">Total Esperado em Caixa</span>
                                 </div>
-                                <span className="text-xl font-bold text-neutral-900">{fmt(expectedCash)} MT</span>
+                                <span className="text-xl font-bold text-slate-900">{fmt(expectedCash)} MT</span>
                             </div>
                         </div>
 
                         {/* Difference indicator */}
                         {(isShortage || isExcess) && (
-                            <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border ${
+                            <div className={`flex items-start gap-3 px-4 py-3 rounded-[4px] border ${
                                 isShortage
                                     ? 'bg-red-50 border-red-200 text-red-700'
                                     : 'bg-amber-50 border-amber-200 text-amber-700'
@@ -112,7 +107,7 @@ export default function CloseShift({ shift, salesTotal, totalDocs, expectedCash 
                         )}
 
                         {counted > 0 && !isShortage && !isExcess && (
-                            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-green-700">
+                            <div className="flex items-center gap-3 px-4 py-3 rounded-[4px] bg-emerald-50 border border-emerald-200 text-emerald-700">
                                 <CheckCircle2 className="w-4 h-4 shrink-0" />
                                 <p className="text-sm font-medium">Caixa conferida sem diferenças.</p>
                             </div>
@@ -121,20 +116,20 @@ export default function CloseShift({ shift, salesTotal, totalDocs, expectedCash 
 
                     {/* Right: Form */}
                     <div className="space-y-4">
-                        <h2 className="font-semibold text-neutral-800">Confirmação de Fecho</h2>
+                        <h2 className="font-semibold text-slate-700 text-sm uppercase tracking-wide">Confirmação de Fecho</h2>
 
-                        <div className="bg-white rounded-xl border border-neutral-200 shadow-sm p-6">
+                        <div className="bg-white rounded-[4px] border border-slate-200 shadow-xs p-6">
                             <form onSubmit={submit} className="space-y-5">
                                 <div className="space-y-2">
                                     <Label htmlFor="ending_cash">Valor Físico Contado em Caixa</Label>
                                     <div className="relative">
-                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 font-medium text-sm">MT</span>
+                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">MT</span>
                                         <Input
                                             id="ending_cash"
                                             type="number"
                                             step="0.01"
                                             min="0"
-                                            className="pl-12 h-14 text-xl font-bold"
+                                            className="pl-12 h-14 text-xl font-bold rounded-[4px]"
                                             value={data.ending_cash}
                                             onChange={(e) => setData('ending_cash', e.target.value)}
                                             required
@@ -151,15 +146,16 @@ export default function CloseShift({ shift, salesTotal, totalDocs, expectedCash 
                                     <Input
                                         id="notes"
                                         placeholder="Ex: diferença de troco, pagamentos por cartão, etc."
+                                        className="rounded-[4px]"
                                         value={data.notes}
                                         onChange={(e) => setData('notes', e.target.value)}
                                     />
                                 </div>
 
-                                <div className="pt-2 space-y-3">
+                                <div className="pt-2">
                                     <Button
                                         type="submit"
-                                        className="w-full h-12 bg-red-600 hover:bg-red-700 text-white gap-2"
+                                        className="w-full h-12 bg-red-600 hover:bg-red-700 text-white gap-2 rounded-[4px]"
                                         disabled={processing}
                                     >
                                         <LogOut className="w-4 h-4" />
@@ -171,6 +167,16 @@ export default function CloseShift({ shift, salesTotal, totalDocs, expectedCash 
                     </div>
                 </div>
             </div>
-        </KutengaLayout>
+        </>
     );
 }
+
+CloseShift.layout = (page: React.ReactNode) => (
+    <AppLayout breadcrumbs={[
+        { title: 'POS', href: '/pos' },
+        { title: 'Turnos', href: '/pos/shifts' },
+        { title: 'Fechar Turno', href: '/pos/shifts/close' },
+    ]}>
+        {page}
+    </AppLayout>
+);

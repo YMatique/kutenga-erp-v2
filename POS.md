@@ -23,3 +23,10 @@
 
 ## Cada turno deve ter um histórico de todas as vendas
 
+## Estética
+- O POS não precisa ser unicamente dark, pode ser configurável
+- Deve aparecer o logo de kutenga ERP.
+- Certificar de usar as cores da aplicação
+- ver a possibilidade de leitor de código de barra e configuração de teclado
+- rever a página de pos/shifts/open: não está a seguir o padrão, não deveria extender o KutengaERP, pois já é carregado por padrão: veja outras páginas como implementaram
+ - rever a página pos/reports e pos/shifts : não seguem o padrão da aplicação: as bordas, as tabelas, os cards

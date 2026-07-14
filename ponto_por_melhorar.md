@@ -39,6 +39,7 @@
 - Detalhes adicionais (ex: Contas Bancárias, Prefixos de Documentos, Prazos de Vencimento Padrão, Moeda Padrão) [feito]
 - Os dados da empresa devem ser únicos por empresa, por exemplo, o email, NUIT, telefone, etc [feito]
 - Esses dados podem ser usados por exemplo para envio de emails, etc. [feito]
+- Colocar algo de notificação onde especifica se quer também receber notificação por email (stock baixo, subscrição, etc)
 
 ## Trabalhar roles e permissões [feito]
 - criação de papeis e permissões [feito]
@@ -76,7 +77,8 @@
 - Todas as páginas deve aplicar o conceito de dark mode, os componentes, etc
 
 ## Relatórios
-
+- deve conter uma página de relatório 
+- baixar relatório
 
 ## Quanto às Imagens
 - Na página de produtos, deve especificar o tamanho recomendável de imagem
@@ -88,6 +90,9 @@
  ## Padrão de Telas de Produtos, Faturação
  - Deve conter cards estatísticos no topo, com informações relevantes para a página em causa, por exemplo, na página de produtos, deve mostrar o número de produtos cadastrados, o número de produtos com estoque baixo, o número de produtos com estoque zerado, etc
  - Algumas delas deve conter por exemplo filtros
+ - rever a página inventory/adjustment/show
+ - rever a página de pos/shifts/open: não está a seguir o padrão, não deveria extender o KutengaERP, pois já é carregado por padrão: veja outras páginas como implementaram
+ - rever a página pos/reports e pos/shifts : não seguem o padrão da aplicação: as bordas, as tabelas, os cards
 
  ## Tabelas
  - Todas as tabelas devem usar paginação
@@ -96,3 +101,6 @@
  - Evitar um controller lord: separação de responsabilidade da aplicação
  - Organizar o código em dominio, em vez de todos controllers, models estarem na raíz, pode se criar diretórios por exemplo: Inventory/models/, Inventory/controllers/, Inventory/requests/, etc.
  
+## Melhorar notificações
+- Stock fica quase baixo e até acabar mas o sistema não mostra isso;
+- O sistema de notificações interna do APP deve ser customizada para cobrir todos os possiveis cenários da aplicação

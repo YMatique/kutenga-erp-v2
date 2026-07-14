@@ -156,45 +156,31 @@
 
 
         td {
-
             font-size: 9px;
-
             padding: 2px 0;
-
             vertical-align: top;
-
         }
 
 
         .product {
-
             font-weight: bold;
-
         }
 
 
         .item-info {
-
             font-size: 8px;
-
         }
 
 
         .summary td {
-
             padding: 2px 0;
-
         }
 
 
         .total {
-
             border-top: 1px dashed #000;
-
             font-size: 11px;
-
             font-weight: bold;
-
         }
 
 
