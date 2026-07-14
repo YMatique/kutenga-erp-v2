@@ -26,7 +26,7 @@ function NumKey({ label, onClick, span }: { label: string; onClick: () => void; 
         <button
             type="button"
             onClick={onClick}
-            className={`${span ? 'col-span-2' : ''} h-14 rounded-xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 text-neutral-800 font-semibold text-xl transition-all border border-neutral-200 flex items-center justify-center`}
+            className={`${span ? 'col-span-2' : ''} h-14 rounded-[4px] bg-neutral-100 hover:bg-neutral-200 active:scale-95 text-neutral-800 font-semibold text-xl transition-all border border-neutral-200 flex items-center justify-center`}
         >
             {label}
         </button>
@@ -176,10 +176,10 @@ ${change > 0 ? `<div class="tot"><span>Troco</span><span>${change.toFixed(2)} MT
                         )}
 
                         <div className="flex gap-3 w-full">
-                            <Button variant="outline" className="flex-1" onClick={onSuccess}>
+                            <Button variant="outline" className="flex-1 rounded-[4px]" onClick={onSuccess}>
                                 Nova Venda
                             </Button>
-                            <Button className="flex-1 gap-2 bg-blue-600 hover:bg-blue-700" onClick={handlePrint}>
+                            <Button className="flex-1 gap-2 bg-[#E8A020] hover:bg-[#d49218] rounded-[4px]" onClick={handlePrint}>
                                 <Printer className="w-4 h-4" /> Imprimir
                             </Button>
                         </div>
@@ -219,7 +219,7 @@ ${change > 0 ? `<div class="tot"><span>Troco</span><span>${change.toFixed(2)} MT
                         </div>
 
                         <Button
-                            className="w-full h-12 bg-blue-600 hover:bg-blue-700 font-bold text-base"
+                            className="w-full h-12 bg-[#2DB8A0] hover:bg-[#27a591] font-bold text-base rounded-[4px]"
                             onClick={() => method === 'cash' ? setStep('amount') : handlePay()}
                             disabled={processing}
                         >
@@ -280,7 +280,7 @@ ${change > 0 ? `<div class="tot"><span>Troco</span><span>${change.toFixed(2)} MT
                         </div>
 
                         <Button
-                            className="w-full h-12 font-bold text-base bg-emerald-600 hover:bg-emerald-700"
+                            className="w-full h-12 font-bold text-base bg-[#2DB8A0] hover:bg-[#27a591] rounded-[4px]"
                             onClick={handlePay}
                             disabled={processing || !canPay}
                         >
