@@ -10,3 +10,14 @@ export function cn(...inputs: ClassValue[]) {
 export function toUrl(url: NonNullable<InertiaLinkProps['href']>): string {
     return typeof url === 'string' ? url : url.url;
 }
+
+export function formatCurrency(
+    amount: number,
+    currency: string = 'MZN',
+    locale: string = 'pt-MZ'
+): string {
+    return new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: currency,
+    }).format(amount);
+}

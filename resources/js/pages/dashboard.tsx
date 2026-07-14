@@ -204,16 +204,13 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                         </div>
                     </div>
 
-                    <div className="w-full">
-                        <svg viewBox="0 0 600 180" width="100%" height="100%" className="overflow-visible font-sans">
+                    <div className="w-full mt-4">
+                        <svg viewBox="0 0 1000 180" width="100%" height="100%" className="overflow-visible font-sans">
                             <defs>
                                 <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#2DB8A0" stopOpacity="0.25" />
+                                    <stop offset="0%" stopColor="#2DB8A0" stopOpacity="0.12" />
                                     <stop offset="100%" stopColor="#2DB8A0" stopOpacity="0.0" />
                                 </linearGradient>
-                                <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
-                                    <feDropShadow dx="0" dy="4" stdDeviation="3" floodColor="#2DB8A0" floodOpacity="0.25" />
-                                </filter>
                             </defs>
 
                             {/* Background Grid Lines and Y-Axis Values */}
@@ -223,21 +220,22 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                                 return (
                                     <g key={idx}>
                                         <line
-                                            x1="60"
+                                            x1="85"
                                             y1={y}
-                                            x2="570"
+                                            x2="960"
                                             y2={y}
-                                            className="stroke-border/30 dark:stroke-border/10"
+                                            className="stroke-border/40 dark:stroke-border/10"
                                             strokeDasharray="4 4"
                                             strokeWidth="1"
                                         />
                                         <text
-                                            x="50"
+                                            x="75"
                                             y={y + 3}
                                             textAnchor="end"
-                                            className="fill-muted-foreground/60 text-[9px] font-mono"
+                                            style={{ fontSize: '9px' }}
+                                            className="fill-muted-foreground/60 font-mono"
                                         >
-                                            {ratio === 0 ? '0' : formatCurrency(val).replace(',00', '').replace('MT', '').trim()}
+                                            {ratio === 0 ? '0 MT' : new Intl.NumberFormat('pt-MZ', { maximumFractionDigits: 0 }).format(val) + ' MT'}
                                         </text>
                                     </g>
                                 );
@@ -248,20 +246,20 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                                 <path
                                     d={(() => {
                                         const points = chart_data.map((item, idx) => ({
-                                            x: 60 + (idx * 102),
+                                            x: 85 + (idx * 175),
                                             y: 140 - (item.value / Math.max(maxChartValue, 1)) * 110
                                         }));
                                         let d = `M ${points[0].x} ${points[0].y}`;
                                         for (let i = 0; i < points.length - 1; i++) {
                                             const p0 = points[i];
                                             const p1 = points[i + 1];
-                                            const cp1x = p0.x + (p1.x - p0.x) / 3;
-                                            const cp1y = p0.y;
-                                            const cp2x = p0.x + 2 * (p1.x - p0.x) / 3;
-                                            const cp2y = p1.y;
+                                            const cp1x = p0.x + (p1.x - p0.x) * 0.3;
+                                            const cp1y = p0.y + (p1.y - p0.y) * 0.05;
+                                            const cp2x = p0.x + (p1.x - p0.x) * 0.7;
+                                            const cp2y = p0.y + (p1.y - p0.y) * 0.95;
                                             d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
                                         }
-                                        return `${d} L ${points[points.length - 1].x} 140 L 60 140 Z`;
+                                        return `${d} L ${points[points.length - 1].x} 140 L 85 140 Z`;
                                     })()}
                                     fill="url(#areaGradient)"
                                 />
@@ -272,33 +270,32 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                                 <path
                                     d={(() => {
                                         const points = chart_data.map((item, idx) => ({
-                                            x: 60 + (idx * 102),
+                                            x: 85 + (idx * 175),
                                             y: 140 - (item.value / Math.max(maxChartValue, 1)) * 110
                                         }));
                                         let d = `M ${points[0].x} ${points[0].y}`;
                                         for (let i = 0; i < points.length - 1; i++) {
                                             const p0 = points[i];
                                             const p1 = points[i + 1];
-                                            const cp1x = p0.x + (p1.x - p0.x) / 3;
-                                            const cp1y = p0.y;
-                                            const cp2x = p0.x + 2 * (p1.x - p0.x) / 3;
-                                            const cp2y = p1.y;
+                                            const cp1x = p0.x + (p1.x - p0.x) * 0.3;
+                                            const cp1y = p0.y + (p1.y - p0.y) * 0.05;
+                                            const cp2x = p0.x + (p1.x - p0.x) * 0.7;
+                                            const cp2y = p0.y + (p1.y - p0.y) * 0.95;
                                             d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
                                         }
                                         return d;
                                     })()}
                                     fill="none"
                                     stroke="#2DB8A0"
-                                    strokeWidth="3.5"
+                                    strokeWidth="2.5"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
-                                    filter="url(#glow)"
                                 />
                             )}
 
                             {/* Interactive Circles & Hover Tooltips */}
                             {chart_data.map((item, idx) => {
-                                const x = 60 + (idx * 102);
+                                const x = 85 + (idx * 175);
                                 const y = 140 - (item.value / Math.max(maxChartValue, 1)) * 110;
                                 return (
                                     <g key={idx} className="group/point cursor-pointer">
@@ -311,25 +308,26 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                                         <circle
                                             cx={x}
                                             cy={y}
-                                            r="4"
+                                            r="3.5"
                                             fill="#2DB8A0"
-                                            className="transition-all duration-300 group-hover/point:r-6"
+                                            className="transition-all duration-300 group-hover/point:r-5.5"
                                         />
                                         <circle
                                             cx={x}
                                             cy={y}
-                                            r="4"
+                                            r="3.5"
                                             fill="#ffffff"
                                             stroke="#2DB8A0"
-                                            strokeWidth="2.5"
-                                            className="transition-all duration-300 group-hover/point:r-5"
+                                            strokeWidth="2"
+                                            className="transition-all duration-300 group-hover/point:r-4.5"
                                         />
                                         {/* Label text */}
                                         <text
                                             x={x}
                                             y="162"
                                             textAnchor="middle"
-                                            className="fill-muted-foreground text-[10px] font-semibold"
+                                            style={{ fontSize: '9px' }}
+                                            className="fill-muted-foreground font-semibold"
                                         >
                                             {item.label}
                                         </text>
@@ -347,7 +345,8 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                                                 x={x}
                                                 y={y - 18}
                                                 textAnchor="middle"
-                                                className="fill-white text-[9px] font-bold"
+                                                style={{ fontSize: '9px' }}
+                                                className="fill-white font-bold"
                                             >
                                                 {formatCurrency(item.value)}
                                             </text>
@@ -409,8 +408,8 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                                                         sale.status === 'confirmed' || sale.status === 'paid'
                                                             ? 'bg-green-500/10 text-green-600 dark:text-green-400'
                                                             : sale.status === 'draft'
-                                                            ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
-                                                            : 'bg-red-500/10 text-red-600 dark:text-red-400'
+                                                                ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
+                                                                : 'bg-red-500/10 text-red-600 dark:text-red-400'
                                                     )}>
                                                         {sale.status === 'confirmed' || sale.status === 'paid' ? 'Emitida' : sale.status === 'draft' ? 'Rascunho' : 'Cancelada'}
                                                     </span>

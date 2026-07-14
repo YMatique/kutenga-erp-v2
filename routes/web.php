@@ -58,6 +58,14 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
         Route::get('audits', [\App\Http\Controllers\AuditLogController::class, 'index'])->name('settings.audits');
     });
 
+    // Reports
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ReportController::class, 'index'])->name('index');
+        Route::get('/data', [\App\Http\Controllers\ReportController::class, 'data'])->name('data');
+        Route::post('/export/pdf', [\App\Http\Controllers\ReportController::class, 'exportPdf'])->name('export.pdf');
+        Route::post('/export/excel', [\App\Http\Controllers\ReportController::class, 'exportExcel'])->name('export.excel');
+    });
+
     // Inventory
     Route::prefix('/inventory')->group(function () {
         Route::resource('warehouses', WarehouseController::class);
