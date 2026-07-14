@@ -32,12 +32,16 @@ class Company extends Model
         'smtp_username',
         'smtp_password',
         'smtp_encryption',
+        'notify_low_stock_email',
+        'notify_subscription_email',
     ];
 
     protected $casts = [
         'bank_accounts' => 'array',
         'default_tax_rate' => 'decimal:2',
         'default_due_days' => 'integer',
+        'notify_low_stock_email' => 'boolean',
+        'notify_subscription_email' => 'boolean',
     ];
 
     public function branches(): HasMany

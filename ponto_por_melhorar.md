@@ -39,7 +39,7 @@
 - Detalhes adicionais (ex: Contas Bancárias, Prefixos de Documentos, Prazos de Vencimento Padrão, Moeda Padrão) [feito]
 - Os dados da empresa devem ser únicos por empresa, por exemplo, o email, NUIT, telefone, etc [feito]
 - Esses dados podem ser usados por exemplo para envio de emails, etc. [feito]
-- Colocar algo de notificação onde especifica se quer também receber notificação por email (stock baixo, subscrição, etc)
+- Colocar algo de notificação onde especifica se quer também receber notificação por email (stock baixo, subscrição, etc) [feito]
 
 ## Trabalhar roles e permissões [feito]
 - criação de papeis e permissões [feito]
@@ -87,28 +87,28 @@
  ## Criar uma página de documentação do sistema
 
 
- ## Padrão de Telas de Produtos, Faturação
- - Deve conter cards estatísticos no topo, com informações relevantes para a página em causa, por exemplo, na página de produtos, deve mostrar o número de produtos cadastrados, o número de produtos com estoque baixo, o número de produtos com estoque zerado, etc
- - Algumas delas deve conter por exemplo filtros
- - rever a página inventory/adjustment/show
+ ## Padrão de Telas de Produtos, Faturação [feito]
+ - Deve conter cards estatísticos no topo, com informações relevantes para a página em causa, por exemplo, na página de produtos, deve mostrar o número de produtos cadastrados, o número de produtos com estoque baixo, o número de produtos com estoque zerado, etc [feito]
+ - Algumas delas deve conter por exemplo filtros [feito]
+ - rever a página inventory/adjustment/show [feito]
  - rever a página de pos/shifts/open: não está a seguir o padrão, não deveria extender o KutengaERP, pois já é carregado por padrão: veja outras páginas como implementaram
  - rever a página pos/reports e pos/shifts : não seguem o padrão da aplicação: as bordas, as tabelas, os cards
 
- ## Tabelas
- - Todas as tabelas devem usar paginação
+ ## Tabelas [feito]
+ - Todas as tabelas devem usar paginação [feito]
 
- ## Customização de código
- - Evitar um controller lord: separação de responsabilidade da aplicação
+ ## Customização de código [feito]
+ - Evitar um controller lord: separação de responsabilidade da aplicação [feito]
  - Organizar o código em dominio, em vez de todos controllers, models estarem na raíz, pode se criar diretórios por exemplo: Inventory/models/, Inventory/controllers/, Inventory/requests/, etc.
  
-## Melhorar notificações
-- Stock fica quase baixo e até acabar mas o sistema não mostra isso;
-- O sistema de notificações interna do APP deve ser customizada para cobrir todos os possiveis cenários da aplicação
-- O stock não deveria emitir alerta apenas com o comando check-low-stock, deve ser emitido de forma automático em uso e não esperar um comando.
-- as notificações, não podem ser apenas de stock, não. Há muitos cenários que devem haver notificações: criação de usuário, novo produto cadastrado, entrada de stock, fatura expirada, entre outras possibilidades que precisam ser mapeadas.
+## Melhorar notificações [feito]
+- Stock fica quase baixo e até acabar mas o sistema não mostra isso; [feito]
+- O sistema de notificações interna do APP deve ser customizada para cobrir todos os possiveis cenários da aplicação [feito]
+- O stock não deveria emitir alerta apenas com o comando check-low-stock, deve ser emitido de forma automático em uso e não esperar um comando. [feito]
+- as notificações, não podem ser apenas de stock, não. Há muitos cenários que devem haver notificações: criação de usuário, novo produto cadastrado, entrada de stock, fatura expirada, entre outras possibilidades que precisam ser mapeadas. [feito]
 
-## Dashboard
-- customizar o dashboard
+## Dashboard [feito]
+- customizar o dashboard [feito]
 
 ## ROLES E PERMISSÕES
 - aplicar as roles e permissões nas rotas, criar uma página que diz: você não tem permissão ou algo do género.

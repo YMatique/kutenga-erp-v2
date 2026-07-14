@@ -8,6 +8,9 @@ use App\Models\StockMovement;
 use App\Models\Warehouse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\LowStockAlertMail;
+use App\Models\Company;
 
 class StockService
 {
@@ -228,6 +231,15 @@ class StockService
                         'link' => "/products/{$product->id}",
                         'is_read' => false,
                     ]);
+
+                    $company = Company::find($product->company_id);
+                    if ($company && $company->notify_low_stock_email && $company->email) {
+                        try {
+                            Mail::to($company->email)->send(new LowStockAlertMail($product, 0));
+                        } catch (\Exception $e) {
+                            \Illuminate\Support\Facades\Log::error("Erro ao enviar email de stock esgotado para {$company->email}: " . $e->getMessage());
+                        }
+                    }
                 }
 
                 // Resolve low stock notification
@@ -254,6 +266,15 @@ class StockService
                         'link' => "/products/{$product->id}",
                         'is_read' => false,
                     ]);
+
+                    $company = Company::find($product->company_id);
+                    if ($company && $company->notify_low_stock_email && $company->email) {
+                        try {
+                            Mail::to($company->email)->send(new LowStockAlertMail($product, $totalStock));
+                        } catch (\Exception $e) {
+                            \Illuminate\Support\Facades\Log::error("Erro ao enviar email de stock mínimo para {$company->email}: " . $e->getMessage());
+                        }
+                    }
                 }
 
                 // Resolve out of stock notification (since stock is > 0 now)

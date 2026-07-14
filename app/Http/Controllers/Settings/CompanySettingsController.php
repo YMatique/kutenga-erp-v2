@@ -48,6 +48,8 @@ class CompanySettingsController extends Controller
             'smtp_encryption' => 'nullable|string|max:10',
             'logo' => 'nullable|image|max:2048',
             'stamp' => 'nullable|image|max:2048',
+            'notify_low_stock_email' => 'nullable|boolean',
+            'notify_subscription_email' => 'nullable|boolean',
         ]);
 
         if ($request->hasFile('logo')) {

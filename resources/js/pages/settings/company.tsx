@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { BellRing } from 'lucide-react';
 
 export default function CompanySettings({ company }: { company: any }) {
     const [logoPreview, setLogoPreview] = useState<string | null>(company.logo_path ? `/storage/${company.logo_path}` : null);
@@ -33,6 +35,8 @@ export default function CompanySettings({ company }: { company: any }) {
         smtp_encryption: company.smtp_encryption || '',
         logo: null as File | null,
         stamp: null as File | null,
+        notify_low_stock_email: company.notify_low_stock_email ?? true,
+        notify_subscription_email: company.notify_subscription_email ?? true,
     });
 
     const submit = (e: React.FormEvent) => {
@@ -80,10 +84,11 @@ export default function CompanySettings({ company }: { company: any }) {
             <div className="space-y-4">
                 <form onSubmit={submit} className="space-y-8">
                     <Tabs defaultValue="geral" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3 mb-8">
+                        <TabsList className="grid w-full grid-cols-4 mb-8">
                             <TabsTrigger value="geral">Geral & Identidade</TabsTrigger>
                             <TabsTrigger value="faturacao">Faturação & Pagamentos</TabsTrigger>
                             <TabsTrigger value="smtp">Servidor de Email</TabsTrigger>
+                            <TabsTrigger value="notificacoes">Notificações</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="geral" className="space-y-6">
@@ -450,6 +455,48 @@ export default function CompanySettings({ company }: { company: any }) {
                                     {testingSmtp && <Loader2 className="h-4 w-4 animate-spin" />}
                                     Testar Conexão SMTP
                                 </Button>
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="notificacoes" className="space-y-6">
+                            <Heading
+                                variant="small"
+                                title="Configurações de Notificações"
+                                description="Escolha os canais e eventos para receber notificações por email."
+                            />
+
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50/50">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-base flex items-center gap-2">
+                                            <BellRing className="h-4 w-4 text-[#2DB8A0]" />
+                                            Alertas de Stock Baixo por Email
+                                        </Label>
+                                        <p className="text-sm text-slate-500">
+                                            Receba um email automático diariamente ou sempre que um produto atingir o limite mínimo de stock.
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        checked={data.notify_low_stock_email}
+                                        onCheckedChange={(checked) => setData('notify_low_stock_email', checked)}
+                                    />
+                                </div>
+
+                                <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50/50">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-base flex items-center gap-2">
+                                            <BellRing className="h-4 w-4 text-amber-500" />
+                                            Notificações de Subscrição e Limites
+                                        </Label>
+                                        <p className="text-sm text-slate-500">
+                                            Receba alertas de faturamento, expiração de planos e avisos sobre limites de uso atingidos.
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        checked={data.notify_subscription_email}
+                                        onCheckedChange={(checked) => setData('notify_subscription_email', checked)}
+                                    />
+                                </div>
                             </div>
                         </TabsContent>
                     </Tabs>

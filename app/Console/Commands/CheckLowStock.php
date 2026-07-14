@@ -6,6 +6,8 @@ use App\Models\Product;
 use App\Models\SystemNotification;
 use App\Models\Company;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\LowStockAlertMail;
 
 class CheckLowStock extends Command
 {
@@ -44,6 +46,14 @@ class CheckLowStock extends Command
                             'is_read' => false,
                         ]);
                         $totalAlerts++;
+
+                        if ($company->notify_low_stock_email && $company->email) {
+                            try {
+                                Mail::to($company->email)->send(new LowStockAlertMail($product, 0));
+                            } catch (\Exception $e) {
+                                \Illuminate\Support\Facades\Log::error("Erro ao enviar email de stock esgotado para {$company->email}: " . $e->getMessage());
+                            }
+                        }
                     }
 
                     // Resolve low stock alert
@@ -71,6 +81,14 @@ class CheckLowStock extends Command
                             'is_read' => false,
                         ]);
                         $totalAlerts++;
+
+                        if ($company->notify_low_stock_email && $company->email) {
+                            try {
+                                Mail::to($company->email)->send(new LowStockAlertMail($product, $stock));
+                            } catch (\Exception $e) {
+                                \Illuminate\Support\Facades\Log::error("Erro ao enviar email de stock mínimo para {$company->email}: " . $e->getMessage());
+                            }
+                        }
                     }
 
                     // Resolve out of stock alert
