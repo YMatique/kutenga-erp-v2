@@ -30,7 +30,7 @@ use Laravel\Fortify\Features;
 // ])->name('home');
 Route::inertia('/', 'index')->name('home');
 Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     
     // Onboarding
     Route::get('/onboarding', [\App\Http\Controllers\OnboardingController::class, 'index'])->name('onboarding.index');

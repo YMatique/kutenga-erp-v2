@@ -363,6 +363,15 @@ class BillingService
                 'cancelled_by' => Auth::id()
             ]);
 
+            \App\Models\SystemNotification::create([
+                'company_id' => $document->company_id,
+                'type' => 'document_cancelled',
+                'title' => 'Documento Cancelado',
+                'message' => "O documento {$document->document_number} ({$document->document_type}) foi cancelado.",
+                'link' => "/billing/documents/{$document->id}",
+                'is_read' => false,
+            ]);
+
             return $document->load('items');
         });
     }

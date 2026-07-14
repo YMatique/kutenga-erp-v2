@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Bell, Check, Clock, PackageOpen, Receipt } from 'lucide-react';
+import { Bell, Check, Clock, PackageOpen, Receipt, User, PlusCircle, ArrowDownCircle, Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -44,6 +44,14 @@ export function NotificationsDropdown({ notifications }: { notifications: Notifi
                 return <PackageOpen className="h-4 w-4 text-red-500" />;
             case 'invoice_paid':
                 return <Receipt className="h-4 w-4 text-emerald-500" />;
+            case 'user_created':
+                return <User className="h-4 w-4 text-blue-500" />;
+            case 'product_created':
+                return <PlusCircle className="h-4 w-4 text-emerald-500" />;
+            case 'stock_in':
+                return <ArrowDownCircle className="h-4 w-4 text-[#2DB8A0]" />;
+            case 'document_cancelled':
+                return <Ban className="h-4 w-4 text-red-500" />;
             default:
                 return <Bell className="h-4 w-4 text-blue-500" />;
         }

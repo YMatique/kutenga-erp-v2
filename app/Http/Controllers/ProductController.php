@@ -105,7 +105,16 @@ class ProductController extends Controller
             $validated['image_path'] = '/storage/'.$path;
         }
 
-        Product::create($validated);
+        $product = Product::create($validated);
+
+        \App\Models\SystemNotification::create([
+            'company_id' => $companyId,
+            'type' => 'product_created',
+            'title' => 'Novo Item Adicionado',
+            'message' => "O produto/serviço {$product->name} foi adicionado ao catálogo.",
+            'link' => "/products/{$product->id}",
+            'is_read' => false,
+        ]);
 
         return redirect()->route('products.index')->with('success', 'Item criado com sucesso.');
     }

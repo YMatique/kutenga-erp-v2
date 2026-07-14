@@ -50,6 +50,16 @@ class UserController extends Controller
 
         $user->assignRole($validated['role']);
 
+        // Create system notification
+        \App\Models\SystemNotification::create([
+            'company_id' => $companyId,
+            'type' => 'user_created',
+            'title' => 'Novo Utilizador',
+            'message' => "O utilizador {$user->name} ({$user->email}) foi registado com o papel {$validated['role']}.",
+            'link' => '/settings/users',
+            'is_read' => false,
+        ]);
+
         return back()->with('success', 'Utilizador criado com sucesso.');
     }
 

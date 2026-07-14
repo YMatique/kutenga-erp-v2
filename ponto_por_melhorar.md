@@ -104,3 +104,11 @@
 ## Melhorar notificações
 - Stock fica quase baixo e até acabar mas o sistema não mostra isso;
 - O sistema de notificações interna do APP deve ser customizada para cobrir todos os possiveis cenários da aplicação
+- O stock não deveria emitir alerta apenas com o comando check-low-stock, deve ser emitido de forma automático em uso e não esperar um comando.
+- as notificações, não podem ser apenas de stock, não. Há muitos cenários que devem haver notificações: criação de usuário, novo produto cadastrado, entrada de stock, fatura expirada, entre outras possibilidades que precisam ser mapeadas.
+
+## Dashboard
+- customizar o dashboard
+
+## ROLES E PERMISSÕES
+- aplicar as roles e permissões nas rotas, criar uma página que diz: você não tem permissão ou algo do género.
