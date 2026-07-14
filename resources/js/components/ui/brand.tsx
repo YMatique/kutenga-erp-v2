@@ -19,16 +19,16 @@ export function PageHeader({ title, subtitle, actions, className }: PageHeaderPr
         <div
             className={cn(
                 'flex flex-col sm:flex-row sm:items-center justify-between gap-4',
-                'bg-white rounded-[4px] border border-slate-200 px-6 py-4 mb-4 shadow-xs',
+                'bg-card rounded-[4px] border border-border px-6 py-4 mb-4 shadow-xs',
                 className,
             )}
         >
             <div>
-                <h1 className="text-[18px] font-semibold text-slate-900 leading-tight">
+                <h1 className="text-[18px] font-semibold text-foreground leading-tight">
                     {title}
                 </h1>
                 {subtitle && (
-                    <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
                 )}
             </div>
             {actions && (
@@ -51,9 +51,9 @@ interface KpiCardProps {
 const accentMap = {
     teal:   { value: 'text-[#2DB8A0]', icon: 'bg-[#2DB8A0]/10 text-[#2DB8A0]' },
     gold:   { value: 'text-[#E8A020]', icon: 'bg-[#E8A020]/10 text-[#E8A020]' },
-    orange: { value: 'text-orange-500', icon: 'bg-orange-50 text-orange-500' },
-    red:    { value: 'text-red-500',    icon: 'bg-red-50 text-red-500' },
-    slate:  { value: 'text-slate-700',  icon: 'bg-slate-100 text-slate-500' },
+    orange: { value: 'text-orange-500 dark:text-orange-400', icon: 'bg-orange-50 dark:bg-orange-500/10 text-orange-500 dark:text-orange-400' },
+    red:    { value: 'text-red-500 dark:text-red-400',    icon: 'bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400' },
+    slate:  { value: 'text-slate-700 dark:text-slate-300',  icon: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400' },
 };
 
 /**
@@ -63,17 +63,17 @@ export function KpiCard({ label, value, icon, accent = 'teal', description }: Kp
     const colors = accentMap[accent];
 
     return (
-        <div className="bg-white border border-slate-200 rounded-[4px] px-5 py-4 shadow-xs">
+        <div className="bg-card border border-border rounded-[4px] px-5 py-4 shadow-xs">
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                    <p className="text-[12px] font-medium text-slate-500 uppercase tracking-wide leading-none mb-2">
+                    <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wide leading-none mb-2">
                         {label}
                     </p>
                     <p className={cn('text-[28px] font-bold leading-none tracking-tight', colors.value)}>
                         {value}
                     </p>
                     {description && (
-                        <p className="text-[12px] text-slate-400 mt-1.5">{description}</p>
+                        <p className="text-[12px] text-muted-foreground/80 mt-1.5">{description}</p>
                     )}
                 </div>
                 <div className={cn('h-9 w-9 rounded-[4px] flex items-center justify-center flex-shrink-0', colors.icon)}>
@@ -95,9 +95,9 @@ export function StockBadge({
     const map = {
         in_stock:    { dot: 'bg-[#2DB8A0]', text: 'Em Estoque', cls: 'bg-[#2DB8A0]/10 text-[#2DB8A0]' },
         low:         { dot: 'bg-[#E8A020]', text: 'Baixo',      cls: 'bg-[#E8A020]/10 text-[#E8A020]' },
-        out_of_stock:{ dot: 'bg-red-500',   text: 'Esgotado',   cls: 'bg-red-50 text-red-600' },
+        out_of_stock:{ dot: 'bg-red-500',   text: 'Esgotado',   cls: 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400' },
         active:      { dot: 'bg-[#2DB8A0]', text: 'Ativo',      cls: 'bg-[#2DB8A0]/10 text-[#2DB8A0]' },
-        inactive:    { dot: 'bg-slate-400', text: 'Inativo',     cls: 'bg-slate-100 text-slate-500' },
+        inactive:    { dot: 'bg-slate-400', text: 'Inativo',     cls: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400' },
     };
     const { dot, text, cls } = map[status];
 
@@ -114,7 +114,7 @@ export function StockBadge({
  */
 export function TableCard({ children, className }: { children: ReactNode; className?: string }) {
     return (
-        <div className={cn('bg-white border border-slate-200 rounded-[4px] shadow-xs overflow-hidden', className)}>
+        <div className={cn('bg-card border border-border rounded-[4px] shadow-xs overflow-hidden', className)}>
             {children}
         </div>
     );
@@ -137,8 +137,8 @@ export function OutlineButton({
         <Comp
             className={cn(
                 'inline-flex items-center gap-1.5 h-9 px-3.5 text-sm font-medium justify-center',
-                'border border-slate-200 bg-white text-slate-700 rounded-[4px]',
-                'hover:bg-slate-50 hover:border-slate-300 transition-colors',
+                'border border-border bg-card text-foreground rounded-[4px]',
+                'hover:bg-accent hover:text-accent-foreground hover:border-border transition-colors',
                 'disabled:pointer-events-none disabled:opacity-50',
                 className,
             )}

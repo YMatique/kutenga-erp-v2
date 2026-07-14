@@ -34,6 +34,8 @@ class Company extends Model
         'smtp_encryption',
         'notify_low_stock_email',
         'notify_subscription_email',
+        'notify_document_emission_email',
+        'notify_payment_received_email',
     ];
 
     protected $casts = [
@@ -42,6 +44,8 @@ class Company extends Model
         'default_due_days' => 'integer',
         'notify_low_stock_email' => 'boolean',
         'notify_subscription_email' => 'boolean',
+        'notify_document_emission_email' => 'boolean',
+        'notify_payment_received_email' => 'boolean',
     ];
 
     public function branches(): HasMany

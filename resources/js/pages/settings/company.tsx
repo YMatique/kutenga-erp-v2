@@ -37,6 +37,8 @@ export default function CompanySettings({ company }: { company: any }) {
         stamp: null as File | null,
         notify_low_stock_email: company.notify_low_stock_email ?? true,
         notify_subscription_email: company.notify_subscription_email ?? true,
+        notify_document_emission_email: company.notify_document_emission_email ?? true,
+        notify_payment_received_email: company.notify_payment_received_email ?? true,
     });
 
     const submit = (e: React.FormEvent) => {
@@ -495,6 +497,38 @@ export default function CompanySettings({ company }: { company: any }) {
                                     <Switch
                                         checked={data.notify_subscription_email}
                                         onCheckedChange={(checked) => setData('notify_subscription_email', checked)}
+                                    />
+                                </div>
+
+                                <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50/50">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-base flex items-center gap-2">
+                                            <BellRing className="h-4 w-4 text-blue-500" />
+                                            Envio Automático de Documentos ao Cliente
+                                        </Label>
+                                        <p className="text-sm text-slate-500">
+                                            Envie automaticamente um email com o PDF da fatura ou recibo ao cliente assim que for confirmada.
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        checked={data.notify_document_emission_email}
+                                        onCheckedChange={(checked) => setData('notify_document_emission_email', checked)}
+                                    />
+                                </div>
+
+                                <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50/50">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-base flex items-center gap-2">
+                                            <BellRing className="h-4 w-4 text-emerald-500" />
+                                            Envio Automático de Confirmação de Pagamento
+                                        </Label>
+                                        <p className="text-sm text-slate-500">
+                                            Envie automaticamente uma confirmação de liquidação ao cliente sempre que uma fatura for paga.
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        checked={data.notify_payment_received_email}
+                                        onCheckedChange={(checked) => setData('notify_payment_received_email', checked)}
                                     />
                                 </div>
                             </div>

@@ -50,6 +50,8 @@ class CompanySettingsController extends Controller
             'stamp' => 'nullable|image|max:2048',
             'notify_low_stock_email' => 'nullable|boolean',
             'notify_subscription_email' => 'nullable|boolean',
+            'notify_document_emission_email' => 'nullable|boolean',
+            'notify_payment_received_email' => 'nullable|boolean',
         ]);
 
         if ($request->hasFile('logo')) {

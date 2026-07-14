@@ -110,30 +110,30 @@
 }
 
 .dark {
-    --background: oklch(0.13 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.17 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.17 0 0);
-    --popover-foreground: oklch(0.985 0 0);
+    --background: #0B0F19; /* A beautiful dark navy hue that perfectly flows from sidebar #1A2332 */
+    --foreground: #F8FAFC;
+    --card: #151C2C; /* Slightly lighter navy for cards, popovers, etc */
+    --card-foreground: #F1F5F9;
+    --popover: #151C2C;
+    --popover-foreground: #F1F5F9;
     --primary: #2DB8A0;
     --primary-foreground: #ffffff;
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.396 0.141 25.723);
-    --destructive-foreground: oklch(0.637 0.237 25.331);
-    --border: oklch(0.269 0 0);
-    --input: oklch(0.269 0 0);
+    --secondary: #1E293B;
+    --secondary-foreground: #F1F5F9;
+    --muted: #1E293B;
+    --muted-foreground: #94A3B8;
+    --accent: #1E293B;
+    --accent-foreground: #F1F5F9;
+    --destructive: #EF4444;
+    --destructive-foreground: #ffffff;
+    --border: #273549; /* Smooth border that matches the navy tone */
+    --input: #273549;
     --ring: #2DB8A0;
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
+    --chart-1: #3B82F6;
+    --chart-2: #10B981;
+    --chart-3: #F59E0B;
+    --chart-4: #EC4899;
+    --chart-5: #8B5CF6;
 
     /* Sidebar keeps navy in dark mode too */
     --sidebar: #1A2332;
@@ -153,5 +153,59 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+
+    /* Globally fix background colors in dark mode for cards, inputs, tables, etc */
+    .dark .bg-white {
+        background-color: var(--card) !important;
+    }
+    .dark .bg-slate-50 {
+        background-color: var(--background) !important;
+    }
+    .dark .bg-slate-100 {
+        background-color: var(--muted) !important;
+    }
+    .dark .bg-zinc-50 {
+        background-color: var(--background) !important;
+    }
+    .dark .bg-zinc-900 {
+        background-color: var(--card) !important;
+    }
+    .dark .border-slate-100,
+    .dark .border-slate-200,
+    .dark .border-zinc-100,
+    .dark .border-zinc-200 {
+        border-color: var(--border) !important;
+    }
+    .dark .text-slate-900,
+    .dark .text-zinc-900 {
+        color: var(--foreground) !important;
+    }
+    .dark .text-slate-800,
+    .dark .text-zinc-800,
+    .dark .text-slate-700,
+    .dark .text-zinc-700 {
+        color: var(--foreground) !important;
+    }
+    .dark .text-slate-500,
+    .dark .text-zinc-500,
+    .dark .text-slate-600,
+    .dark .text-zinc-600 {
+        color: var(--muted-foreground) !important;
+    }
+    .dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+    .dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+        border-color: var(--border) !important;
+    }
+    .dark input, .dark textarea, .dark select {
+        background-color: var(--card) !important;
+        color: var(--foreground) !important;
+        border-color: var(--border) !important;
+    }
+    .dark table thead tr {
+        background-color: var(--background) !important;
+    }
+    .dark table tbody tr:hover {
+        background-color: var(--accent) !important;
     }
 }

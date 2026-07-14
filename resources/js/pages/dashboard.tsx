@@ -178,7 +178,7 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className="group bg-white border border-slate-200 rounded-[4px] shadow-xs p-5 flex flex-col gap-4 hover:border-[#2DB8A0] hover:shadow-md transition-all duration-200"
+                                className="group bg-card border border-border rounded-[4px] shadow-xs p-5 flex flex-col gap-4 hover:border-[#2DB8A0] hover:shadow-md transition-all duration-200"
                             >
                                 <div className="flex items-start justify-between">
                                     <div className={`h-10 w-10 rounded-[4px] flex items-center justify-center flex-shrink-0 ${item.iconBg}`}>
@@ -187,8 +187,8 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                                     <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-[#2DB8A0] group-hover:translate-x-0.5 transition-all duration-200" />
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-slate-900 text-[14px] leading-tight">{item.title}</p>
-                                    <p className="text-[12px] text-slate-500 mt-1 leading-snug">{item.description}</p>
+                                    <p className="font-semibold text-foreground text-[14px] leading-tight">{item.title}</p>
+                                    <p className="text-[12px] text-muted-foreground mt-1 leading-snug">{item.description}</p>
                                 </div>
                             </Link>
                         );
@@ -196,7 +196,7 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                 </div>
 
                 {/* Sales Chart Section */}
-                <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs p-5">
+                <div className="bg-card border border-border rounded-[4px] shadow-xs p-5">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-2">
                             <TrendingUp className="h-4 w-4 text-[#2DB8A0]" />
@@ -232,10 +232,10 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     {/* Left side: Recent Sales */}
                     <TableCard>
-                        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <ShoppingCart className="h-4 w-4 text-[#2DB8A0]" />
-                                <h2 className="text-[14px] font-semibold text-slate-800">Últimas Faturas e Vendas</h2>
+                                <h2 className="text-[14px] font-semibold text-foreground">Últimas Faturas e Vendas</h2>
                             </div>
                             <Link href="/billing/documents" className="text-xs text-[#2DB8A0] hover:text-[#239B86] font-medium flex items-center gap-1">
                                 Ver todas <ArrowRight className="h-3 w-3" />
@@ -243,43 +243,43 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
-                                <thead className="bg-slate-50 border-b border-slate-100 text-left">
+                                <thead className="bg-muted/50 border-b border-border text-left">
                                     <tr>
-                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Nº Documento</th>
-                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Cliente</th>
-                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right">Valor</th>
-                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-center">Estado</th>
+                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Nº Documento</th>
+                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Cliente</th>
+                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground text-right">Valor</th>
+                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground text-center">Estado</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-border">
                                     {recent_sales.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="px-5 py-8 text-center text-slate-400 text-xs">
+                                            <td colSpan={4} className="px-5 py-8 text-center text-muted-foreground text-xs">
                                                 Nenhum documento faturado recentemente.
                                             </td>
                                         </tr>
                                     ) : (
                                         recent_sales.map((sale) => (
-                                            <tr key={sale.id} className="hover:bg-slate-50/50 transition-colors">
-                                                <td className="px-5 py-3 font-semibold text-slate-900 text-xs">
+                                            <tr key={sale.id} className="hover:bg-muted/50 transition-colors">
+                                                <td className="px-5 py-3 font-semibold text-foreground text-xs">
                                                     <Link href={`/billing/documents/${sale.id}`} className="hover:underline text-[#2DB8A0]">
                                                         {sale.document_number}
                                                     </Link>
                                                 </td>
-                                                <td className="px-5 py-3 text-slate-700 text-xs truncate max-w-[150px]">
+                                                <td className="px-5 py-3 text-muted-foreground text-xs truncate max-w-[150px]">
                                                     {sale.customer_name}
                                                 </td>
-                                                <td className="px-5 py-3 text-right font-mono font-bold text-slate-900 text-xs">
+                                                <td className="px-5 py-3 text-right font-mono font-bold text-foreground text-xs">
                                                     {formatCurrency(sale.grand_total)}
                                                 </td>
                                                 <td className="px-5 py-3 text-center">
                                                     <span className={cn(
                                                         'inline-flex items-center px-2 py-0.5 rounded-[4px] text-[10px] font-semibold uppercase tracking-wide',
                                                         sale.status === 'confirmed' || sale.status === 'paid'
-                                                            ? 'bg-green-50 text-green-700'
+                                                            ? 'bg-green-500/10 text-green-600 dark:text-green-400'
                                                             : sale.status === 'draft'
-                                                            ? 'bg-yellow-50 text-yellow-700'
-                                                            : 'bg-red-50 text-red-700'
+                                                            ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
+                                                            : 'bg-red-500/10 text-red-600 dark:text-red-400'
                                                     )}>
                                                         {sale.status === 'confirmed' || sale.status === 'paid' ? 'Emitida' : sale.status === 'draft' ? 'Rascunho' : 'Cancelada'}
                                                     </span>
@@ -294,10 +294,10 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
 
                     {/* Right side: Recent Activity */}
                     <TableCard>
-                        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <Activity className="h-4 w-4 text-[#E8A020]" />
-                                <h2 className="text-[14px] font-semibold text-slate-800">Atividades de Stock Recentes</h2>
+                                <h2 className="text-[14px] font-semibold text-foreground">Atividades de Stock Recentes</h2>
                             </div>
                             <Link href="/inventory/movements" className="text-xs text-[#E8A020] hover:text-[#c48414] font-medium flex items-center gap-1">
                                 Ver todos <ArrowRight className="h-3 w-3" />
@@ -305,18 +305,18 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
-                                <thead className="bg-slate-50 border-b border-slate-100 text-left">
+                                <thead className="bg-muted/50 border-b border-border text-left">
                                     <tr>
-                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Produto</th>
-                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Armazém</th>
-                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right">Qtd</th>
-                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-center">Tipo</th>
+                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Produto</th>
+                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Armazém</th>
+                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground text-right">Qtd</th>
+                                        <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground text-center">Tipo</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-border">
                                     {recent_activity.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="px-5 py-8 text-center text-slate-400 text-xs">
+                                            <td colSpan={4} className="px-5 py-8 text-center text-muted-foreground text-xs">
                                                 Nenhuma movimentação de stock recente.
                                             </td>
                                         </tr>
@@ -324,14 +324,14 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                                         recent_activity.map((act) => {
                                             const cfg = movementTypeConfig[act.type] ?? movementTypeConfig.adjustment;
                                             return (
-                                                <tr key={act.id} className="hover:bg-slate-50/50 transition-colors">
-                                                    <td className="px-5 py-3 font-semibold text-slate-900 text-xs truncate max-w-[150px]">
+                                                <tr key={act.id} className="hover:bg-muted/50 transition-colors">
+                                                    <td className="px-5 py-3 font-semibold text-foreground text-xs truncate max-w-[150px]">
                                                         {act.product_name}
                                                     </td>
-                                                    <td className="px-5 py-3 text-slate-500 text-xs">
+                                                    <td className="px-5 py-3 text-muted-foreground text-xs">
                                                         {act.warehouse_name}
                                                     </td>
-                                                    <td className="px-5 py-3 text-right font-mono font-bold text-slate-800 text-xs">
+                                                    <td className="px-5 py-3 text-right font-mono font-bold text-foreground text-xs">
                                                         {act.quantity}
                                                     </td>
                                                     <td className="px-5 py-3 text-center">

@@ -60,6 +60,13 @@ class UserController extends Controller
             'is_read' => false,
         ]);
 
+        // Send welcome/credentials email
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\UserCreatedMail($user, $validated['password']));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Erro ao enviar email de credenciais para {$user->email}: " . $e->getMessage());
+        }
+
         return back()->with('success', 'Utilizador criado com sucesso.');
     }
 
