@@ -1,11 +1,11 @@
 import { useForm, Link } from '@inertiajs/react'
-import AppLayout from '@/layouts/app-layout';
-
+import { PrimaryButton, OutlineButton } from '@/components/ui/brand'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { PrimaryButton, OutlineButton } from '@/components/ui/brand'
+import { Textarea } from '@/components/ui/textarea'
+import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils'
 
 export default function Create() {

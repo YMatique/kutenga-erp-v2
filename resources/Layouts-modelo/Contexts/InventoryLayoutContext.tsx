@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface InventoryLayoutContextType {
     sidebarOpen: boolean;
@@ -15,6 +16,7 @@ export function InventoryLayoutProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         setIsMounted(true);
         const saved = localStorage.getItem('inventory-sidebar-open');
+
         if (saved !== null) {
             setSidebarOpen(JSON.parse(saved));
         }
@@ -37,8 +39,10 @@ export function InventoryLayoutProvider({ children }: { children: ReactNode }) {
 
 export function useInventoryLayout() {
     const context = useContext(InventoryLayoutContext);
+
     if (context === undefined) {
         throw new Error('useInventoryLayout must be used within an InventoryLayoutProvider');
     }
+
     return context;
 }

@@ -1,17 +1,4 @@
 import { Head, Link } from '@inertiajs/react'
-import AppLayout from '@/layouts/app-layout';
-
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table'
 import { 
     ArrowLeft, 
     Check, 
@@ -25,6 +12,19 @@ import {
     AlertCircle,
     History
 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+
+import { PageHeader, KpiCard, TableCard, PrimaryButton, OutlineButton } from '@/components/ui/brand';
+import { Button } from '@/components/ui/button'
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table'
+import AppLayout from '@/layouts/app-layout';
 
 // Interfaces estritas para tipagem do ecrã
 interface Warehouse {
@@ -102,128 +102,100 @@ export default function Show({ adjustment }: ShowProps) {
         <>
             <Head title={`Ajuste de Stock #${adjustment.id}`} />
 
-            <div className="space-y-4  mx-auto">
+            <div className="space-y-4 mx-auto">
 
                 {/* CABEÇALHO */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-5">
-                    <div>
+                <PageHeader
+                    title={
                         <div className="flex items-center gap-3">
-                            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                                Ajuste #{adjustment.id}
-                            </h1>
+                            <span>Ajuste #{adjustment.id}</span>
                             <StatusBadge status={adjustment.status} />
                         </div>
+                    }
+                    subtitle={adjustment.warehouse.name}
+                    actions={
+                        <>
+                            {adjustment.status === 'draft' && (
+                                <>
+                                    <PrimaryButton className="bg-green-600 hover:bg-green-700 h-9" asChild>
+                                        <Link
+                                            href={`/inventory/adjustments/${adjustment.id}/complete`}
+                                            method="post"
+                                            as="button"
+                                        >
+                                            <Check className="h-4 w-4" />
+                                            Concluir Ajuste
+                                        </Link>
+                                    </PrimaryButton>
 
-                        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                            <Landmark className="h-4 w-4 text-slate-400" />
-                            {adjustment.warehouse.name}
-                        </p>
-                    </div>
+                                    <Button variant="destructive" className="gap-2 shadow-xs h-9 px-3.5 text-sm font-semibold rounded-[4px]" asChild>
+                                        <Link
+                                            href={`/inventory/adjustments/${adjustment.id}/cancel`}
+                                            method="post"
+                                            as="button"
+                                        >
+                                            <Ban className="h-4 w-4" />
+                                            Cancelar
+                                        </Link>
+                                    </Button>
+                                </>
+                            )}
 
-                    <div className="flex flex-wrap items-center gap-2">
-                        {/* Botões do estado de rascunho utilizando "asChild" para evitar tags aninhadas inválidas */}
-                        {adjustment.status === 'draft' && (
-                            <>
-                                <Button className="gap-2 bg-green-600 hover:bg-green-700 shadow-sm" asChild>
-                                    <Link
-                                        href={`/inventory/adjustments/${adjustment.id}/complete`}
-                                        method="post"
-                                        as="button"
-                                    >
-                                        <Check className="h-4 w-4" />
-                                        Concluir Ajuste
-                                    </Link>
-                                </Button>
-
-                                <Button variant="destructive" className="gap-2 shadow-sm" asChild>
-                                    <Link
-                                        href={`/inventory/adjustments/${adjustment.id}/cancel`}
-                                        method="post"
-                                        as="button"
-                                    >
-                                        <Ban className="h-4 w-4" />
-                                        Cancelar
-                                    </Link>
-                                </Button>
-                            </>
-                        )}
-
-                        <Button variant="outline" className="gap-1.5 shadow-sm" asChild>
-                            <Link href="/inventory/adjustments">
-                                <ArrowLeft className="h-4 w-4" />
-                                Voltar
-                            </Link>
-                        </Button>
-                    </div>
-                </div>
+                            <OutlineButton asChild>
+                                <Link href="/inventory/adjustments">
+                                    <ArrowLeft className="h-4 w-4" />
+                                    Voltar
+                                </Link>
+                            </OutlineButton>
+                        </>
+                    }
+                />
 
                 {/* PAINEL DE METRICAS E RESUMO */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    
-                    <Card className="flex items-center p-4 gap-4 shadow-sm">
-                        <div className="p-2.5 bg-slate-100 rounded-lg text-slate-600">
-                            <ClipboardList className="h-5 w-5" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Status Atual</p>
-                            <div className="mt-0.5">
-                                <StatusBadge status={adjustment.status} />
-                            </div>
-                        </div>
-                    </Card>
+                    <KpiCard
+                        label="Status Atual"
+                        value={<StatusBadge status={adjustment.status} />}
+                        icon={<ClipboardList className="h-4 w-4" />}
+                        accent="slate"
+                    />
 
-                    <Card className="flex items-center p-4 gap-4 shadow-sm">
-                        <div className="p-2.5 bg-slate-100 rounded-lg text-slate-600">
-                            <Boxes className="h-5 w-5" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Itens Registados</p>
-                            <p className="text-xl font-bold text-slate-900 font-mono mt-0.5">
-                                {adjustment.items.length}
-                            </p>
-                        </div>
-                    </Card>
+                    <KpiCard
+                        label="Itens Registados"
+                        value={adjustment.items.length}
+                        icon={<Boxes className="h-4 w-4" />}
+                        accent="slate"
+                    />
 
-                    <Card className="flex items-center p-4 gap-4 shadow-sm">
-                        <div className="p-2.5 bg-green-50 rounded-lg text-green-600">
-                            <TrendingUp className="h-5 w-5" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total de Aumentos</p>
-                            <p className="text-xl font-bold text-green-600 font-mono mt-0.5">
-                                +{totalIncrease}
-                            </p>
-                        </div>
-                    </Card>
+                    <KpiCard
+                        label="Total de Aumentos"
+                        value={`+${totalIncrease}`}
+                        icon={<TrendingUp className="h-4 w-4" />}
+                        accent="teal"
+                    />
 
-                    <Card className="flex items-center p-4 gap-4 shadow-sm">
-                        <div className="p-2.5 bg-red-50 rounded-lg text-red-600">
-                            <TrendingDown className="h-5 w-5" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total de Reduções</p>
-                            <p className="text-xl font-bold text-red-600 font-mono mt-0.5">
-                                -{totalDecrease}
-                            </p>
-                        </div>
-                    </Card>
-
+                    <KpiCard
+                        label="Total de Reduções"
+                        value={`-${totalDecrease}`}
+                        icon={<TrendingDown className="h-4 w-4" />}
+                        accent="red"
+                    />
                 </div>
 
                 {/* INFORMAÇÕES ADICIONAIS E TIMELINE */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2">
-                        <Card className="shadow-sm border-zinc-200 h-full">
-                            <CardHeader className="bg-slate-50/75 border-b py-4">
+                        <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs overflow-hidden h-full">
+                            <div className="bg-slate-50 border-b border-slate-100 px-5 py-4">
                                 <div className="flex items-center gap-2 text-slate-800">
-                                    <FileText className="h-5 w-5 text-slate-500" />
-                                    <CardTitle className="text-sm font-bold uppercase tracking-wider">Detalhes e Justificação</CardTitle>
+                                    <FileText className="h-4 w-4 text-slate-500" />
+                                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">Detalhes e Justificação</h2>
                                 </div>
-                            </CardHeader>
-                            <CardContent className="grid gap-4 pt-5">
+                            </div>
+                            <div className="p-5 grid gap-4">
                                 <div className="grid gap-1">
                                     <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Motivo de Ajuste</span>
-                                    <p className="text-sm text-slate-800 font-medium bg-slate-50 p-3 rounded-md border">
+                                    <p className="text-sm text-slate-800 font-medium bg-slate-50 p-3 rounded-[4px] border border-slate-100">
                                         {adjustment.reason || 'Nenhum motivo especificado.'}
                                     </p>
                                 </div>
@@ -231,24 +203,24 @@ export default function Show({ adjustment }: ShowProps) {
                                 {adjustment.notes && (
                                     <div className="grid gap-1">
                                         <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Observações Operacionais</span>
-                                        <p className="text-sm text-slate-700 bg-slate-50 p-3 rounded-md border whitespace-pre-wrap">
+                                        <p className="text-sm text-slate-750 bg-slate-50 p-3 rounded-[4px] border border-slate-100 whitespace-pre-wrap">
                                             {adjustment.notes}
                                         </p>
                                     </div>
                                 )}
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="lg:col-span-1">
-                        <Card className="shadow-sm border-zinc-200 h-full">
-                            <CardHeader className="bg-slate-50/75 border-b py-4">
+                        <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs overflow-hidden h-full">
+                            <div className="bg-slate-50 border-b border-slate-100 px-5 py-4">
                                 <div className="flex items-center gap-2 text-slate-800">
-                                    <History className="h-5 w-5 text-slate-500" />
-                                    <CardTitle className="text-sm font-bold uppercase tracking-wider">Histórico do Ajuste</CardTitle>
+                                    <History className="h-4 w-4 text-slate-500" />
+                                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">Histórico do Ajuste</h2>
                                 </div>
-                            </CardHeader>
-                            <CardContent className="pt-6 relative">
+                            </div>
+                            <div className="p-5 pt-6 relative">
                                 <div className="relative pl-6 border-l-2 border-slate-100 space-y-6">
                                     
                                     {/* EVENTO 1: CRIADO */}
@@ -323,27 +295,25 @@ export default function Show({ adjustment }: ShowProps) {
                                     )}
 
                                 </div>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 {/* LISTAGEM DOS PRODUTOS DA TABELA */}
-                <Card className="shadow-sm overflow-hidden border-zinc-200">
-                    <CardHeader className="bg-slate-50/75 border-b py-4">
-                        <div className="flex items-center gap-2 text-slate-800">
-                            <Boxes className="h-5 w-5 text-slate-400" />
-                            <CardTitle className="text-base font-semibold">Produtos Afetados</CardTitle>
-                        </div>
-                    </CardHeader>
+                <TableCard>
+                    <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-2 text-slate-800">
+                        <Boxes className="h-4 w-4 text-slate-400" />
+                        <h2 className="text-sm font-bold uppercase tracking-wider">Produtos Afetados</h2>
+                    </div>
 
                     <Table>
                         <TableHeader>
-                            <TableRow>
-                                <TableHead className="font-semibold text-slate-700">Produto</TableHead>
-                                <TableHead className="font-semibold text-slate-700 w-[150px]">Stock Atual</TableHead>
-                                <TableHead className="font-semibold text-slate-700 w-[150px]">Novo Stock</TableHead>
-                                <TableHead className="text-right font-semibold text-slate-700 w-[150px]">Diferença</TableHead>
+                            <TableRow className="bg-slate-50 border-b border-slate-100 hover:bg-slate-50">
+                                <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">Produto</TableHead>
+                                <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold w-[150px]">Stock Anterior</TableHead>
+                                <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold w-[150px]">Novo Stock</TableHead>
+                                <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold text-right w-[150px]">Diferença</TableHead>
                             </TableRow>
                         </TableHeader>
 
@@ -359,7 +329,7 @@ export default function Show({ adjustment }: ShowProps) {
                                 </TableRow>
                             ) : (
                                 adjustment.items.map((item) => (
-                                    <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                                    <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100">
                                         {/* PRODUTO */}
                                         <TableCell className="font-medium text-slate-900 py-3.5">
                                             {item.product.name}
@@ -396,18 +366,18 @@ export default function Show({ adjustment }: ShowProps) {
                             )}
                         </TableBody>
                     </Table>
-                </Card>
+                </TableCard>
 
             </div>
         </>
-    )
+    );
 }
 
 Show.layout = (page: any) => (
     <AppLayout breadcrumbs={[
         { title: 'Inventário', href: '#' },
         { title: 'Ajustes de Stock', href: '/inventory/adjustments' },
-        { title: `Ajuste #${page.props?.adjustment?.id ?? ''}`, href: '#' },
+        { title: `Ajuste #${page.props?.adjustment?.id ?? ''}` },
     ]}>
         {page}
     </AppLayout>

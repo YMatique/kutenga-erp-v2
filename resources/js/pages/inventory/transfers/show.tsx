@@ -1,9 +1,8 @@
 import { Head, Link } from '@inertiajs/react'
-import AppLayout from '@/layouts/app-layout';
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { ArrowRight, Package, Landmark, Boxes, Ban, Check, ShieldCheck } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
     Table,
     TableBody,
@@ -12,7 +11,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { ArrowRight, Package, Landmark, Boxes, Ban, Check, ShieldCheck } from 'lucide-react'
+import AppLayout from '@/layouts/app-layout';
+
 
 // 1. Tipagem estruturada para o autocompletar do editor
 interface Warehouse {

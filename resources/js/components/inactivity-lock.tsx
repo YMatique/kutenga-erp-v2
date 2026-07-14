@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Lock, Loader2, User } from 'lucide-react';
 import { usePage, useForm } from '@inertiajs/react';
+import { Lock, Loader2, User } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 export function InactivityLock() {
@@ -20,8 +20,14 @@ export function InactivityLock() {
     const INACTIVITY_LIMIT = 5 * 60 * 1000;
 
     const resetTimer = () => {
-        if (locked) return;
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        if (locked) {
+return;
+}
+
+        if (timeoutRef.current) {
+clearTimeout(timeoutRef.current);
+}
+
         timeoutRef.current = setTimeout(() => {
             setLocked(true);
         }, INACTIVITY_LIMIT);
@@ -34,23 +40,30 @@ export function InactivityLock() {
 
         return () => {
             events.forEach((event) => window.removeEventListener(event, resetTimer));
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+            if (timeoutRef.current) {
+clearTimeout(timeoutRef.current);
+}
         };
     }, [locked]);
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
+
         if (locked) {
             setTime(new Date());
             interval = setInterval(() => {
                 setTime(new Date());
             }, 1000);
         }
+
         return () => clearInterval(interval);
     }, [locked]);
 
     // Only render if there's a logged-in user
-    if (!auth?.user) return null;
+    if (!auth?.user) {
+return null;
+}
 
     const handleUnlock = (e: React.FormEvent) => {
         e.preventDefault();
@@ -67,7 +80,9 @@ export function InactivityLock() {
         });
     };
 
-    if (!locked) return null;
+    if (!locked) {
+return null;
+}
 
     const formattedTime = time.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
     const formattedDate = time.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' });

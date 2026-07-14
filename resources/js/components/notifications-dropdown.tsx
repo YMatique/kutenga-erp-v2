@@ -1,3 +1,4 @@
+import { router } from '@inertiajs/react';
 import { Bell, Check, Clock, PackageOpen, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,7 +9,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { router } from '@inertiajs/react';
 
 interface Notification {
     id: number;
@@ -39,6 +39,8 @@ export function NotificationsDropdown({ notifications }: { notifications: Notifi
             case 'quote_expired':
                 return <Clock className="h-4 w-4 text-amber-500" />;
             case 'low_stock':
+                return <PackageOpen className="h-4 w-4 text-amber-500" />;
+            case 'out_of_stock':
                 return <PackageOpen className="h-4 w-4 text-red-500" />;
             case 'invoice_paid':
                 return <Receipt className="h-4 w-4 text-emerald-500" />;

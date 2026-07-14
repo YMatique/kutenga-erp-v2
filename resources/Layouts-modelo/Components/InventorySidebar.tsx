@@ -13,7 +13,6 @@ import {
     ArrowRightLeft,
     TrendingUp
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
     Tooltip,
@@ -21,6 +20,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 interface InventorySidebarProps {
     isOpen: boolean;
@@ -214,6 +214,7 @@ export function InventorySidebar({ isOpen, onClose }: InventorySidebarProps) {
                             <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
                                 {navigation.map((item) => {
                                     const Icon = item.icon;
+
                                     return (
                                         <Link
                                             key={item.name}

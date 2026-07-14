@@ -1,5 +1,5 @@
-import DocumentForm from '@/pages/billing/shared/document-form';
 import AppLayout from '@/layouts/app-layout';
+import DocumentForm from '@/pages/billing/shared/document-form';
 
 export default function InvoicesEdit({ document, ...props }: any) {
     return (
@@ -16,6 +16,7 @@ export default function InvoicesEdit({ document, ...props }: any) {
 InvoicesEdit.layout = (page: any) => {
     const doc = page.props?.document;
     const label = doc?.document_number || 'Rascunho';
+
     return (
         <AppLayout breadcrumbs={[
             { title: 'Faturação', href: '#' },

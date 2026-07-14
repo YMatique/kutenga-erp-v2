@@ -1,9 +1,9 @@
-import AppLayout from '@/layouts/app-layout';
 import { Head, useForm } from '@inertiajs/react';
+import { LogIn, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LogIn, ShoppingBag } from 'lucide-react';
+import AppLayout from '@/layouts/app-layout';
 
 export default function OpenShift() {
     const { data, setData, post, processing, errors } = useForm({

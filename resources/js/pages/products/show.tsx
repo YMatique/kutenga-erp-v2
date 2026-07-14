@@ -1,5 +1,4 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import {
     ArrowLeft,
     Package,
@@ -17,16 +16,17 @@ import {
     Boxes,
 } from 'lucide-react';
 
+
+import { Badge } from '@/components/ui/badge';
+import { PrimaryButton, OutlineButton, KpiCard } from '@/components/ui/brand';
+import { Button } from '@/components/ui/button';
 import {
     Tabs,
     TabsContent,
     TabsList,
     TabsTrigger,
 } from '@/components/ui/tabs';
-
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { PrimaryButton, OutlineButton, KpiCard } from '@/components/ui/brand';
+import AppLayout from '@/layouts/app-layout';
 
 interface Category {
     id: number;

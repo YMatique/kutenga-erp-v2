@@ -1,11 +1,11 @@
-import { Head, usePage } from '@inertiajs/react'
-import AppLayout from '@/layouts/app-layout';
+import { Head, usePage, router } from '@inertiajs/react'
 import { ArrowDownCircle, ArrowUpCircle, RefreshCw, Package2, Activity } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import {
     PageHeader,
     TableCard,
 } from '@/components/ui/brand'
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -65,6 +65,7 @@ const movementTypeConfig: Record<
 
 function MovementTypeBadge({ type }: { type: Movement['type'] }) {
     const cfg = movementTypeConfig[type] ?? movementTypeConfig.adjustment
+
     return (
         <span className={cn('inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px]', cfg.cls)}>
             <span className={cn('h-1.5 w-1.5 rounded-full flex-shrink-0', cfg.dot)} />
@@ -91,7 +92,7 @@ export default function MovementsIndex() {
                     actions={
                         <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-100 px-3 py-1.5 rounded-[4px]">
                             <Activity className="h-3.5 w-3.5 text-[#2DB8A0]" />
-                            {movements?.data?.length ?? 0} movimentos
+                            {movements?.total ?? 0} movimentos
                         </div>
                     }
                 />
@@ -207,17 +208,42 @@ export default function MovementsIndex() {
                             )}
                         </tbody>
                     </table>
+
+                    {/* Pagination */}
+                    {movements.last_page > 1 && (
+                        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-white">
+                            <p className="text-xs text-slate-500">
+                                Página {movements.current_page} de {movements.last_page} · {movements.total} registos
+                            </p>
+                            <div className="flex gap-1">
+                                {movements.links.map((link, i) => (
+                                    <button
+                                        key={i}
+                                        disabled={!link.url}
+                                        onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
+                                        className={cn(
+                                            'px-3 py-1.5 text-xs rounded-[4px] border transition-colors',
+                                            link.active
+                                                ? 'bg-[#2DB8A0] text-white border-transparent font-medium'
+                                                : !link.url
+                                                ? 'text-slate-300 border-transparent cursor-not-allowed'
+                                                : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                                        )}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </TableCard>
             </div>
         </>
     )
 }
 
-MovementsIndex.layout = (page: any) => (
-    <AppLayout breadcrumbs={[
+MovementsIndex.layout = {
+    breadcrumbs: [
         { title: 'Inventário', href: '#' },
         { title: 'Movimentos', href: '/inventory/movements' },
-    ]}>
-        {page}
-    </AppLayout>
-);
+    ],
+};

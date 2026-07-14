@@ -1,11 +1,11 @@
 import { Head } from '@inertiajs/react';
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { Search, ShoppingCart, Trash2, Plus, Minus, LayoutGrid, LogOut, Package, Barcode } from 'lucide-react';
 import { Link } from '@inertiajs/react';
+import { Search, ShoppingCart, Trash2, Plus, Minus, LayoutGrid, LogOut, Package, Barcode } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import PaymentModal from './Components/PaymentModal';
 import { useAppearance } from '@/hooks/use-appearance';
+import PaymentModal from './Components/PaymentModal';
 
 interface Product {
     id: number;
@@ -29,8 +29,10 @@ function LiveClock({ dark }: { dark: boolean }) {
     const [t, setT] = useState(new Date());
     useEffect(() => {
         const i = setInterval(() => setT(new Date()), 1000);
+
         return () => clearInterval(i);
     }, []);
+
     return (
         <div className="hidden lg:block text-center">
             <p className={`font-mono text-xl font-bold leading-none ${dark ? 'text-white' : 'text-slate-800'}`}>
@@ -60,6 +62,7 @@ export default function PosIndex({ shift, categories, products, auth }: any) {
     const filtered = useMemo(() =>
         products.filter((p: Product) => {
             const q = search.toLowerCase();
+
             return (
                 !q ||
                 p.name.toLowerCase().includes(q) ||
@@ -71,7 +74,11 @@ export default function PosIndex({ shift, categories, products, auth }: any) {
 
     const addToCart = useCallback((p: Product) => setCart(prev => {
         const ex = prev.find(i => i.id === p.id);
-        if (ex) return prev.map(i => i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i);
+
+        if (ex) {
+return prev.map(i => i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i);
+}
+
         return [...prev, { ...p, cart_id: genId(), quantity: 1 }];
     }), []);
 
@@ -88,6 +95,7 @@ export default function PosIndex({ shift, categories, products, auth }: any) {
             const l = p * i.quantity;
             sub += l; tax += l * (i.tax_rate / 100);
         });
+
         return { sub, tax, total: sub + tax };
     }, [cart]);
 
@@ -110,11 +118,14 @@ export default function PosIndex({ shift, categories, products, auth }: any) {
             );
 
             // Se o foco está noutro campo, não interfere
-            if (isInOtherInput) return;
+            if (isInOtherInput) {
+return;
+}
 
             // Se o foco não está no nosso campo, redirecionar
             if (target !== searchRef.current) {
                 searchRef.current?.focus();
+
                 return;
             }
 
@@ -126,7 +137,9 @@ export default function PosIndex({ shift, categories, products, auth }: any) {
                 const query = barcodeBuffer.current.trim();
                 barcodeBuffer.current = '';
 
-                if (!query) return;
+                if (!query) {
+return;
+}
 
                 // Verificar se foi input rápido (scanner) — < 100ms médio por tecla
                 if (timeDiff < 100) {
@@ -134,10 +147,12 @@ export default function PosIndex({ shift, categories, products, auth }: any) {
                     const exactMatch = products.find((p: Product) =>
                         p.barcode === query || p.sku === query
                     );
+
                     if (exactMatch) {
                         addToCart(exactMatch);
                         setSearch('');
                         e.preventDefault();
+
                         return;
                     }
                 }
@@ -159,6 +174,7 @@ export default function PosIndex({ shift, categories, products, auth }: any) {
         };
 
         window.addEventListener('keydown', handleKeyDown);
+
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [products, filtered, addToCart]);
 
@@ -187,7 +203,9 @@ export default function PosIndex({ shift, categories, products, auth }: any) {
                         src="/kutenga-logo.png"
                         alt="Kutenga ERP"
                         className="h-7 w-auto object-contain"
-                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        onError={e => {
+ (e.target as HTMLImageElement).style.display = 'none'; 
+}}
                     />
                     <div className={`hidden sm:block w-px h-5 ${d ? 'bg-white/15' : 'bg-slate-200'}`} />
                     <div>
@@ -309,6 +327,7 @@ export default function PosIndex({ shift, categories, products, auth }: any) {
                                 {filtered.map((p: Product) => {
                                     const price = parseFloat(String(p.sale_price)) || 0;
                                     const inCart = cart.find(i => i.id === p.id);
+
                                     return (
                                         <button
                                             key={p.id}
@@ -414,6 +433,7 @@ export default function PosIndex({ shift, categories, products, auth }: any) {
                         ) : cart.map(item => {
                             const price = parseFloat(String(item.sale_price)) || 0;
                             const lineTotal = price * item.quantity * (1 + item.tax_rate / 100);
+
                             return (
                                 <div
                                     key={item.cart_id}
@@ -529,7 +549,9 @@ export default function PosIndex({ shift, categories, products, auth }: any) {
                 onClose={() => setPayOpen(false)}
                 total={totals.total}
                 cart={cart}
-                onSuccess={() => { setCart([]); setPayOpen(false); }}
+                onSuccess={() => {
+ setCart([]); setPayOpen(false); 
+}}
             />
         </div>
     );

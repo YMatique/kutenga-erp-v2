@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { Slot } from '@radix-ui/react-slot';
 
 interface PageHeaderProps {
-    title: string;
+    title: ReactNode;
     subtitle?: string;
     actions?: ReactNode;
     className?: string;
@@ -42,7 +42,7 @@ export function PageHeader({ title, subtitle, actions, className }: PageHeaderPr
 
 interface KpiCardProps {
     label: string;
-    value: string | number;
+    value: ReactNode;
     icon: ReactNode;
     accent?: 'teal' | 'gold' | 'orange' | 'red' | 'slate';
     description?: string;

@@ -1,3 +1,5 @@
+import { usePage, router } from '@inertiajs/react';
+import { Building2, ChevronsUpDown, Check, MapPin } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -7,8 +9,6 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { usePage, router } from '@inertiajs/react';
-import { Building2, ChevronsUpDown, Check, MapPin } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
@@ -29,7 +29,9 @@ export function CompanySwitcher() {
         );
     };
 
-    if (!activeCompany) return null;
+    if (!activeCompany) {
+return null;
+}
 
     return (
         <SidebarMenu>

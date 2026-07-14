@@ -1,5 +1,4 @@
 import { Head, Link } from '@inertiajs/react'
-import AppLayout from '@/layouts/app-layout';
 import {
     ArrowLeft,
     Pencil,
@@ -22,6 +21,7 @@ import {
     OutlineButton,
     KpiCard,
 } from '@/components/ui/brand'
+import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils'
 
 interface Product {

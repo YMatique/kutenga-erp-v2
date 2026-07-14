@@ -205,6 +205,73 @@ class StockService
 
         $stock->quantity += $delta;
         $stock->save();
+
+        // Immediate verification of limits (low stock & out of stock)
+        $product = Product::find($movement->product_id);
+        if ($product && $product->track_stock) {
+            $totalStock = ProductStock::where('product_id', $product->id)->sum('quantity');
+
+            if ($totalStock <= 0) {
+                // Out of stock
+                $exists = \App\Models\SystemNotification::where('company_id', $product->company_id)
+                    ->where('type', 'out_of_stock')
+                    ->where('link', "/products/{$product->id}")
+                    ->where('is_read', false)
+                    ->exists();
+
+                if (!$exists) {
+                    \App\Models\SystemNotification::create([
+                        'company_id' => $product->company_id,
+                        'type' => 'out_of_stock',
+                        'title' => 'Stock Esgotado',
+                        'message' => "O produto {$product->name} esgotou em todos os armazéns. Stock Atual: 0.",
+                        'link' => "/products/{$product->id}",
+                        'is_read' => false,
+                    ]);
+                }
+
+                // Resolve low stock notification
+                \App\Models\SystemNotification::where('company_id', $product->company_id)
+                    ->where('type', 'low_stock')
+                    ->where('link', "/products/{$product->id}")
+                    ->where('is_read', false)
+                    ->update(['is_read' => true]);
+
+            } elseif (!is_null($product->min_stock) && $totalStock <= $product->min_stock) {
+                // Low stock
+                $exists = \App\Models\SystemNotification::where('company_id', $product->company_id)
+                    ->where('type', 'low_stock')
+                    ->where('link', "/products/{$product->id}")
+                    ->where('is_read', false)
+                    ->exists();
+
+                if (!$exists) {
+                    \App\Models\SystemNotification::create([
+                        'company_id' => $product->company_id,
+                        'type' => 'low_stock',
+                        'title' => 'Stock Mínimo Atingido',
+                        'message' => "O produto {$product->name} atingiu ou desceu abaixo do limite mínimo ({$product->min_stock}). Stock Atual: {$totalStock}.",
+                        'link' => "/products/{$product->id}",
+                        'is_read' => false,
+                    ]);
+                }
+
+                // Resolve out of stock notification (since stock is > 0 now)
+                \App\Models\SystemNotification::where('company_id', $product->company_id)
+                    ->where('type', 'out_of_stock')
+                    ->where('link', "/products/{$product->id}")
+                    ->where('is_read', false)
+                    ->update(['is_read' => true]);
+
+            } else {
+                // Healthy stock -> resolve both alerts
+                \App\Models\SystemNotification::where('company_id', $product->company_id)
+                    ->whereIn('type', ['low_stock', 'out_of_stock'])
+                    ->where('link', "/products/{$product->id}")
+                    ->where('is_read', false)
+                    ->update(['is_read' => true]);
+            }
+        }
     }
 
     public function lockStock(Product $product, Warehouse $warehouse)

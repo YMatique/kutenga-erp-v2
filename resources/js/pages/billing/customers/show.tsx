@@ -1,12 +1,12 @@
-import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, User, Phone, Mail, MapPin, Building2, CreditCard, Calendar, Briefcase, Edit, ReceiptText } from 'lucide-react';
+import React from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
+import type {BreadcrumbItem} from '@/types';
 
 interface Contact {
     id: number;

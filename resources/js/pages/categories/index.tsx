@@ -1,5 +1,4 @@
 import { Head, usePage, useForm } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import {
     Plus,
     Search,
@@ -10,15 +9,10 @@ import {
     AlertCircle,
     FolderPlus,
 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { PageHeader, TableCard, PrimaryButton } from '@/components/ui/brand';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import {
     Dialog,
     DialogContent,
@@ -29,7 +23,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
     Select,
     SelectContent,
@@ -37,11 +30,18 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { PageHeader, TableCard, PrimaryButton } from '@/components/ui/brand';
-import { cn } from '@/lib/utils';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import { useConfirmDelete } from '@/contexts/confirm-delete-context';
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 
 interface Category {
     id: number;
@@ -69,6 +69,7 @@ export default function CategoriesIndex() {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+
         if (editingCategory) {
             put(`/categories/${editingCategory.id}`, {
                 onSuccess: () => {

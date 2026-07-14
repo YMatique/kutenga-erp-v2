@@ -20,15 +20,41 @@ class CheckLowStock extends Command
         foreach ($companies as $company) {
             $products = Product::where('company_id', $company->id)
                 ->where('track_stock', true)
-                ->whereNotNull('min_stock')
                 ->with('stocks')
                 ->get();
 
             foreach ($products as $product) {
                 $stock = $product->stocks->sum('quantity');
 
-                if ($stock <= $product->min_stock) {
-                    // Evitar duplicar notificações não lidas
+                if ($stock <= 0) {
+                    // Out of stock
+                    $exists = SystemNotification::where('company_id', $product->company_id)
+                        ->where('type', 'out_of_stock')
+                        ->where('link', "/products/{$product->id}")
+                        ->where('is_read', false)
+                        ->exists();
+
+                    if (!$exists) {
+                        SystemNotification::create([
+                            'company_id' => $product->company_id,
+                            'type' => 'out_of_stock',
+                            'title' => 'Stock Esgotado',
+                            'message' => "O produto {$product->name} esgotou em todos os armazéns. Stock Atual: 0.",
+                            'link' => "/products/{$product->id}",
+                            'is_read' => false,
+                        ]);
+                        $totalAlerts++;
+                    }
+
+                    // Resolve low stock alert
+                    SystemNotification::where('company_id', $product->company_id)
+                        ->where('type', 'low_stock')
+                        ->where('link', "/products/{$product->id}")
+                        ->where('is_read', false)
+                        ->update(['is_read' => true]);
+
+                } elseif (!is_null($product->min_stock) && $stock <= $product->min_stock) {
+                    // Low stock
                     $exists = SystemNotification::where('company_id', $product->company_id)
                         ->where('type', 'low_stock')
                         ->where('link', "/products/{$product->id}")
@@ -46,6 +72,21 @@ class CheckLowStock extends Command
                         ]);
                         $totalAlerts++;
                     }
+
+                    // Resolve out of stock alert
+                    SystemNotification::where('company_id', $product->company_id)
+                        ->where('type', 'out_of_stock')
+                        ->where('link', "/products/{$product->id}")
+                        ->where('is_read', false)
+                        ->update(['is_read' => true]);
+
+                } else {
+                    // Healthy stock -> resolve both alerts
+                    SystemNotification::where('company_id', $product->company_id)
+                        ->whereIn('type', ['low_stock', 'out_of_stock'])
+                        ->where('link', "/products/{$product->id}")
+                        ->where('is_read', false)
+                        ->update(['is_read' => true]);
                 }
             }
         }

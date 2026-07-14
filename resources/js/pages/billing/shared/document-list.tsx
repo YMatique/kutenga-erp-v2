@@ -1,9 +1,9 @@
-import React, { useCallback } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { Eye, Filter, Plus, ReceiptText, Search, X } from 'lucide-react';
+import React, { useCallback } from 'react';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
 interface Document {
@@ -57,19 +57,30 @@ const STATUS_CONFIG: Record<string, { label: string; dot: string; cls: string }>
 };
 
 function formatDate(dateStr: string | null | undefined): string {
-    if (!dateStr) return '—';
+    if (!dateStr) {
+return '—';
+}
+
     try {
         const cleanDateStr = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
         const parts = cleanDateStr.split('-');
+
         if (parts.length === 3) {
             const [year, month, day] = parts;
+
             return `${day}/${month}/${year}`;
         }
+
         const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return dateStr;
+
+        if (isNaN(date.getTime())) {
+return dateStr;
+}
+
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
+
         return `${day}/${month}/${year}`;
     } catch {
         return dateStr;
@@ -78,6 +89,7 @@ function formatDate(dateStr: string | null | undefined): string {
 
 function StatusBadge({ status }: { status: string }) {
     const cfg = STATUS_CONFIG[status] ?? { label: status, dot: 'bg-slate-400', cls: 'bg-slate-100 text-slate-600' };
+
     return (
         <span className={cn('inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px]', cfg.cls)}>
             <span className={cn('h-1.5 w-1.5 rounded-full flex-shrink-0', cfg.dot)} />
@@ -97,8 +109,14 @@ export default function DocumentList({ documents, filters, type, title, createHr
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setSearch(value);
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => { applyFilter({ search: value }); }, 400);
+
+        if (debounceRef.current) {
+clearTimeout(debounceRef.current);
+}
+
+        debounceRef.current = setTimeout(() => {
+ applyFilter({ search: value }); 
+}, 400);
     };
 
     const clearFilters = () => {

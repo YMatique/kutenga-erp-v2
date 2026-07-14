@@ -1,4 +1,5 @@
 import { usePage } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { ChevronsUpDown, LogOut, Settings, User } from 'lucide-react';
 import {
     DropdownMenu,
@@ -14,9 +15,8 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from '@/components/ui/sidebar';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useInitials } from '@/hooks/use-initials';
-import { Link } from '@inertiajs/react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 export function NavUser() {
@@ -25,7 +25,9 @@ export function NavUser() {
     const isMobile = useIsMobile();
     const getInitials = useInitials();
 
-    if (!auth.user) return null;
+    if (!auth.user) {
+return null;
+}
 
     const user = auth.user;
 

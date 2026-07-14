@@ -1,6 +1,4 @@
 import { Head, Link, router } from '@inertiajs/react'
-import AppLayout from '@/layouts/app-layout';
-import { useState, useEffect } from 'react'
 import {
     ClipboardList,
     Search,
@@ -17,12 +15,14 @@ import {
     XCircle,
     AlertCircle,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { useState, useEffect } from 'react'
 import {
     PageHeader,
     TableCard,
     PrimaryButton,
 } from '@/components/ui/brand'
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -44,6 +44,10 @@ interface Adjustment {
 
 interface PaginatedAdjustments {
     data: Adjustment[]
+    current_page: number
+    last_page: number
+    total: number
+    links: Array<{ url: string | null; label: string; active: boolean }>
 }
 
 interface Filters {
@@ -84,6 +88,7 @@ const statusConfig: Record<
 
 function AdjStatusBadge({ status }: { status: Adjustment['status'] }) {
     const cfg = statusConfig[status] ?? statusConfig.draft
+
     return (
         <span className={cn('inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px]', cfg.cls)}>
             <span className={cn('h-1.5 w-1.5 rounded-full flex-shrink-0', cfg.dot)} />
@@ -93,7 +98,10 @@ function AdjStatusBadge({ status }: { status: Adjustment['status'] }) {
 }
 
 function AdjTypeBadge({ type }: { type?: 'increase' | 'decrease' }) {
-    if (!type) return <span className="text-slate-400 text-xs">—</span>
+    if (!type) {
+return <span className="text-slate-400 text-xs">—</span>
+}
+
     return type === 'increase' ? (
         <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-[4px] bg-[#2DB8A0]/10 text-[#2DB8A0]">
             <TrendingUp className="h-3 w-3" />
@@ -122,8 +130,12 @@ export default function Index({ adjustments, filters }: IndexProps) {
 
     // Debounced search
     useEffect(() => {
-        if (search === (filters?.search || '')) return
+        if (search === (filters?.search || '')) {
+return
+}
+
         const t = setTimeout(() => applyFilters({ newSearch: search }), 400)
+
         return () => clearTimeout(t)
     }, [search])
 
@@ -184,6 +196,7 @@ export default function Index({ adjustments, filters }: IndexProps) {
                             const isAll = s === 'all'
                             const active = status === s
                             const cfg = isAll ? null : statusConfig[s as Adjustment['status']]
+
                             return (
                                 <button
                                     key={s}
@@ -368,17 +381,42 @@ export default function Index({ adjustments, filters }: IndexProps) {
                             )}
                         </tbody>
                     </table>
+
+                    {/* Pagination */}
+                    {adjustments.last_page > 1 && (
+                        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-white">
+                            <p className="text-xs text-slate-500">
+                                Página {adjustments.current_page} de {adjustments.last_page} · {adjustments.total} registos
+                            </p>
+                            <div className="flex gap-1">
+                                {adjustments.links.map((link, i) => (
+                                    <button
+                                        key={i}
+                                        disabled={!link.url}
+                                        onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
+                                        className={cn(
+                                            'px-3 py-1.5 text-xs rounded-[4px] border transition-colors',
+                                            link.active
+                                                ? 'bg-[#2DB8A0] text-white border-transparent font-medium'
+                                                : !link.url
+                                                ? 'text-slate-300 border-transparent cursor-not-allowed'
+                                                : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                                        )}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </TableCard>
             </div>
         </>
     )
 }
 
-Index.layout = (page: any) => (
-    <AppLayout breadcrumbs={[
+Index.layout = {
+    breadcrumbs: [
         { title: 'Inventário', href: '#' },
         { title: 'Ajustes de Stock', href: '/inventory/adjustments' },
-    ]}>
-        {page}
-    </AppLayout>
-);
+    ],
+};

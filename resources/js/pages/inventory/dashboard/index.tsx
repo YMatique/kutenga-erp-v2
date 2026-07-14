@@ -1,5 +1,4 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import {
     AlertTriangle,
     ArrowDownRight,
@@ -11,6 +10,7 @@ import {
     RefreshCw,
     Warehouse,
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { KpiCard, OutlineButton, PageHeader, PrimaryButton, StockBadge, TableCard } from '@/components/ui/brand';
 import {
     Table,
@@ -20,7 +20,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import AppLayout from '@/layouts/app-layout';
 
 const movementLabels: Record<string, { label: string; color: string }> = {
     opening: { label: 'Stock Inicial', color: 'bg-slate-100 text-slate-600' },
@@ -244,6 +244,7 @@ export default function InventoryDashboard() {
                             ) : (
                                 recentMovements.map((movement: any) => {
                                     const typeInfo = movementLabels[movement.type] ?? { label: movement.type, color: 'bg-slate-100 text-slate-600' };
+
                                     return (
                                         <TableRow
                                             key={movement.id}

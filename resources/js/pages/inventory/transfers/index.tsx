@@ -1,6 +1,4 @@
 import { Head, Link, router } from '@inertiajs/react'
-import AppLayout from '@/layouts/app-layout';
-import { useState, useEffect } from 'react'
 import {
     ArrowRightLeft,
     Search,
@@ -12,13 +10,15 @@ import {
     PackageCheck,
     FilterX,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { useState, useEffect } from 'react'
 import {
     PageHeader,
     TableCard,
     PrimaryButton,
     OutlineButton,
 } from '@/components/ui/brand'
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -39,6 +39,10 @@ interface Transfer {
 
 interface PaginatedTransfers {
     data: Transfer[]
+    current_page: number
+    last_page: number
+    total: number
+    links: Array<{ url: string | null; label: string; active: boolean }>
 }
 
 interface Filters {
@@ -85,6 +89,7 @@ const statusConfig: Record<
 
 function TransferStatusBadge({ status }: { status: Transfer['status'] }) {
     const cfg = statusConfig[status] ?? statusConfig.pending
+
     return (
         <span className={cn('inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px]', cfg.cls)}>
             <span className={cn('h-1.5 w-1.5 rounded-full flex-shrink-0', cfg.dot)} />
@@ -108,8 +113,12 @@ export default function Index({ transfers, filters }: IndexProps) {
 
     // Debounced search
     useEffect(() => {
-        if (search === (filters?.search || '')) return
+        if (search === (filters?.search || '')) {
+return
+}
+
         const t = setTimeout(() => applyFilters({ newSearch: search }), 400)
+
         return () => clearTimeout(t)
     }, [search])
 
@@ -162,6 +171,7 @@ export default function Index({ transfers, filters }: IndexProps) {
                             const isAll = s === 'all'
                             const active = status === s
                             const cfg = isAll ? null : statusConfig[s as Transfer['status']]
+
                             return (
                                 <button
                                     key={s}
@@ -184,7 +194,9 @@ export default function Index({ transfers, filters }: IndexProps) {
                     {/* Clear filters */}
                     {hasFilters && (
                         <button
-                            onClick={() => { setSearch(''); setStatus('all') }}
+                            onClick={() => {
+ setSearch(''); setStatus('all') 
+}}
                             className="ml-auto flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 transition-colors"
                         >
                             <FilterX className="h-3.5 w-3.5" />
@@ -233,7 +245,9 @@ export default function Index({ transfers, filters }: IndexProps) {
                                             </p>
                                             {hasFilters && (
                                                 <button
-                                                    onClick={() => { setSearch(''); setStatus('all') }}
+                                                    onClick={() => {
+ setSearch(''); setStatus('all') 
+}}
                                                     className="text-xs text-[#2DB8A0] underline underline-offset-2"
                                                 >
                                                     Limpar filtros
@@ -330,17 +344,42 @@ export default function Index({ transfers, filters }: IndexProps) {
                             )}
                         </tbody>
                     </table>
+
+                    {/* Pagination */}
+                    {transfers.last_page > 1 && (
+                        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-white">
+                            <p className="text-xs text-slate-500">
+                                Página {transfers.current_page} de {transfers.last_page} · {transfers.total} registos
+                            </p>
+                            <div className="flex gap-1">
+                                {transfers.links.map((link, i) => (
+                                    <button
+                                        key={i}
+                                        disabled={!link.url}
+                                        onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
+                                        className={cn(
+                                            'px-3 py-1.5 text-xs rounded-[4px] border transition-colors',
+                                            link.active
+                                                ? 'bg-[#2DB8A0] text-white border-transparent font-medium'
+                                                : !link.url
+                                                ? 'text-slate-300 border-transparent cursor-not-allowed'
+                                                : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                                        )}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </TableCard>
             </div>
         </>
     )
 }
 
-Index.layout = (page: any) => (
-    <AppLayout breadcrumbs={[
+Index.layout = {
+    breadcrumbs: [
         { title: 'Inventário', href: '#' },
         { title: 'Transferências de Stock', href: '/inventory/transfers' },
-    ]}>
-        {page}
-    </AppLayout>
-);
+    ],
+};

@@ -1,16 +1,20 @@
 import { Head, useForm, router } from '@inertiajs/react';
+import { UserPlus, Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import Heading from '@/components/heading';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useState } from 'react';
-import { UserPlus, Pencil, Trash2 } from 'lucide-react';
-import InputError from '@/components/input-error';
+import { useConfirmDelete } from '@/contexts/confirm-delete-context';
+import { cn } from '@/lib/utils';
 
 export default function UsersIndex({ users, roles }: { users: any, roles: any[] }) {
+    const { confirmDelete } = useConfirmDelete();
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<any>(null);
@@ -58,7 +62,11 @@ export default function UsersIndex({ users, roles }: { users: any, roles: any[] 
 
     const handleEdit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!editingUser) return;
+
+        if (!editingUser) {
+return;
+}
+
         editForm.put(`/settings/users/${editingUser.id}`, {
             preserveScroll: true,
             onSuccess: () => {
@@ -69,9 +77,12 @@ export default function UsersIndex({ users, roles }: { users: any, roles: any[] 
     };
 
     const handleDelete = (id: number) => {
-        if (confirm('Tens a certeza que pretendes remover este utilizador? O seu acesso será revogado imediatamente.')) {
-            router.delete(`/settings/users/${id}`, { preserveScroll: true });
-        }
+        confirmDelete({
+            url: `/settings/users/${id}`,
+            title: 'Remover Utilizador',
+            description: 'Tens a certeza que pretendes remover este utilizador? O seu acesso será revogado imediatamente.',
+            onSuccess: () => toast.success('Utilizador removido com sucesso!'),
+        });
     };
 
     return (
@@ -123,7 +134,7 @@ export default function UsersIndex({ users, roles }: { users: any, roles: any[] 
                                     </TableCell>
                                 </TableRow>
                             ))}
-                            {users.data.length === 0 && (
+                            {users?.data?.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={4} className="h-24 text-center text-slate-500">
                                         Nenhum utilizador encontrado.
@@ -132,6 +143,33 @@ export default function UsersIndex({ users, roles }: { users: any, roles: any[] 
                             )}
                         </TableBody>
                     </Table>
+
+                    {/* Pagination */}
+                    {users?.last_page > 1 && (
+                        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-white">
+                            <p className="text-xs text-slate-500">
+                                Página {users.current_page} de {users.last_page} · {users.total} registos
+                            </p>
+                            <div className="flex gap-1">
+                                {users.links.map((link: any, i: number) => (
+                                    <button
+                                        key={i}
+                                        disabled={!link.url}
+                                        onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
+                                        className={cn(
+                                            'px-3 py-1.5 text-xs rounded-[4px] border transition-colors',
+                                            link.active
+                                                ? 'bg-[#2DB8A0] text-white border-transparent font-medium'
+                                                : !link.url
+                                                ? 'text-slate-300 border-transparent cursor-not-allowed'
+                                                : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                                        )}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

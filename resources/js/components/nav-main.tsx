@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { ChevronRight, type LucideIcon } from 'lucide-react';
+import { ChevronRight  } from 'lucide-react';
+import type {LucideIcon} from 'lucide-react';
 import {
     Collapsible,
     CollapsibleContent,
@@ -15,8 +16,8 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/hooks/use-current-url';
-import type { NavItem } from '@/types';
 import { cn } from '@/lib/utils';
+import type { NavItem } from '@/types';
 
 export function NavMain({ items = [] }: { items: NavItem[] }) {
     const { isCurrentUrl } = useCurrentUrl();
@@ -25,7 +26,10 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
 
     // Check if any child URL is active (for parent group highlighting)
     const isGroupActive = (item: NavItem) => {
-        if (!item.items) return false;
+        if (!item.items) {
+return false;
+}
+
         return item.items.some((sub) => isCurrentUrl(sub.href));
     };
 
@@ -118,6 +122,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                     <SidebarMenuSub className="ml-6 border-l border-white/8 pl-3 mt-0.5 space-y-0.5">
                                         {item.items?.map((subItem) => {
                                             const subActive = isCurrentUrl(subItem.href);
+
                                             return (
                                                 <SidebarMenuSubItem key={subItem.title}>
                                                     <Link

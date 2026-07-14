@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { History, Search, X, ShieldAlert } from 'lucide-react';
+import React, { useState } from 'react';
+import { PageHeader, TableCard, OutlineButton } from '@/components/ui/brand';
 import { Input } from '@/components/ui/input';
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { PageHeader, TableCard, OutlineButton } from '@/components/ui/brand';
 import { cn } from '@/lib/utils';
-import { type BreadcrumbItem } from '@/types';
+import type {BreadcrumbItem} from '@/types';
 
 export interface PaginatedData<T> {
     data: T[];
@@ -50,6 +50,7 @@ export default function Audits({ activities, filters }: Props) {
         const timeout = setTimeout(() => {
             router.get('/settings/audits', { search: value }, { preserveState: true, replace: true });
         }, 400);
+
         return () => clearTimeout(timeout);
     };
 

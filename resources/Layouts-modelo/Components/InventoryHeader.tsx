@@ -1,8 +1,9 @@
-import { Breadcrumbs } from '@/components/breadcrumbs';
-import { Button } from '@/components/ui/button';
-import { type BreadcrumbItem as BreadcrumbItemType, SharedData } from '@/types';
-import { Search, Bell, Moon, Sun, Menu } from 'lucide-react';
 import { Link, usePage } from '@inertiajs/react';
+import { Search, Bell, Moon, Sun, Menu } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Breadcrumbs } from '@/components/breadcrumbs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -11,8 +12,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useEffect, useState } from 'react';
+import type { SharedData } from '@/types';
+import type {BreadcrumbItem as BreadcrumbItemType} from '@/types';
 
 export function InventoryHeader({
     breadcrumbs = [],
@@ -33,6 +34,7 @@ export function InventoryHeader({
 
     const toggleDarkMode = () => {
         const html = document.documentElement;
+
         if (html.classList.contains('dark')) {
             html.classList.remove('dark');
             setIsDarkMode(false);
@@ -97,7 +99,9 @@ export function InventoryHeader({
 function HeaderUser() {
     const { auth } = usePage<SharedData>().props;
 
-    if (!auth.user) return null;
+    if (!auth.user) {
+return null;
+}
 
     return (
         <DropdownMenu>

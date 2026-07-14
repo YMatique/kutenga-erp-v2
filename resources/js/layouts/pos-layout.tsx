@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ReactNode, useState, useEffect } from 'react';
 import { LayoutGrid, LogOut, ShoppingBag } from 'lucide-react';
+import type { ReactNode} from 'react';
+import { useState, useEffect } from 'react';
 
 interface PosLayoutProps {
     children: ReactNode;
@@ -14,6 +15,7 @@ export default function PosLayout({ children, title = 'POS', shift }: PosLayoutP
 
     useEffect(() => {
         const interval = setInterval(() => setCurrentTime(new Date()), 1000);
+
         return () => clearInterval(interval);
     }, []);
 

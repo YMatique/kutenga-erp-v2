@@ -66,7 +66,9 @@ export default function AuthSimpleLayout({
                                     src="/kutenga-logo.png"
                                     alt="Kutenga Logo"
                                     className="h-9 w-9 object-contain"
-                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                    onError={(e) => {
+ e.currentTarget.style.display = 'none'; 
+}}
                                 />
                                 <svg viewBox="0 0 40 42" xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 fill-[#2DB8A0] absolute">
                                     <path

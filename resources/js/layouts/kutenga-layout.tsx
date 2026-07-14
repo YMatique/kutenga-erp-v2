@@ -1,12 +1,12 @@
+import { usePage } from '@inertiajs/react';
+import {  useEffect } from 'react';
+import type {PropsWithChildren} from 'react';
+import { toast } from 'sonner';
 import { AppHeader } from '@/components/app-header';
 import { AppSidebar } from '@/components/app-sidebar';
-import { type BreadcrumbItem } from '@/types';
-import { type PropsWithChildren, useEffect } from 'react';
-import { Toaster } from '@/components/ui/sonner';
-import { toast } from 'sonner';
-import { usePage } from '@inertiajs/react';
-import { cn } from '@/lib/utils';
+import { InactivityLock } from '@/components/inactivity-lock';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
+import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 function KutengaLayoutContent({
@@ -18,10 +18,21 @@ function KutengaLayoutContent({
     const sidebarOpen = state === 'expanded';
 
     useEffect(() => {
-        if (props.flash?.success) toast.success(props.flash.success);
-        if (props.flash?.error) toast.error(props.flash.error);
-        if (props.flash?.warning) toast.warning(props.flash.warning);
-        if (props.flash?.info) toast.info(props.flash.info);
+        if (props.flash?.success) {
+toast.success(props.flash.success);
+}
+
+        if (props.flash?.error) {
+toast.error(props.flash.error);
+}
+
+        if (props.flash?.warning) {
+toast.warning(props.flash.warning);
+}
+
+        if (props.flash?.info) {
+toast.info(props.flash.info);
+}
     }, [props.flash]);
 
     return (
@@ -68,13 +79,15 @@ function KutengaLayoutContent({
 }
 
 import { ConfirmDeleteProvider } from '@/contexts/confirm-delete-context';
-import { InactivityLock } from '@/components/inactivity-lock';
+import { cn } from '@/lib/utils';
+import type {BreadcrumbItem} from '@/types';
 
 export default function KutengaLayout({
     children,
     breadcrumbs = [],
 }: PropsWithChildren<{ breadcrumbs?: BreadcrumbItem[] }>) {
     const { sidebarOpen } = usePage<any>().props;
+
     return (
         <ConfirmDeleteProvider>
             <TooltipProvider delayDuration={0}>

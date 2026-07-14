@@ -1,7 +1,10 @@
-import * as React from "react"
+import axios from "axios"
 import { Check, ChevronsUpDown, Search, Loader2 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import * as React from "react"
+import { useDebounce } from "use-debounce"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import {
     Command,
     CommandEmpty,
@@ -15,9 +18,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
-import { Badge } from "@/components/ui/badge"
-import axios from "axios"
-import { useDebounce } from "use-debounce"
 
 export interface Product {
     id: string
@@ -57,11 +57,13 @@ export function ProductPicker({ value, onSelect, placeholder = "Buscar produto..
     React.useEffect(() => {
         if (debouncedQuery.length < 2) {
             setProducts([])
+
             return
         }
 
         const fetchProducts = async () => {
             setLoading(true)
+
             try {
                 const response = await axios.get(route('tenant.inventory.products.search'), {
                     params: { query: debouncedQuery }
@@ -82,12 +84,15 @@ export function ProductPicker({ value, onSelect, placeholder = "Buscar produto..
         setOpen(false)
 
         let label = product.name
+
         if (variation) {
             label += ` - ${variation.name}`
         }
+
         if (product.sku) {
             label += ` (${product.sku})`
         }
+
         setSelectedLabel(label)
     }
 

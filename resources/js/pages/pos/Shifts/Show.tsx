@@ -1,12 +1,12 @@
-import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft, Receipt, Package, Calculator, TrendingUp, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { KpiCard, TableCard, PageHeader } from '@/components/ui/brand';
+import { Button } from '@/components/ui/button';
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '@/components/ui/table';
-import { ArrowLeft, Receipt, Package, Calculator, TrendingUp, Clock } from 'lucide-react';
+import AppLayout from '@/layouts/app-layout';
 
 export default function ShiftShow({ shift, documents, summary }: any) {
     const fmt = (n: number) =>
@@ -24,6 +24,7 @@ export default function ShiftShow({ shift, documents, summary }: any) {
         const ms    = end - start;
         const h     = Math.floor(ms / 3600000);
         const m     = Math.floor((ms % 3600000) / 60000);
+
         return `${h}h ${m}m`;
     };
 

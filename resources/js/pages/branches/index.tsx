@@ -1,6 +1,8 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import { MapPin, Plus, Trash2, Phone, Hash, Pencil, Building2 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { PageHeader, StockBadge, TableCard, PrimaryButton, OutlineButton } from '@/components/ui/brand';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -21,10 +23,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { useState } from 'react';
-import { toast } from 'sonner';
 import { useConfirmDelete } from '@/contexts/confirm-delete-context';
-import { PageHeader, StockBadge, TableCard, PrimaryButton, OutlineButton } from '@/components/ui/brand';
+import AppLayout from '@/layouts/app-layout';
 
 interface Branch {
     id: number;
@@ -49,6 +49,7 @@ export default function BranchesIndex() {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+
         if (editingBranch) {
             put(`/branches/${editingBranch.id}`, {
                 onSuccess: () => {
@@ -109,7 +110,10 @@ export default function BranchesIndex() {
                     actions={
                         <Dialog open={open} onOpenChange={(val) => {
                             setOpen(val);
-                            if (!val) setEditingBranch(null);
+
+                            if (!val) {
+setEditingBranch(null);
+}
                         }}>
                             <DialogTrigger asChild>
                                 <PrimaryButton onClick={handleNew} className="gap-1.5 h-9 px-3.5">

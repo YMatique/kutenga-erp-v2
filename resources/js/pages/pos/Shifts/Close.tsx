@@ -1,14 +1,14 @@
-import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { PageHeader } from '@/components/ui/brand';
 import {
     LogOut, Calculator, ShoppingBag, Receipt,
     CheckCircle2, AlertTriangle
 } from 'lucide-react';
+import { PageHeader } from '@/components/ui/brand';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import AppLayout from '@/layouts/app-layout';
 
 export default function CloseShift({ shift, salesTotal, totalDocs, expectedCash }: any) {
     const { data, setData, post, processing, errors } = useForm({

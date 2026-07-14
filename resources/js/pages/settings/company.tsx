@@ -1,13 +1,13 @@
 import { Head, useForm } from '@inertiajs/react';
+import { Loader2, Plus, Trash2, ImagePlus } from 'lucide-react';
+import { useState } from 'react';
 import Heading from '@/components/heading';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import InputError from '@/components/input-error';
-import { Loader2, Plus, Trash2, ImagePlus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState } from 'react';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function CompanySettings({ company }: { company: any }) {
     const [logoPreview, setLogoPreview] = useState<string | null>(company.logo_path ? `/storage/${company.logo_path}` : null);
@@ -177,6 +177,7 @@ export default function CompanySettings({ company }: { company: any }) {
                                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                             onChange={(e) => {
                                                 const file = e.target.files?.[0];
+
                                                 if (file) {
                                                     setData('logo', file);
                                                     setLogoPreview(URL.createObjectURL(file));
@@ -207,6 +208,7 @@ export default function CompanySettings({ company }: { company: any }) {
                                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                             onChange={(e) => {
                                                 const file = e.target.files?.[0];
+
                                                 if (file) {
                                                     setData('stamp', file);
                                                     setStampPreview(URL.createObjectURL(file));

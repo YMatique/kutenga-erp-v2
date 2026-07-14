@@ -1,3 +1,7 @@
+import { router } from '@inertiajs/react';
+import { Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -6,10 +10,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { router } from '@inertiajs/react';
-import { useState } from 'react';
-import { Trash2 } from 'lucide-react';
 
 interface ConfirmDeleteModalProps {
     isOpen: boolean;
@@ -18,6 +18,8 @@ interface ConfirmDeleteModalProps {
     title?: string;
     description?: string;
     onSuccess?: () => void;
+    method?: 'delete' | 'post';
+    confirmLabel?: string;
 }
 
 export function ConfirmDeleteModal({
@@ -27,18 +29,23 @@ export function ConfirmDeleteModal({
     title = 'Tem certeza?',
     description = 'Esta ação não pode ser desfeita. Isso excluirá permanentemente este registro de nossos servidores.',
     onSuccess,
+    method = 'delete',
+    confirmLabel,
 }: ConfirmDeleteModalProps) {
     const [processing, setProcessing] = useState(false);
 
     const handleDelete = () => {
-        router.delete(deleteUrl, {
+        const routeMethod = method === 'post' ? router.post : router.delete;
+        routeMethod(deleteUrl, {
             onStart: () => setProcessing(true),
             onFinish: () => {
                 setProcessing(false);
                 onClose();
             },
             onSuccess: () => {
-                if (onSuccess) onSuccess();
+                if (onSuccess) {
+onSuccess();
+}
             },
         });
     };
@@ -58,7 +65,7 @@ export function ConfirmDeleteModal({
                         Cancelar
                     </Button>
                     <Button variant="destructive" onClick={handleDelete} disabled={processing}>
-                        {processing ? 'Excluindo...' : 'Excluir'}
+                        {processing ? (confirmLabel ? 'Processando...' : 'Excluindo...') : (confirmLabel || 'Excluir')}
                     </Button>
                 </DialogFooter>
             </DialogContent>

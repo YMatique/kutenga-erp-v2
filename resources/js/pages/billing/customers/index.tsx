@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { Plus, Pencil, Trash2, Search, X, User, Phone, Mail, Eye, Users } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import React, { useState } from 'react';
+import { PageHeader, TableCard, PrimaryButton, OutlineButton } from '@/components/ui/brand';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { PageHeader, TableCard, PrimaryButton, OutlineButton } from '@/components/ui/brand';
-import { cn } from '@/lib/utils';
-import { type BreadcrumbItem } from '@/types';
 import { useConfirmDelete } from '@/contexts/confirm-delete-context';
+import { cn } from '@/lib/utils';
+import type {BreadcrumbItem} from '@/types';
 
 interface Customer {
     id: number;
@@ -50,6 +50,7 @@ export default function CustomerIndex({ customers, filters }: Props) {
         const timeout = setTimeout(() => {
             router.get('/billing/customers', { search: value }, { preserveState: true, replace: true });
         }, 400);
+
         return () => clearTimeout(timeout);
     };
 

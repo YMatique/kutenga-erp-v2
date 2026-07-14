@@ -1,16 +1,19 @@
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
+import { KeyRound, Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import Heading from '@/components/heading';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useState } from 'react';
-import { KeyRound, Pencil, Trash2 } from 'lucide-react';
-import InputError from '@/components/input-error';
+import { useConfirmDelete } from '@/contexts/confirm-delete-context';
 
 export default function RolesIndex({ roles, permissions }: { roles: any[], permissions: Record<string, any[]> }) {
+    const { confirmDelete } = useConfirmDelete();
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [editingRole, setEditingRole] = useState<any>(null);
@@ -52,7 +55,11 @@ export default function RolesIndex({ roles, permissions }: { roles: any[], permi
 
     const handleEdit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!editingRole) return;
+
+        if (!editingRole) {
+return;
+}
+
         editForm.put(`/settings/roles/${editingRole.id}`, {
             preserveScroll: true,
             onSuccess: () => {
@@ -63,14 +70,18 @@ export default function RolesIndex({ roles, permissions }: { roles: any[], permi
     };
 
     const handleDelete = (id: number) => {
-        if (confirm('Tens a certeza que pretendes remover este papel? Os utilizadores com este papel perderão os acessos correspondentes.')) {
-            router.delete(`/settings/roles/${id}`, { preserveScroll: true });
-        }
+        confirmDelete({
+            url: `/settings/roles/${id}`,
+            title: 'Remover Papel / Perfil',
+            description: 'Tens a certeza que pretendes remover este papel? Os utilizadores com este papel perderão os acessos correspondentes.',
+            onSuccess: () => toast.success('Papel removido com sucesso!'),
+        });
     };
 
     const handlePermissionToggle = (permissionName: string, isEdit = false) => {
         const targetForm = isEdit ? editForm : form;
         const currentPermissions = targetForm.data.permissions;
+
         if (currentPermissions.includes(permissionName)) {
             targetForm.setData('permissions', currentPermissions.filter(p => p !== permissionName));
         } else {

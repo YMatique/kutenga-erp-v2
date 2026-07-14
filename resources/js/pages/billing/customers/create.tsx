@@ -1,14 +1,14 @@
-import React from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import { ArrowLeft, Save, User, Phone, Mail, MapPin, Plus, Trash2, Briefcase } from 'lucide-react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { type BreadcrumbItem } from '@/types';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import type {BreadcrumbItem} from '@/types';
 
 interface Contact {
     name: string;
@@ -52,7 +52,10 @@ export default function CustomerCreate() {
         setData('contacts', [...data.contacts, { name: '', role: '', phone: '', email: '' }]);
     };
     const removeContact = (index: number) => {
-        if (data.contacts.length <= 1) return;
+        if (data.contacts.length <= 1) {
+return;
+}
+
         setData('contacts', data.contacts.filter((_, i) => i !== index));
     };
     const updateContact = (index: number, field: keyof Contact, value: string) => {
@@ -66,7 +69,10 @@ export default function CustomerCreate() {
         setData('addresses', [...data.addresses, { type: 'billing' as const, address: '', city: '' }]);
     };
     const removeAddress = (index: number) => {
-        if (data.addresses.length <= 1) return;
+        if (data.addresses.length <= 1) {
+return;
+}
+
         setData('addresses', data.addresses.filter((_, i) => i !== index));
     };
     const updateAddress = (index: number, field: keyof Address, value: string) => {

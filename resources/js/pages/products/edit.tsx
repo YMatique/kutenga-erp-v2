@@ -1,5 +1,4 @@
 import { Head, useForm, Link } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import { 
     ArrowLeft, 
     Save, 
@@ -17,18 +16,11 @@ import {
     BadgePercent,
     Coins
 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { PrimaryButton, OutlineButton } from '@/components/ui/brand';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
@@ -37,10 +29,18 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { PrimaryButton, OutlineButton } from '@/components/ui/brand';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import AppLayout from '@/layouts/app-layout';
 
 interface Category {
     id: number;
@@ -115,6 +115,7 @@ export default function ProductEdit({ product, categories, units, brands }: Prop
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
+
         if (file) {
             setData('image', file);
             const reader = new FileReader();
@@ -129,7 +130,10 @@ export default function ProductEdit({ product, categories, units, brands }: Prop
         setData('image', null);
         setImagePreview(null);
         const fileInput = document.getElementById('product-image-upload') as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
+
+        if (fileInput) {
+fileInput.value = '';
+}
     };
 
     // Estados para controlo de modais de criação rápida

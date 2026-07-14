@@ -1,17 +1,19 @@
-import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
+import { TrendingUp, Receipt, ShoppingBag, Calculator, Users, BarChart2, ArrowUpRight, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { KpiCard, TableCard, PageHeader } from '@/components/ui/brand';
-import { TrendingUp, Receipt, ShoppingBag, Calculator, Users, BarChart2, ArrowUpRight, Clock } from 'lucide-react';
+import AppLayout from '@/layouts/app-layout';
 
 // Simple bar chart using CSS
 function BarChart({ data }: { data: Array<{ date: string; total: number; count: number }> }) {
     const max = Math.max(...data.map(d => d.total), 1);
+
     return (
         <div className="flex items-end gap-1 h-32 w-full">
             {data.map((d, i) => {
                 const pct = (d.total / max) * 100;
                 const label = new Date(d.date + 'T00:00:00').toLocaleDateString('pt-MZ', { day: '2-digit', month: 'short' });
+
                 return (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1 group min-w-0">
                         <div className="relative w-full flex items-end justify-center" style={{ height: '96px' }}>
@@ -34,8 +36,14 @@ function BarChart({ data }: { data: Array<{ date: string; total: number; count: 
 export default function PosReports({ kpis, dailySales, byOperator, topProducts, recentShifts, period }: any) {
     const fmt = (n: number) => n.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
     const fmtShort = (n: number) => {
-        if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
-        if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'K';
+        if (n >= 1_000_000) {
+return (n / 1_000_000).toFixed(1) + 'M';
+}
+
+        if (n >= 1_000)     {
+return (n / 1_000).toFixed(1) + 'K';
+}
+
         return fmt(n);
     };
 
@@ -129,6 +137,7 @@ export default function PosReports({ kpis, dailySales, byOperator, topProducts, 
                                     {byOperator.map((op: any, i: number) => {
                                         const maxVal = byOperator[0].total;
                                         const pct = (op.total / maxVal) * 100;
+
                                         return (
                                             <div key={i}>
                                                 <div className="flex justify-between text-sm mb-1">
@@ -165,6 +174,7 @@ export default function PosReports({ kpis, dailySales, byOperator, topProducts, 
                             )}
                             {topProducts.map((p: any, i: number) => {
                                 const pct = (p.qty / maxProductQty) * 100;
+
                                 return (
                                     <div key={i} className="px-5 py-3">
                                         <div className="flex items-center justify-between mb-1">

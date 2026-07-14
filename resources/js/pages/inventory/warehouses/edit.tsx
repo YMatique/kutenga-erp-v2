@@ -1,11 +1,11 @@
 import { useForm, Head, Link } from '@inertiajs/react'
-import AppLayout from '@/layouts/app-layout';
-
+import { PrimaryButton } from '@/components/ui/brand'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { PrimaryButton } from '@/components/ui/brand'
+import { Textarea } from '@/components/ui/textarea'
+import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils'
 
 // 1. Definição da interface para garantir a tipagem estrita do modelo

@@ -1,15 +1,15 @@
-import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { KpiCard, TableCard, PageHeader } from '@/components/ui/brand';
-import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow
-} from '@/components/ui/table';
 import {
     ShoppingBag, Users, TrendingUp, AlertCircle,
     Plus, CheckCircle2, BarChart2, ChevronRight
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { KpiCard, TableCard, PageHeader } from '@/components/ui/brand';
+import { Button } from '@/components/ui/button';
+import {
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow
+} from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
 
 export default function History({ shifts, stats, myOpenShift }: any) {
     const fmt = (n: number) =>
@@ -22,10 +22,14 @@ export default function History({ shifts, stats, myOpenShift }: any) {
         }) : '—';
 
     const duration = (opened: string, closed: string | null) => {
-        if (!closed) return <span className="text-emerald-600 font-medium">Em curso</span>;
+        if (!closed) {
+return <span className="text-emerald-600 font-medium">Em curso</span>;
+}
+
         const ms = new Date(closed).getTime() - new Date(opened).getTime();
         const h  = Math.floor(ms / 3600000);
         const m  = Math.floor((ms % 3600000) / 60000);
+
         return `${h}h ${m}m`;
     };
 
@@ -144,6 +148,7 @@ export default function History({ shifts, stats, myOpenShift }: any) {
                                 const diff = shift.ending_cash !== null
                                     ? shift.ending_cash - (shift.starting_cash + shift.sales_total)
                                     : null;
+
                                 return (
                                     <TableRow key={shift.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100 group">
                                         <TableCell className="font-mono font-semibold text-slate-700">

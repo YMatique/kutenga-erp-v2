@@ -1,13 +1,13 @@
 import { Head, Link } from '@inertiajs/react'
-import AppLayout from '@/layouts/app-layout';
 import { Eye, Layers, PackageSearch } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import {
     PageHeader,
     StockBadge,
     TableCard,
     PrimaryButton,
 } from '@/components/ui/brand'
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -43,8 +43,14 @@ function resolveStockStatus(
     qty: number,
     minStock: number,
 ): 'in_stock' | 'low' | 'out_of_stock' {
-    if (qty <= 0) return 'out_of_stock'
-    if (qty <= minStock) return 'low'
+    if (qty <= 0) {
+return 'out_of_stock'
+}
+
+    if (qty <= minStock) {
+return 'low'
+}
+
     return 'in_stock'
 }
 

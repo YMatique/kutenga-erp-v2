@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { ConfirmDeleteModal } from '@/components/confirm-delete-modal';
 
 interface ConfirmDeleteOptions {
@@ -6,6 +7,8 @@ interface ConfirmDeleteOptions {
     title?: string;
     description?: string;
     onSuccess?: () => void;
+    method?: 'delete' | 'post';
+    confirmLabel?: string;
 }
 
 interface ConfirmDeleteContextType {
@@ -38,6 +41,8 @@ export function ConfirmDeleteProvider({ children }: { children: ReactNode }) {
                     title={options.title}
                     description={options.description}
                     onSuccess={options.onSuccess}
+                    method={options.method}
+                    confirmLabel={options.confirmLabel}
                 />
             )}
         </ConfirmDeleteContext.Provider>
@@ -46,8 +51,10 @@ export function ConfirmDeleteProvider({ children }: { children: ReactNode }) {
 
 export function useConfirmDelete() {
     const context = useContext(ConfirmDeleteContext);
+
     if (!context) {
         throw new Error('useConfirmDelete must be used within a ConfirmDeleteProvider');
     }
+
     return context;
 }

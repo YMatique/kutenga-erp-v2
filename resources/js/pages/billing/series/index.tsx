@@ -1,20 +1,20 @@
-import React, { useState } from 'react';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { Plus, Pencil, Trash2, Search, X, Hash, Calendar, CheckCircle2, XCircle } from 'lucide-react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog, DialogContent, DialogDescription, DialogFooter,
+    DialogHeader, DialogTitle, DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    Dialog, DialogContent, DialogDescription, DialogFooter,
-    DialogHeader, DialogTitle, DialogTrigger,
-} from '@/components/ui/dialog';
-import { type BreadcrumbItem } from '@/types';
 import { useConfirmDelete } from '@/contexts/confirm-delete-context';
+import type {BreadcrumbItem} from '@/types';
 
 interface Series {
     id: number;
@@ -71,6 +71,7 @@ export default function SeriesIndex({ series, filters }: Props) {
         const timeout = setTimeout(() => {
             router.get('/billing/series', { search: value }, { preserveState: true, replace: true });
         }, 400);
+
         return () => clearTimeout(timeout);
     };
 
@@ -99,7 +100,10 @@ export default function SeriesIndex({ series, filters }: Props) {
     };
 
     const handleUpdate = () => {
-        if (!editingSeries) return;
+        if (!editingSeries) {
+return;
+}
+
         editForm.put(`/billing/series/${editingSeries.id}`, {
             onSuccess: () => {
                 setEditingSeries(null);

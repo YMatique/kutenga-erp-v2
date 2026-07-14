@@ -1,11 +1,11 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
+import { Loader2, Building2, CheckCircle2, Store, Briefcase, FileText, BarChart3 } from 'lucide-react';
+import AppLogo from '@/components/app-logo';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import InputError from '@/components/input-error';
-import { Loader2, Building2, CheckCircle2, Store, Briefcase, FileText, BarChart3 } from 'lucide-react';
-import AppLogo from '@/components/app-logo';
 import { cn } from '@/lib/utils';
 
 export default function Onboarding({ existingCompany }: { existingCompany?: any }) {

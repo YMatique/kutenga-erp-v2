@@ -1,5 +1,5 @@
-import DocumentShow from '@/pages/billing/shared/document-show';
 import AppLayout from '@/layouts/app-layout';
+import DocumentShow from '@/pages/billing/shared/document-show';
 
 export default function CreditNotesShow({ document, ...props }: any) {
     return (
@@ -16,6 +16,7 @@ export default function CreditNotesShow({ document, ...props }: any) {
 CreditNotesShow.layout = (page: any) => {
     const doc = page.props?.document;
     const label = doc?.document_number || 'Rascunho';
+
     return (
         <AppLayout breadcrumbs={[
             { title: 'Faturação', href: '#' },

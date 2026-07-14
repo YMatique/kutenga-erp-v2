@@ -14,10 +14,46 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $companyId = auth()->user()->company_id;
+        $query = Product::with(['category', 'unit', 'brand'])
+            ->withSum('stocks as total_stock', 'quantity')
+            ->where('company_id', $companyId);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        $products = $query->latest()->paginate(15)->withQueryString();
+
+        // Calculate statistics over all company products
+        $allProducts = Product::where('company_id', $companyId)
+            ->withSum('stocks as total_stock', 'quantity')
+            ->get();
+
+        $stats = [
+            'total_items' => $allProducts->count(),
+            'total_products' => $allProducts->where('type', 'product')->count(),
+            'total_services' => $allProducts->where('type', 'service')->count(),
+            'low_stock' => $allProducts->filter(function ($p) {
+                return $p->track_stock && ($p->total_stock ?? 0) <= $p->min_stock && ($p->total_stock ?? 0) > 0;
+            })->count(),
+            'out_of_stock' => $allProducts->filter(function ($p) {
+                return $p->track_stock && ($p->total_stock ?? 0) <= 0;
+            })->count(),
+        ];
+
         return Inertia::render('products/index', [
-            'products' => Product::with(['category', 'unit', 'brand'])->get(),
+            'products' => $products,
+            'stats' => $stats,
+            'filters' => [
+                'search' => $request->search,
+            ],
         ]);
     }
 

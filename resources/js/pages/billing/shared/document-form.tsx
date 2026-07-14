@@ -1,16 +1,16 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import { Plus, Trash2, Save, ReceiptText, AlertCircle, PackageSearch, User } from 'lucide-react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
     Select, SelectContent, SelectItem,
     SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Customer {
     id: number;
@@ -103,6 +103,7 @@ function today(): string {
 function addDays(dateStr: string, days: number): string {
     const d = new Date(dateStr);
     d.setDate(d.getDate() + days);
+
     return d.toISOString().split('T')[0];
 }
 
@@ -132,7 +133,11 @@ function ItemRow({ item, index, products, onChange, onRemove, type, maxQuantity,
 
     const handleProductSelect = (productId: string) => {
         const p = products.find((p) => p.id.toString() === productId);
-        if (!p) return;
+
+        if (!p) {
+return;
+}
+
         onChange(index, 'product_id', productId);
         onChange(index, 'product_name', p.name);
         onChange(index, 'product_sku', p.sku ?? '');
@@ -183,9 +188,11 @@ function ItemRow({ item, index, products, onChange, onRemove, type, maxQuantity,
                 <Input type="number" min="0.001" step="0.001" className="h-8 text-sm text-right"
                     value={item.quantity} onChange={(e) => {
                         let val = parseFloat(e.target.value) || 0;
+
                         if (type === 'NC' && maxQuantity !== undefined && val > maxQuantity) {
                             val = maxQuantity;
                         }
+
                         onChange(index, 'quantity', val);
                     }} />
                 {type === 'NC' && maxQuantity !== undefined && (
@@ -258,6 +265,7 @@ export default function DocumentForm({ customers, products, series, type, docume
 
     const handleInvoiceSelect = useCallback((invoiceId: string) => {
         const inv = invoices?.find((i) => i.id.toString() === invoiceId);
+
         if (inv) {
             setData((prev) => ({
                 ...prev,
@@ -287,6 +295,7 @@ export default function DocumentForm({ customers, products, series, type, docume
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const refId = params.get('referenced_document_id');
+
         if (refId && invoices && invoices.length > 0 && !data.referenced_document_id) {
             handleInvoiceSelect(refId);
         }
@@ -300,6 +309,7 @@ export default function DocumentForm({ customers, products, series, type, docume
 
     const handleCustomerChange = useCallback((customerId: string) => {
         const c = customers.find((c) => c.id.toString() === customerId);
+
         if (c) {
             setData((prev) => ({
                 ...prev,
@@ -339,6 +349,7 @@ export default function DocumentForm({ customers, products, series, type, docume
                 const lineDiscount = type === 'CT' ? 0 : lineSubtotal * (item.discount_percent / 100);
                 const lineTaxable = lineSubtotal - lineDiscount;
                 const lineTax = lineTaxable * (item.tax_rate / 100);
+
                 return {
                     subtotal: acc.subtotal + lineSubtotal,
                     discount: acc.discount + lineDiscount,
@@ -587,6 +598,7 @@ export default function DocumentForm({ customers, products, series, type, docume
                                             const maxQty = type === 'NC' && refInvoice && refInvoice.items[index]
                                                 ? parseFloat(refInvoice.items[index].quantity)
                                                 : undefined;
+
                                             return (
                                                 <ItemRow
                                                     key={index}

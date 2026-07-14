@@ -1,10 +1,10 @@
-import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import { Package2 } from 'lucide-react';
+import { useState } from 'react';
 import { PageHeader } from '@/components/ui/brand';
 import { Label } from '@/components/ui/label';
+import AppLayout from '@/layouts/app-layout';
 
 interface Product {
     id: number;

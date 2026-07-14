@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import {
     ReceiptText, CheckCircle2, Clock, Ban, ArrowLeft,
@@ -6,23 +5,26 @@ import {
     Warehouse as WarehouseIcon, Printer, Plus, History,
     FileDown, Mail,
 } from 'lucide-react';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    Select, SelectContent, SelectItem,
-    SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import {
-    Table, TableBody, TableCell, TableHead,
-    TableHeader, TableRow, TableFooter,
-} from '@/components/ui/table';
 import {
     Dialog, DialogContent, DialogDescription, DialogFooter,
     DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select, SelectContent, SelectItem,
+    SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import {
+    Table, TableBody, TableCell, TableHead,
+    TableHeader, TableRow, TableFooter,
+} from '@/components/ui/table';
+import { useConfirmDelete } from '@/contexts/confirm-delete-context';
 
 interface DocumentItem {
     id: number;
@@ -113,19 +115,30 @@ function fmt(n: number | string): string {
 }
 
 function formatDate(dateStr: string | null | undefined): string {
-    if (!dateStr) return '—';
+    if (!dateStr) {
+return '—';
+}
+
     try {
         const cleanDateStr = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
         const parts = cleanDateStr.split('-');
+
         if (parts.length === 3) {
             const [year, month, day] = parts;
+
             return `${day}/${month}/${year}`;
         }
+
         const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return dateStr;
+
+        if (isNaN(date.getTime())) {
+return dateStr;
+}
+
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
+
         return `${day}/${month}/${year}`;
     } catch {
         return dateStr;
@@ -141,6 +154,7 @@ export default function DocumentShow({
     cancelRoute,
     receivePaymentRoute,
 }: Props) {
+    const { confirmDelete } = useConfirmDelete();
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const [isEmailOpen, setIsEmailOpen] = useState(false);
 
@@ -159,21 +173,33 @@ export default function DocumentShow({
     const handleConfirm = () => confirmForm.post(confirmRoute);
 
     const handleCancel = () => {
-        if (window.confirm('Tem a certeza que pretende cancelar este documento? Esta ação reverterá stock e saldos correspondentes.')) {
-            cancelForm.post(cancelRoute);
-        }
+        confirmDelete({
+            url: cancelRoute,
+            title: 'Cancelar Documento',
+            description: 'Tem a certeza que pretende cancelar este documento? Esta ação reverterá stock e saldos correspondentes.',
+            onSuccess: () => toast.success('Documento cancelado com sucesso!'),
+            method: 'post',
+            confirmLabel: 'Confirmar Cancelamento',
+        });
     };
 
     const handleRegisterPayment = () => {
-        if (!receivePaymentRoute) return;
+        if (!receivePaymentRoute) {
+return;
+}
+
         paymentForm.post(receivePaymentRoute, {
-            onSuccess: () => { setIsPaymentOpen(false); paymentForm.reset('reference'); },
+            onSuccess: () => {
+ setIsPaymentOpen(false); paymentForm.reset('reference'); 
+},
         });
     };
 
     const handleSendEmail = () => {
         emailForm.post(`/billing/documents/${doc.id}/send-email`, {
-            onSuccess: () => { setIsEmailOpen(false); },
+            onSuccess: () => {
+ setIsEmailOpen(false); 
+},
         });
     };
 

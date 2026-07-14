@@ -1,5 +1,4 @@
-import { Head, usePage, Link } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
+import { Head, usePage, Link, router } from '@inertiajs/react';
 import {
     Plus,
     Search,
@@ -12,7 +11,13 @@ import {
     Trash2,
     Edit,
     PackageOpen,
+    AlertCircle,
+    ShoppingBag,
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { PageHeader, TableCard, PrimaryButton, StockBadge, KpiCard } from '@/components/ui/brand';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -21,6 +26,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import {
     Table,
     TableBody,
@@ -29,13 +35,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { PageHeader, TableCard, PrimaryButton, StockBadge } from '@/components/ui/brand';
-import { cn } from '@/lib/utils';
-import { useState } from 'react';
-import { toast } from 'sonner';
 import { useConfirmDelete } from '@/contexts/confirm-delete-context';
+import { cn } from '@/lib/utils';
 
 interface Category {
     id: number;
@@ -69,14 +70,30 @@ interface Product {
     brand: Brand | null;
 }
 
-export default function ProductsIndex() {
-    const { products } = usePage<{ products: Product[] }>().props;
-    const [search, setSearch] = useState('');
+interface PaginatedProducts {
+    data: Product[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+}
 
-    const filteredProducts = products.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.sku?.toLowerCase().includes(search.toLowerCase())
-    );
+export default function ProductsIndex() {
+    const { products, stats, filters } = usePage<{ products: PaginatedProducts; stats: any; filters: any }>().props;
+    const [search, setSearch] = useState(filters?.search || '');
+
+    // Debounced search to query backend
+    useEffect(() => {
+        if (search === (filters?.search || '')) {
+return;
+}
+
+        const t = setTimeout(() => {
+            router.get('/products', { search }, { preserveState: true, replace: true });
+        }, 400);
+
+        return () => clearTimeout(t);
+    }, [search, filters?.search]);
 
     const { confirmDelete } = useConfirmDelete();
 
@@ -91,6 +108,7 @@ export default function ProductsIndex() {
 
     const formatCurrency = (value: string) => {
         const numeric = parseFloat(value) || 0;
+
         return new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(numeric);
     };
 
@@ -98,7 +116,7 @@ export default function ProductsIndex() {
         <>
             <Head title="Catálogo de Itens" />
 
-            <div className=" space-y-4 bg-slate-50">
+            <div className="space-y-4 bg-slate-50">
                 {/* PAGE HEADER */}
                 <PageHeader
                     title="Catálogo de Itens"
@@ -113,6 +131,44 @@ export default function ProductsIndex() {
                     }
                 />
 
+                {/* STATS CARDS */}
+                {stats && (
+                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                        <KpiCard
+                            label="Total de Itens"
+                            value={stats.total_items}
+                            icon={<ShoppingBag className="h-4 w-4" />}
+                            accent="slate"
+                        />
+                        <KpiCard
+                            label="Produtos Físicos"
+                            value={stats.total_products}
+                            icon={<Package className="h-4 w-4" />}
+                            accent="teal"
+                        />
+                        <KpiCard
+                            label="Serviços"
+                            value={stats.total_services}
+                            icon={<Wrench className="h-4 w-4" />}
+                            accent="slate"
+                        />
+                        <KpiCard
+                            label="Stock Baixo"
+                            value={stats.low_stock}
+                            icon={<AlertCircle className="h-4 w-4" />}
+                            accent="gold"
+                            description="precisam de reposição"
+                        />
+                        <KpiCard
+                            label="Stock Zerado"
+                            value={stats.out_of_stock}
+                            icon={<AlertCircle className="h-4 w-4" />}
+                            accent="red"
+                            description="estoque esgotado"
+                        />
+                    </div>
+                )}
+
                 {/* SEARCH BAR */}
                 <div className="flex items-center gap-3">
                     <div className="relative flex-1 max-w-sm">
@@ -125,7 +181,7 @@ export default function ProductsIndex() {
                         />
                     </div>
                     <span className="text-xs text-slate-400 font-medium">
-                        {filteredProducts.length} ite{filteredProducts.length !== 1 ? 'ns' : 'm'}
+                        {products.total} ite{products.total !== 1 ? 'ns' : 'm'}
                     </span>
                 </div>
 
@@ -159,7 +215,7 @@ export default function ProductsIndex() {
                         </TableHeader>
 
                         <TableBody>
-                            {filteredProducts.length === 0 ? (
+                            {products.data.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={7} className="h-52 text-center">
                                         <div className="flex flex-col items-center justify-center gap-3">
@@ -174,7 +230,7 @@ export default function ProductsIndex() {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                filteredProducts.map((product) => (
+                                products.data.map((product) => (
                                     <TableRow
                                         key={product.id}
                                         className="hover:bg-slate-50/50 transition-colors border-b border-slate-100"
@@ -321,17 +377,42 @@ export default function ProductsIndex() {
                             )}
                         </TableBody>
                     </Table>
+
+                    {/* Pagination */}
+                    {products.last_page > 1 && (
+                        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-white">
+                            <p className="text-xs text-slate-500">
+                                Página {products.current_page} de {products.last_page} · {products.total} registos
+                            </p>
+                            <div className="flex gap-1">
+                                {products.links.map((link, i) => (
+                                    <button
+                                        key={i}
+                                        disabled={!link.url}
+                                        onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
+                                        className={cn(
+                                            'px-3 py-1.5 text-xs rounded-[4px] border transition-colors',
+                                            link.active
+                                                ? 'bg-[#2DB8A0] text-white border-transparent font-medium'
+                                                : !link.url
+                                                ? 'text-slate-300 border-transparent cursor-not-allowed'
+                                                : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                                        )}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </TableCard>
             </div>
         </>
     );
 }
 
-ProductsIndex.layout = (page: any) => (
-    <AppLayout breadcrumbs={[
+ProductsIndex.layout = {
+    breadcrumbs: [
         { title: 'Catálogo', href: '#' },
         { title: 'Produtos e Serviços', href: '/products' },
-    ]}>
-        {page}
-    </AppLayout>
-);
+    ],
+};

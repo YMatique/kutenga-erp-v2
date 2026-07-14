@@ -1,13 +1,13 @@
 import { useForm, usePage } from '@inertiajs/react'
 import { useState } from 'react'
-import AppLayout from '@/layouts/app-layout';
 
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import AppLayout from '@/layouts/app-layout';
 
 export default function CreateTransfer() {
 
@@ -24,7 +24,9 @@ const { warehouses = [], products = [] }: any = usePage().props
     const [quantity, setQuantity] = useState(1)
 
     function addItem() {
-        if (!productId || quantity <= 0) return
+        if (!productId || quantity <= 0) {
+return
+}
 
         const product = products.find((p: any) => p.id == productId)
 

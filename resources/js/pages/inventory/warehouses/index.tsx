@@ -1,6 +1,4 @@
-import { useState } from 'react'
 import { Head, Link, usePage } from '@inertiajs/react'
-import AppLayout from '@/layouts/app-layout';
 import {
     Warehouse,
     MapPin,
@@ -12,7 +10,7 @@ import {
     Star,
     Eye,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { useState } from 'react'
 import {
     PageHeader,
     TableCard,
@@ -20,6 +18,8 @@ import {
     OutlineButton,
     KpiCard,
 } from '@/components/ui/brand'
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

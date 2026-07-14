@@ -1,5 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import { useState } from 'react';
 import {
     ShoppingCart,
     Package,
@@ -20,10 +19,11 @@ import {
     Receipt,
     Percent
 } from 'lucide-react';
+import { useState } from 'react';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 
 // --- MOCK DATA FOR SIMULATORS ---
 const initialPOSProducts = [
@@ -69,13 +69,21 @@ export default function Landing() {
 
     // POS logic
     const addToCart = (product: typeof initialPOSProducts[0]) => {
-        if (product.stock <= 0) return;
+        if (product.stock <= 0) {
+return;
+}
+
         setCart(prev => {
             const existing = prev.find(item => item.product.id === product.id);
+
             if (existing) {
-                if (existing.qty >= product.stock) return prev;
+                if (existing.qty >= product.stock) {
+return prev;
+}
+
                 return prev.map(item => item.product.id === product.id ? { ...item, qty: item.qty + 1 } : item);
             }
+
             return [...prev, { product, qty: 1 }];
         });
         setReceipt(null);
@@ -86,14 +94,18 @@ export default function Landing() {
     };
 
     const handleCheckout = () => {
-        if (cart.length === 0) return;
+        if (cart.length === 0) {
+return;
+}
 
         // Deduct stock
         setPosProducts(prev => prev.map(p => {
             const cartItem = cart.find(c => c.product.id === p.id);
+
             if (cartItem) {
                 return { ...p, stock: Math.max(0, p.stock - cartItem.qty) };
             }
+
             return p;
         }));
 
@@ -127,16 +139,25 @@ export default function Landing() {
     // Stock logic
     const handleStockAdjust = () => {
         const qty = parseInt(adjustQty, 10);
-        if (isNaN(qty)) return;
+
+        if (isNaN(qty)) {
+return;
+}
 
         setStockItems(prev => prev.map(item => {
             if (item.id === selectedStockId) {
                 const newQty = Math.max(0, item.qty + qty);
                 let status: 'in_stock' | 'low' | 'out_of_stock' = 'in_stock';
-                if (newQty === 0) status = 'out_of_stock';
-                else if (newQty < 15) status = 'low';
+
+                if (newQty === 0) {
+status = 'out_of_stock';
+} else if (newQty < 15) {
+status = 'low';
+}
+
                 return { ...item, qty: newQty, status };
             }
+
             return item;
         }));
 
@@ -148,9 +169,16 @@ export default function Landing() {
     // Billing logic
     const handleAddInvoice = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newInvCustomer || !newInvTotal) return;
+
+        if (!newInvCustomer || !newInvTotal) {
+return;
+}
+
         const totalVal = parseFloat(newInvTotal);
-        if (isNaN(totalVal)) return;
+
+        if (isNaN(totalVal)) {
+return;
+}
 
         const newId = `FT 2026/${Math.floor(1015 + Math.random() * 9000)}`;
         const newDoc = {
@@ -169,7 +197,10 @@ export default function Landing() {
     };
 
     const filteredInvoices = invoices.filter(inv => {
-        if (filterStatus === 'Todos') return true;
+        if (filterStatus === 'Todos') {
+return true;
+}
+
         return inv.status === filterStatus;
     });
 

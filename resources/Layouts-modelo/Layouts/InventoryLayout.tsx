@@ -1,16 +1,17 @@
-import { InventorySidebar } from '../Components/InventorySidebar';
+import { usePage } from '@inertiajs/react';
+import {  useState, useEffect } from 'react';
+import type {PropsWithChildren} from 'react';
+import { toast } from 'sonner';
+import { Toaster } from '@/components/ui/sonner';
+import { cn } from '@/lib/utils';
+import type {BreadcrumbItem} from '@/types';
 import { InventoryHeader } from '../Components/InventoryHeader';
+import { InventorySidebar } from '../Components/InventorySidebar';
+import { InventoryLayoutProvider, useInventoryLayout } from '../Contexts/InventoryLayoutContext';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { ImpersonationBanner } from '@/components/impersonation-banner';
 import { OnboardingBanner } from '@/components/onboarding-banner';
-import { type BreadcrumbItem } from '@/types';
-import { type PropsWithChildren, useState, useEffect } from 'react';
-import { ErrorBoundary } from '@/components/error-boundary';
-import { Toaster } from '@/components/ui/sonner';
-import { toast } from 'sonner';
-import { usePage } from '@inertiajs/react';
-import { cn } from '@/lib/utils';
 
-import { InventoryLayoutProvider, useInventoryLayout } from '../Contexts/InventoryLayoutContext';
 
 function InventoryLayoutContent({
     children,
@@ -25,12 +26,15 @@ function InventoryLayoutContent({
         if (props.success) {
             toast.success(props.success);
         }
+
         if (props.error) {
             toast.error(props.error);
         }
+
         if (props.warning) {
             toast.warning(props.warning);
         }
+
         if (props.info) {
             toast.info(props.info);
         }

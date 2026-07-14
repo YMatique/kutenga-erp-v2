@@ -9,9 +9,9 @@ import {
     Warehouse,
     MapPin,
 } from 'lucide-react';
+import { CompanySwitcher } from '@/components/company-switcher';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { CompanySwitcher } from '@/components/company-switcher';
 import {
     Sidebar,
     SidebarContent,
@@ -19,9 +19,9 @@ import {
     SidebarHeader,
     useSidebar,
 } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
-import { cn } from '@/lib/utils';
 
 const mainNavItems: NavItem[] = [
     {

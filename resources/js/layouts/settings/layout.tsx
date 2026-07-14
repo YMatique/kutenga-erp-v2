@@ -1,15 +1,15 @@
 import { Link } from '@inertiajs/react';
+import { User, Shield, Palette, Building2, Users, KeyRound } from 'lucide-react';
 import type { PropsWithChildren } from 'react';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
-import { edit } from '@/routes/profile';
-import { edit as editSecurity } from '@/routes/security';
 import { edit as editCompany } from '@/routes/company-settings';
-import { index as usersIndex } from '@/routes/users';
+import { edit } from '@/routes/profile';
 import { index as rolesIndex } from '@/routes/roles';
+import { edit as editSecurity } from '@/routes/security';
+import { index as usersIndex } from '@/routes/users';
 import type { NavItem } from '@/types';
-import { User, Shield, Palette, Building2, Users, KeyRound } from 'lucide-react';
 
 const sidebarNavItems: NavItem[] = [
     { title: 'Perfil',      href: edit(),           icon: User },
@@ -38,6 +38,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                         <nav aria-label="Definições" className="divide-y divide-slate-100">
                             {sidebarNavItems.map((item, index) => {
                                 const active = isCurrentOrParentUrl(item.href ?? '');
+
                                 return (
                                     <Link
                                         key={`${toUrl(item.href)}-${index}`}

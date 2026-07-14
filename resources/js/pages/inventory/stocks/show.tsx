@@ -1,5 +1,4 @@
 import { Head, Link } from '@inertiajs/react'
-import AppLayout from '@/layouts/app-layout';
 import {
     ArrowLeft,
     Box,
@@ -24,6 +23,7 @@ import {
     KpiCard,
     StockBadge
 } from '@/components/ui/brand'
+import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils'
 
 interface Warehouse {
@@ -79,8 +79,14 @@ function resolveStockStatus(
     qty: number,
     minStock: number,
 ): 'in_stock' | 'low' | 'out_of_stock' {
-    if (qty <= 0) return 'out_of_stock'
-    if (qty <= minStock) return 'low'
+    if (qty <= 0) {
+return 'out_of_stock'
+}
+
+    if (qty <= minStock) {
+return 'low'
+}
+
     return 'in_stock'
 }
 

@@ -1,15 +1,9 @@
 import { Head, usePage, useForm } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import { Plus, Search, Ruler, Edit, Trash2, Hash } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { PageHeader, TableCard, PrimaryButton } from '@/components/ui/brand';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import {
     Dialog,
     DialogContent,
@@ -20,11 +14,17 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PageHeader, TableCard, PrimaryButton } from '@/components/ui/brand';
-import { cn } from '@/lib/utils';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { useConfirmDelete } from '@/contexts/confirm-delete-context';
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 
 interface Unit {
     id: number;
@@ -50,6 +50,7 @@ export default function UnitsIndex() {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+
         if (editingUnit) {
             put(`/units/${editingUnit.id}`, {
                 onSuccess: () => {
