@@ -112,6 +112,26 @@ return prev.map(i => i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i);
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             const target = e.target as HTMLElement;
+
+            // Global shortcuts
+            if (e.key === 'F2') {
+                e.preventDefault();
+                if (cart.length > 0) {
+                    setPayOpen(true);
+                }
+                return;
+            }
+
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                if (payOpen) {
+                    setPayOpen(false);
+                } else if (cart.length > 0) {
+                    setCart([]);
+                }
+                return;
+            }
+
             const isInOtherInput = (
                 (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') &&
                 target !== searchRef.current
@@ -176,7 +196,7 @@ return;
         window.addEventListener('keydown', handleKeyDown);
 
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [products, filtered, addToCart]);
+    }, [products, filtered, addToCart, cart.length, payOpen]);
 
     // ── Classes condicionais por tema ──
     const d = dark; // alias curto

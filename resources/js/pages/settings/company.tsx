@@ -468,13 +468,13 @@ export default function CompanySettings({ company }: { company: any }) {
                             />
 
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50/50">
+                                <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/30">
                                     <div className="space-y-0.5">
                                         <Label className="text-base flex items-center gap-2">
                                             <BellRing className="h-4 w-4 text-[#2DB8A0]" />
                                             Alertas de Stock Baixo por Email
                                         </Label>
-                                        <p className="text-sm text-slate-500">
+                                        <p className="text-sm text-muted-foreground">
                                             Receba um email automático diariamente ou sempre que um produto atingir o limite mínimo de stock.
                                         </p>
                                     </div>
@@ -484,13 +484,13 @@ export default function CompanySettings({ company }: { company: any }) {
                                     />
                                 </div>
 
-                                <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50/50">
+                                <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/30">
                                     <div className="space-y-0.5">
                                         <Label className="text-base flex items-center gap-2">
                                             <BellRing className="h-4 w-4 text-amber-500" />
                                             Notificações de Subscrição e Limites
                                         </Label>
-                                        <p className="text-sm text-slate-500">
+                                        <p className="text-sm text-muted-foreground">
                                             Receba alertas de faturamento, expiração de planos e avisos sobre limites de uso atingidos.
                                         </p>
                                     </div>
@@ -500,13 +500,13 @@ export default function CompanySettings({ company }: { company: any }) {
                                     />
                                 </div>
 
-                                <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50/50">
+                                <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/30">
                                     <div className="space-y-0.5">
                                         <Label className="text-base flex items-center gap-2">
                                             <BellRing className="h-4 w-4 text-blue-500" />
                                             Envio Automático de Documentos ao Cliente
                                         </Label>
-                                        <p className="text-sm text-slate-500">
+                                        <p className="text-sm text-muted-foreground">
                                             Envie automaticamente um email com o PDF da fatura ou recibo ao cliente assim que for confirmada.
                                         </p>
                                     </div>
@@ -516,13 +516,13 @@ export default function CompanySettings({ company }: { company: any }) {
                                     />
                                 </div>
 
-                                <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50/50">
+                                <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/30">
                                     <div className="space-y-0.5">
                                         <Label className="text-base flex items-center gap-2">
                                             <BellRing className="h-4 w-4 text-emerald-500" />
                                             Envio Automático de Confirmação de Pagamento
                                         </Label>
-                                        <p className="text-sm text-slate-500">
+                                        <p className="text-sm text-muted-foreground">
                                             Envie automaticamente uma confirmação de liquidação ao cliente sempre que uma fatura for paga.
                                         </p>
                                     </div>

@@ -204,27 +204,158 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                         </div>
                     </div>
 
-                    <div className="flex items-end justify-between h-48 pt-6 border-b border-slate-100 px-4 md:px-8 gap-4">
-                        {chart_data.map((item, idx) => {
-                            const pct = Math.max(10, (item.value / maxChartValue) * 100);
-                            return (
-                                <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                                    <div className="relative w-full flex justify-center h-full items-end">
-                                        {/* Value tooltip on hover */}
-                                        <span className="absolute -top-6 bg-slate-800 text-white text-[10px] px-2 py-0.5 rounded-[4px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none shadow-sm z-10">
-                                            {formatCurrency(item.value)}
-                                        </span>
-                                        <div
-                                            style={{ height: `${pct}%` }}
-                                            className="w-full sm:w-16 rounded-t-[4px] bg-gradient-to-t from-[#2DB8A0]/90 to-[#2DB8A0]/70 hover:from-[#239B86] hover:to-[#2DB8A0] transition-all duration-300 shadow-xs relative"
+                    <div className="w-full">
+                        <svg viewBox="0 0 600 180" width="100%" height="100%" className="overflow-visible font-sans">
+                            <defs>
+                                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#2DB8A0" stopOpacity="0.25" />
+                                    <stop offset="100%" stopColor="#2DB8A0" stopOpacity="0.0" />
+                                </linearGradient>
+                                <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+                                    <feDropShadow dx="0" dy="4" stdDeviation="3" floodColor="#2DB8A0" floodOpacity="0.25" />
+                                </filter>
+                            </defs>
+
+                            {/* Background Grid Lines and Y-Axis Values */}
+                            {[0, 0.25, 0.5, 0.75, 1.0].map((ratio, idx) => {
+                                const val = maxChartValue * ratio;
+                                const y = 140 - ratio * 110;
+                                return (
+                                    <g key={idx}>
+                                        <line
+                                            x1="60"
+                                            y1={y}
+                                            x2="570"
+                                            y2={y}
+                                            className="stroke-border/30 dark:stroke-border/10"
+                                            strokeDasharray="4 4"
+                                            strokeWidth="1"
                                         />
-                                    </div>
-                                    <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap mt-1">
-                                        {item.label}
-                                    </span>
-                                </div>
-                            );
-                        })}
+                                        <text
+                                            x="50"
+                                            y={y + 3}
+                                            textAnchor="end"
+                                            className="fill-muted-foreground/60 text-[9px] font-mono"
+                                        >
+                                            {ratio === 0 ? '0' : formatCurrency(val).replace(',00', '').replace('MT', '').trim()}
+                                        </text>
+                                    </g>
+                                );
+                            })}
+
+                            {/* Area Gradient under smooth Bézier curve */}
+                            {chart_data.length > 0 && (
+                                <path
+                                    d={(() => {
+                                        const points = chart_data.map((item, idx) => ({
+                                            x: 60 + (idx * 102),
+                                            y: 140 - (item.value / Math.max(maxChartValue, 1)) * 110
+                                        }));
+                                        let d = `M ${points[0].x} ${points[0].y}`;
+                                        for (let i = 0; i < points.length - 1; i++) {
+                                            const p0 = points[i];
+                                            const p1 = points[i + 1];
+                                            const cp1x = p0.x + (p1.x - p0.x) / 3;
+                                            const cp1y = p0.y;
+                                            const cp2x = p0.x + 2 * (p1.x - p0.x) / 3;
+                                            const cp2y = p1.y;
+                                            d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
+                                        }
+                                        return `${d} L ${points[points.length - 1].x} 140 L 60 140 Z`;
+                                    })()}
+                                    fill="url(#areaGradient)"
+                                />
+                            )}
+
+                            {/* Main Stroke Line using smooth Bézier curve */}
+                            {chart_data.length > 0 && (
+                                <path
+                                    d={(() => {
+                                        const points = chart_data.map((item, idx) => ({
+                                            x: 60 + (idx * 102),
+                                            y: 140 - (item.value / Math.max(maxChartValue, 1)) * 110
+                                        }));
+                                        let d = `M ${points[0].x} ${points[0].y}`;
+                                        for (let i = 0; i < points.length - 1; i++) {
+                                            const p0 = points[i];
+                                            const p1 = points[i + 1];
+                                            const cp1x = p0.x + (p1.x - p0.x) / 3;
+                                            const cp1y = p0.y;
+                                            const cp2x = p0.x + 2 * (p1.x - p0.x) / 3;
+                                            const cp2y = p1.y;
+                                            d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
+                                        }
+                                        return d;
+                                    })()}
+                                    fill="none"
+                                    stroke="#2DB8A0"
+                                    strokeWidth="3.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    filter="url(#glow)"
+                                />
+                            )}
+
+                            {/* Interactive Circles & Hover Tooltips */}
+                            {chart_data.map((item, idx) => {
+                                const x = 60 + (idx * 102);
+                                const y = 140 - (item.value / Math.max(maxChartValue, 1)) * 110;
+                                return (
+                                    <g key={idx} className="group/point cursor-pointer">
+                                        <circle
+                                            cx={x}
+                                            cy={y}
+                                            r="12"
+                                            fill="transparent"
+                                        />
+                                        <circle
+                                            cx={x}
+                                            cy={y}
+                                            r="4"
+                                            fill="#2DB8A0"
+                                            className="transition-all duration-300 group-hover/point:r-6"
+                                        />
+                                        <circle
+                                            cx={x}
+                                            cy={y}
+                                            r="4"
+                                            fill="#ffffff"
+                                            stroke="#2DB8A0"
+                                            strokeWidth="2.5"
+                                            className="transition-all duration-300 group-hover/point:r-5"
+                                        />
+                                        {/* Label text */}
+                                        <text
+                                            x={x}
+                                            y="162"
+                                            textAnchor="middle"
+                                            className="fill-muted-foreground text-[10px] font-semibold"
+                                        >
+                                            {item.label}
+                                        </text>
+                                        {/* Floating tooltip */}
+                                        <g className="opacity-0 group-hover/point:opacity-100 transition-opacity duration-200 pointer-events-none z-30">
+                                            <rect
+                                                x={x - 55}
+                                                y={y - 32}
+                                                width="110"
+                                                height="22"
+                                                rx="4"
+                                                className="fill-slate-900 dark:fill-slate-800 stroke-border shadow-md"
+                                            />
+                                            <text
+                                                x={x}
+                                                y={y - 18}
+                                                textAnchor="middle"
+                                                className="fill-white text-[9px] font-bold"
+                                            >
+                                                {formatCurrency(item.value)}
+                                            </text>
+                                        </g>
+                                    </g>
+                                );
+                            })}
+                        </svg>
                     </div>
                 </div>
 

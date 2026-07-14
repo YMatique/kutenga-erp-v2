@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { History, Search, X, ShieldAlert } from 'lucide-react';
+import { Search, X, ShieldAlert, Eye, Calendar, Settings2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { PageHeader, TableCard, OutlineButton } from '@/components/ui/brand';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,10 @@ import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import type {BreadcrumbItem} from '@/types';
+import type { BreadcrumbItem } from '@/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import AppLayout from '@/layouts/app-layout';
 
 export interface PaginatedData<T> {
     data: T[];
@@ -33,7 +36,13 @@ export interface Activity {
 
 interface Props {
     activities: PaginatedData<Activity>;
-    filters?: { search?: string };
+    filters?: {
+        search?: string;
+        action?: string;
+        subject?: string;
+        date_start?: string;
+        date_end?: string;
+    };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -43,48 +52,64 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function Audits({ activities, filters }: Props) {
     const [search, setSearch] = useState(filters?.search ?? '');
+    const [action, setAction] = useState(filters?.action ?? 'all');
+    const [subject, setSubject] = useState(filters?.subject ?? 'all');
+    const [dateStart, setDateStart] = useState(filters?.date_start ?? '');
+    const [dateEnd, setDateEnd] = useState(filters?.date_end ?? '');
 
-    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setSearch(value);
-        const timeout = setTimeout(() => {
-            router.get('/settings/audits', { search: value }, { preserveState: true, replace: true });
-        }, 400);
+    const [selectedLog, setSelectedLog] = useState<Activity | null>(null);
+    const [detailOpen, setDetailOpen] = useState(false);
 
-        return () => clearTimeout(timeout);
+    const handleFilter = () => {
+        const params: any = {};
+        if (search) params.search = search;
+        if (action && action !== 'all') params.action = action;
+        if (subject && subject !== 'all') params.subject = subject;
+        if (dateStart) params.date_start = dateStart;
+        if (dateEnd) params.date_end = dateEnd;
+        router.get('/settings/audits', params, { preserveState: true });
     };
 
-    const clearSearch = () => {
+    const handleReset = () => {
         setSearch('');
-        router.get('/settings/audits', {}, { preserveState: false });
+        setAction('all');
+        setSubject('all');
+        setDateStart('');
+        setDateEnd('');
+        router.get('/settings/audits', {});
+    };
+
+    const openDetails = (log: Activity) => {
+        setSelectedLog(log);
+        setDetailOpen(true);
     };
 
     const getActionBadge = (description: string) => {
         switch (description) {
             case 'created':
                 return (
-                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px] bg-green-100 text-green-700">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px] bg-green-500/10 text-green-600 dark:text-green-400">
                         <span className="h-1.5 w-1.5 rounded-full bg-green-500 flex-shrink-0" />
                         Criado
                     </span>
                 );
             case 'updated':
                 return (
-                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px] bg-blue-100 text-blue-700">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px] bg-blue-500/10 text-blue-600 dark:text-blue-400">
                         <span className="h-1.5 w-1.5 rounded-full bg-blue-500 flex-shrink-0" />
                         Atualizado
                     </span>
                 );
             case 'deleted':
                 return (
-                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px] bg-red-100 text-red-700">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px] bg-red-500/10 text-red-600 dark:text-red-400">
                         <span className="h-1.5 w-1.5 rounded-full bg-red-500 flex-shrink-0" />
                         Eliminado
                     </span>
                 );
             default:
                 return (
-                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px] bg-slate-100 text-slate-700">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px] bg-muted text-muted-foreground">
                         <span className="h-1.5 w-1.5 rounded-full bg-slate-500 flex-shrink-0" />
                         {description}
                     </span>
@@ -99,125 +124,200 @@ export default function Audits({ activities, filters }: Props) {
             case 'Product': return 'Produto';
             case 'Document': return 'Documento';
             case 'Invoice': return 'Fatura';
+            case 'StockAdjustment': return 'Ajuste de Stock';
+            case 'StockTransfer': return 'Transferência';
+            case 'Warehouse': return 'Armazém';
             default: return type;
         }
+    };
+
+    const formatValue = (val: any) => {
+        if (val === null || val === undefined) return '—';
+        if (typeof val === 'boolean') return val ? 'Sim' : 'Não';
+        if (typeof val === 'object') return JSON.stringify(val);
+        return String(val);
     };
 
     return (
         <>
             <Head title="Auditoria" />
 
-            <div className=" space-y-4 bg-slate-50 ">
+            <div className="space-y-4">
                 <PageHeader
                     title="Auditoria de Sistema"
                     subtitle="Histórico completo de todas as ações realizadas pelos utilizadores no sistema."
                 />
 
                 {/* FILTERS BAR */}
-                <div className="flex items-center gap-3">
-                    <div className="relative flex-1 max-w-sm">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <Input
-                            className="pl-9 bg-white border-slate-200 rounded-[4px] h-9 text-sm focus-visible:ring-[#2DB8A0]/30"
-                            placeholder="Pesquisar logs..."
-                            value={search}
-                            onChange={handleSearch}
-                        />
+                <div className="flex flex-col gap-4 bg-card border border-border p-4 rounded-[4px] shadow-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                        {/* Termo de Pesquisa */}
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                className="pl-9 h-9 text-sm rounded-[4px] border-border bg-card text-foreground"
+                                placeholder="Pesquisar logs..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Ação */}
+                        <Select value={action} onValueChange={setAction}>
+                            <SelectTrigger className="h-9 rounded-[4px] border-border bg-card text-foreground">
+                                <SelectValue placeholder="Todas as ações" />
+                            </SelectTrigger>
+                            <SelectContent className="border-border bg-card text-foreground">
+                                <SelectItem value="all">Todas as ações</SelectItem>
+                                <SelectItem value="created">Criado</SelectItem>
+                                <SelectItem value="updated">Atualizado</SelectItem>
+                                <SelectItem value="deleted">Eliminado</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {/* Tipo de Registo */}
+                        <Select value={subject} onValueChange={setSubject}>
+                            <SelectTrigger className="h-9 rounded-[4px] border-border bg-card text-foreground">
+                                <SelectValue placeholder="Todos os registos" />
+                            </SelectTrigger>
+                            <SelectContent className="border-border bg-card text-foreground">
+                                <SelectItem value="all">Todos os registos</SelectItem>
+                                <SelectItem value="User">Utilizadores</SelectItem>
+                                <SelectItem value="Customer">Clientes</SelectItem>
+                                <SelectItem value="Product">Produtos</SelectItem>
+                                <SelectItem value="Document">Faturas/Cotações</SelectItem>
+                                <SelectItem value="StockAdjustment">Ajustes de Stock</SelectItem>
+                                <SelectItem value="StockTransfer">Transferências</SelectItem>
+                                <SelectItem value="Warehouse">Armazéns</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {/* Data Início */}
+                        <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <Input
+                                type="date"
+                                className="h-9 text-xs rounded-[4px] border-border bg-card text-foreground"
+                                value={dateStart}
+                                onChange={(e) => setDateStart(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Data Fim */}
+                        <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <Input
+                                type="date"
+                                className="h-9 text-xs rounded-[4px] border-border bg-card text-foreground"
+                                value={dateEnd}
+                                onChange={(e) => setDateEnd(e.target.value)}
+                            />
+                        </div>
                     </div>
-                    {filters?.search && (
-                        <OutlineButton onClick={clearSearch}>
-                            <X className="h-3.5 w-3.5" />
-                            Limpar
-                        </OutlineButton>
-                    )}
-                    <span className="text-xs text-slate-400 font-medium ml-auto">
-                        {activities.total} registo{activities.total !== 1 ? 's' : ''}
-                    </span>
+
+                    <div className="flex justify-between items-center border-t border-border pt-3">
+                        <span className="text-xs text-muted-foreground font-medium">
+                            {activities.total} registo{activities.total !== 1 ? 's' : ''} encontrado{activities.total !== 1 ? 's' : ''}
+                        </span>
+                        <div className="flex gap-2">
+                            {(search || action !== 'all' || subject !== 'all' || dateStart || dateEnd) && (
+                                <OutlineButton onClick={handleReset} className="h-9 px-3">
+                                    <X className="h-3.5 w-3.5 mr-1" />
+                                    Limpar Filtros
+                                </OutlineButton>
+                            )}
+                            <button
+                                onClick={handleFilter}
+                                className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold justify-center bg-[#2DB8A0] hover:bg-[#239B86] text-white rounded-[4px] transition-colors"
+                            >
+                                <Settings2 className="h-3.5 w-3.5" />
+                                Filtrar Resultados
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* TABLE CARD */}
                 <TableCard>
                     {activities.data.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 gap-3">
-                            <div className="h-12 w-12 rounded-[4px] bg-slate-100 flex items-center justify-center">
-                                <ShieldAlert className="h-6 w-6 text-slate-400" />
+                            <div className="h-12 w-12 rounded-[4px] bg-muted flex items-center justify-center border border-border">
+                                <ShieldAlert className="h-6 w-6 text-muted-foreground" />
                             </div>
                             <div className="text-center">
-                                <p className="text-sm font-medium text-slate-600">Nenhuma atividade registada</p>
-                                <p className="text-xs text-slate-400 mt-0.5">As ações dos utilizadores aparecerão aqui.</p>
+                                <p className="text-sm font-medium text-foreground">Nenhuma atividade registada</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">As ações dos utilizadores aparecerão aqui.</p>
                             </div>
                         </div>
                     ) : (
                         <>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="bg-slate-50 border-b border-slate-100 hover:bg-slate-50">
-                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">
-                                            Data / Hora
-                                        </TableHead>
-                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">
-                                            Utilizador
-                                        </TableHead>
-                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">
-                                            Ação
-                                        </TableHead>
-                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">
-                                            Registo Afetado
-                                        </TableHead>
-                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold text-right">
-                                            Detalhes
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {activities.data.map((log: Activity) => (
-                                        <TableRow
-                                            key={log.id}
-                                            className="hover:bg-slate-50/50 transition-colors border-b border-slate-100"
-                                        >
-                                            <TableCell className="py-3">
-                                                <div className="font-medium text-sm text-slate-900">{log.created_at}</div>
-                                                <div className="text-[10px] font-mono text-slate-400 mt-0.5 uppercase tracking-wider">{log.created_at_human}</div>
-                                            </TableCell>
-                                            
-                                            <TableCell>
-                                                <div className="font-medium text-sm text-slate-700">{log.causer_name}</div>
-                                                {log.causer_email && <div className="text-xs text-slate-500">{log.causer_email}</div>}
-                                            </TableCell>
-                                            
-                                            <TableCell>
-                                                {getActionBadge(log.description)}
-                                            </TableCell>
-                                            
-                                            <TableCell>
-                                                <span className="font-semibold text-sm text-slate-700">
-                                                    {getSubjectName(log.subject_type)}
-                                                </span>
-                                                <span className="text-xs text-slate-400 ml-1 font-mono">#{log.subject_id}</span>
-                                            </TableCell>
-                                            
-                                            <TableCell className="text-right">
-                                                <span className="text-xs text-slate-500">
-                                                    {log.properties?.old && Object.keys(log.properties.old).length > 0 ? (
-                                                        <span className="inline-flex items-center gap-1">
-                                                            Alterou <strong className="text-slate-700">{Object.keys(log.properties.old).length}</strong> campos
-                                                        </span>
-                                                    ) : log.description === 'created' ? (
-                                                        'Criação original'
-                                                    ) : (
-                                                        'Sem detalhes'
-                                                    )}
-                                                </span>
-                                            </TableCell>
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="bg-muted/50 border-b border-border hover:bg-muted/50">
+                                            <TableHead className="uppercase text-[10px] tracking-wider text-muted-foreground font-semibold">
+                                                Data / Hora
+                                            </TableHead>
+                                            <TableHead className="uppercase text-[10px] tracking-wider text-muted-foreground font-semibold">
+                                                Utilizador
+                                            </TableHead>
+                                            <TableHead className="uppercase text-[10px] tracking-wider text-muted-foreground font-semibold">
+                                                Ação
+                                            </TableHead>
+                                            <TableHead className="uppercase text-[10px] tracking-wider text-muted-foreground font-semibold">
+                                                Registo Afetado
+                                            </TableHead>
+                                            <TableHead className="uppercase text-[10px] tracking-wider text-muted-foreground font-semibold text-right">
+                                                Ações
+                                            </TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody className="divide-y divide-border">
+                                        {activities.data.map((log: Activity) => (
+                                            <TableRow
+                                                key={log.id}
+                                                className="hover:bg-muted/50 transition-colors border-b border-border"
+                                            >
+                                                <TableCell className="py-3">
+                                                    <div className="font-medium text-sm text-foreground">{log.created_at}</div>
+                                                    <div className="text-[10px] font-mono text-muted-foreground mt-0.5 uppercase tracking-wider">{log.created_at_human}</div>
+                                                </TableCell>
+
+                                                <TableCell>
+                                                    <div className="font-medium text-sm text-foreground">{log.causer_name}</div>
+                                                    {log.causer_email && <div className="text-xs text-muted-foreground">{log.causer_email}</div>}
+                                                </TableCell>
+
+                                                <TableCell>
+                                                    {getActionBadge(log.description)}
+                                                </TableCell>
+
+                                                <TableCell>
+                                                    <span className="font-semibold text-sm text-foreground">
+                                                        {getSubjectName(log.subject_type)}
+                                                    </span>
+                                                    <span className="text-xs text-muted-foreground ml-1 font-mono">#{log.subject_id}</span>
+                                                </TableCell>
+
+                                                <TableCell className="text-right">
+                                                    <OutlineButton
+                                                        className="h-8 px-2.5 text-xs inline-flex items-center gap-1.5"
+                                                        onClick={() => openDetails(log)}
+                                                    >
+                                                        <Eye size={12} />
+                                                        Ver Detalhes
+                                                    </OutlineButton>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
 
                             {/* PAGINAÇÃO */}
                             {activities.last_page > 1 && (
-                                <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100">
-                                    <p className="text-xs text-slate-400">
+                                <div className="flex items-center justify-between px-5 py-4 border-t border-border bg-card">
+                                    <p className="text-xs text-muted-foreground">
                                         Página {activities.current_page} de {activities.last_page}
                                     </p>
                                     <div className="flex gap-1">
@@ -231,8 +331,8 @@ export default function Audits({ activities, filters }: Props) {
                                                     link.active
                                                         ? 'bg-[#1A2332] text-white border-transparent font-semibold'
                                                         : !link.url
-                                                            ? 'text-slate-300 border-transparent cursor-not-allowed'
-                                                            : 'border-slate-200 text-slate-600 hover:bg-slate-50 bg-white',
+                                                            ? 'text-muted-foreground/30 border-transparent cursor-not-allowed'
+                                                            : 'border-border text-foreground hover:bg-muted bg-card',
                                                 )}
                                                 dangerouslySetInnerHTML={{ __html: link.label }}
                                             />
@@ -244,10 +344,149 @@ export default function Audits({ activities, filters }: Props) {
                     )}
                 </TableCard>
             </div>
+
+            {/* DETALHES MODAL */}
+            <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto border-border bg-card text-foreground">
+                    <DialogHeader>
+                        <DialogTitle className="text-lg font-bold text-foreground">
+                            Detalhes da Auditoria #{selectedLog?.id}
+                        </DialogTitle>
+                        <DialogDescription className="text-xs text-muted-foreground">
+                            Metadados e mapa de alterações do registo afetado.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {selectedLog && (
+                        <div className="space-y-6 py-2 text-sm text-foreground">
+                            {/* METADATA GRID */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-muted/40 p-4 rounded-[4px] border border-border">
+                                <div>
+                                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide">Data / Hora</p>
+                                    <p className="font-medium mt-0.5">{selectedLog.created_at}</p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">{selectedLog.created_at_human}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide">Operador / Utilizador</p>
+                                    <p className="font-medium mt-0.5">{selectedLog.causer_name}</p>
+                                    {selectedLog.causer_email && <p className="text-xs text-muted-foreground mt-0.5">{selectedLog.causer_email}</p>}
+                                </div>
+                                <div>
+                                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide">Ação</p>
+                                    <p className="mt-0.5">{getActionBadge(selectedLog.description)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide">Registo Afetado</p>
+                                    <p className="font-medium mt-0.5">
+                                        {getSubjectName(selectedLog.subject_type)} <span className="font-mono text-xs text-muted-foreground">#{selectedLog.subject_id}</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* COMPARISON VALUES DIFF */}
+                            <div className="space-y-3">
+                                <h3 className="font-semibold text-foreground text-sm border-b border-border pb-1">Alterações no Registo</h3>
+                                
+                                {selectedLog.description === 'updated' && selectedLog.properties?.old && selectedLog.properties?.attributes ? (
+                                    <div className="border border-border rounded-[4px] overflow-hidden shadow-xs">
+                                        <Table>
+                                            <TableHeader className="bg-muted/40">
+                                                <TableRow className="hover:bg-transparent border-b border-border">
+                                                    <TableHead className="w-[180px] font-semibold text-muted-foreground text-xs uppercase">Campo</TableHead>
+                                                    <TableHead className="font-semibold text-muted-foreground text-xs uppercase">Antes (Velho)</TableHead>
+                                                    <TableHead className="font-semibold text-muted-foreground text-xs uppercase">Depois (Novo)</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody className="divide-y divide-border">
+                                                {Object.keys(selectedLog.properties.attributes).map((key) => {
+                                                    const oldVal = selectedLog.properties.old[key];
+                                                    const newVal = selectedLog.properties.attributes[key];
+                                                    return (
+                                                        <TableRow key={key} className="hover:bg-transparent border-b border-border">
+                                                            <TableCell className="font-mono text-xs font-semibold text-foreground bg-muted/20 py-2">
+                                                                {key}
+                                                            </TableCell>
+                                                            <TableCell className="bg-red-500/5 text-red-600 dark:text-red-400 font-mono text-xs py-2 line-through">
+                                                                {formatValue(oldVal)}
+                                                            </TableCell>
+                                                            <TableCell className="bg-green-500/5 text-green-600 dark:text-green-400 font-mono text-xs py-2 font-semibold">
+                                                                {formatValue(newVal)}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                ) : selectedLog.description === 'created' && selectedLog.properties?.attributes ? (
+                                    <div className="border border-border rounded-[4px] overflow-hidden shadow-xs">
+                                        <Table>
+                                            <TableHeader className="bg-muted/40">
+                                                <TableRow className="hover:bg-transparent border-b border-border">
+                                                    <TableHead className="w-[180px] font-semibold text-muted-foreground text-xs uppercase">Campo</TableHead>
+                                                    <TableHead className="font-semibold text-muted-foreground text-xs uppercase">Valor Inicial</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody className="divide-y divide-border">
+                                                {Object.keys(selectedLog.properties.attributes).map((key) => {
+                                                    const newVal = selectedLog.properties.attributes[key];
+                                                    return (
+                                                        <TableRow key={key} className="hover:bg-transparent border-b border-border">
+                                                            <TableCell className="font-mono text-xs font-semibold text-foreground bg-muted/20 py-2">
+                                                                {key}
+                                                            </TableCell>
+                                                            <TableCell className="bg-green-500/5 text-green-600 dark:text-green-400 font-mono text-xs py-2 font-semibold">
+                                                                {formatValue(newVal)}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                ) : selectedLog.description === 'deleted' && selectedLog.properties?.old ? (
+                                    <div className="border border-border rounded-[4px] overflow-hidden shadow-xs">
+                                        <Table>
+                                            <TableHeader className="bg-muted/40">
+                                                <TableRow className="hover:bg-transparent border-b border-border">
+                                                    <TableHead className="w-[180px] font-semibold text-muted-foreground text-xs uppercase">Campo</TableHead>
+                                                    <TableHead className="font-semibold text-muted-foreground text-xs uppercase">Valor Removido</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody className="divide-y divide-border">
+                                                {Object.keys(selectedLog.properties.old).map((key) => {
+                                                    const oldVal = selectedLog.properties.old[key];
+                                                    return (
+                                                        <TableRow key={key} className="hover:bg-transparent border-b border-border">
+                                                            <TableCell className="font-mono text-xs font-semibold text-foreground bg-muted/20 py-2">
+                                                                {key}
+                                                            </TableCell>
+                                                            <TableCell className="bg-red-500/5 text-red-600 dark:text-red-400 font-mono text-xs py-2 line-through">
+                                                                {formatValue(oldVal)}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-muted-foreground py-4 text-center">Nenhum detalhe adicional registado nas propriedades.</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    <DialogFooter className="border-t border-border pt-4">
+                        <OutlineButton onClick={() => setDetailOpen(false)}>Fechar Detalhes</OutlineButton>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
 
-Audits.layout = {
-    breadcrumbs,
-};
+Audits.layout = (page: any) => (
+    <AppLayout breadcrumbs={breadcrumbs}>
+        {page}
+    </AppLayout>
+);

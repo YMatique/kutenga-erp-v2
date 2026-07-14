@@ -17,11 +17,49 @@ class AuditLogController extends Controller
 
         $companyId = $request->user()->company_id;
 
+        $query = Activity::with(['causer'])
+            ->where('company_id', $companyId);
+
+        // Filter by action
+        if ($request->filled('action')) {
+            $query->where('description', $request->action);
+        }
+
+        // Filter by subject type
+        if ($request->filled('subject')) {
+            $subject = $request->subject;
+            $query->where(function ($q) use ($subject) {
+                $q->where('subject_type', 'like', "%\\{$subject}")
+                  ->orWhere('subject_type', $subject);
+            });
+        }
+
+        // Filter by dates
+        if ($request->filled('date_start')) {
+            $query->whereDate('created_at', '>=', $request->date_start);
+        }
+        if ($request->filled('date_end')) {
+            $query->whereDate('created_at', '<=', $request->date_end);
+        }
+
+        // Filter by search query
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                  ->orWhere('subject_type', 'like', "%{$search}%")
+                  ->orWhere('subject_id', 'like', "%{$search}%")
+                  ->orWhereHas('causer', function ($userQuery) use ($search) {
+                      $userQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
         // Buscar logs com paginação, ordenados do mais recente para o mais antigo
-        $activities = Activity::with(['causer'])
-            ->where('company_id', $companyId)
-            ->latest()
+        $activities = $query->latest()
             ->paginate(15)
+            ->withQueryString()
             ->through(function ($activity) {
                 return [
                     'id' => $activity->id,
@@ -38,7 +76,8 @@ class AuditLogController extends Controller
             });
 
         return Inertia::render('settings/audits', [
-            'activities' => $activities
+            'activities' => $activities,
+            'filters' => $request->only(['search', 'action', 'subject', 'date_start', 'date_end'])
         ]);
     }
 }

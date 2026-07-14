@@ -56,7 +56,7 @@
 - Cada empresa deverá estar subscrita em um determinado plano e consoante a esse plano ter limites de uso;
 - Ter telas de bloquio quando os limites forem atingidos
 
-## Trabalhar nas Telas de Auditoria
+## Trabalhar nas Telas de Auditoria [feito]
 
 ## Onbording [feito]
 - No onbording pedir informações mais completas da empresa, como: NUIT, número de telefone, email, morada, moeda oficial, etc [feito]
