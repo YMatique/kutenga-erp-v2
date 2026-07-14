@@ -45,10 +45,10 @@ interface ShowProps {
 
 function StatusBadge({ status }: { status: Transfer['status'] }) {
     const map: Record<Transfer['status'], { label: string; className: string }> = {
-        pending: { label: 'Pendente', className: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-        approved: { label: 'Aprovado', className: 'bg-blue-50 text-blue-700 border-blue-200' },
-        completed: { label: 'Concluído', className: 'bg-green-50 text-green-700 border-green-200' },
-        cancelled: { label: 'Cancelado', className: 'bg-red-50 text-red-700 border-red-200' },
+        pending: { label: 'Pendente', className: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-200/30' },
+        approved: { label: 'Aprovado', className: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200/30' },
+        completed: { label: 'Concluído', className: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-200/30' },
+        cancelled: { label: 'Cancelado', className: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-200/30' },
     }
 
     const current = map[status]
@@ -74,10 +74,10 @@ export default function Show({ transfer }: ShowProps) {
             <div className="space-y-6  mx-auto">
 
                 {/* HEADER */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-5">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border pb-5">
                     <div>
                         <div className="flex items-center gap-3">
-                            <h1 className="text-2xl font-bold text-slate-900">
+                            <h1 className="text-2xl font-bold text-foreground">
                                 Transferência #{transfer.id}
                             </h1>
                             <StatusBadge status={transfer.status} />
@@ -99,46 +99,46 @@ export default function Show({ transfer }: ShowProps) {
 
                 {/* SUMMARY METRICS */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="flex items-center p-4 gap-4 shadow-sm">
-                        <div className="p-2 bg-slate-100 rounded-lg text-slate-600">
+                    <div className="bg-card border border-border rounded-[4px] flex items-center p-4 gap-4 shadow-xs">
+                        <div className="p-2 bg-muted rounded-lg text-muted-foreground">
                             <Landmark className="h-5 w-5" />
                         </div>
                         <div>
                             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Origem</p>
-                            <p className="font-semibold text-slate-800">{transfer.from_warehouse.name}</p>
+                            <p className="font-semibold text-foreground">{transfer.from_warehouse.name}</p>
                         </div>
-                    </Card>
+                    </div>
 
-                    <Card className="flex items-center p-4 gap-4 shadow-sm">
-                        <div className="p-2 bg-slate-100 rounded-lg text-slate-600">
+                    <div className="bg-card border border-border rounded-[4px] flex items-center p-4 gap-4 shadow-xs">
+                        <div className="p-2 bg-muted rounded-lg text-muted-foreground">
                             <Package className="h-5 w-5" />
                         </div>
                         <div>
                             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Destino</p>
-                            <p className="font-semibold text-slate-800">{transfer.to_warehouse.name}</p>
+                            <p className="font-semibold text-foreground">{transfer.to_warehouse.name}</p>
                         </div>
-                    </Card>
+                    </div>
 
-                    <Card className="flex items-center p-4 gap-4 shadow-sm">
-                        <div className="p-2 bg-slate-100 rounded-lg text-slate-600">
+                    <div className="bg-card border border-border rounded-[4px] flex items-center p-4 gap-4 shadow-xs">
+                        <div className="p-2 bg-muted rounded-lg text-muted-foreground">
                             <Boxes className="h-5 w-5" />
                         </div>
                         <div>
                             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Geral</p>
-                            <p className="font-semibold text-slate-800">
+                            <p className="font-semibold text-foreground">
                                 {totalItems} {totalItems === 1 ? 'item' : 'itens'} / {totalQty} un.
                             </p>
                         </div>
-                    </Card>
+                    </div>
                 </div>
 
                 {/* ITEMS TABLE */}
-                <Card className="shadow-sm overflow-hidden">
-                    <CardHeader className="bg-slate-50/75 border-b py-4">
-                        <CardTitle className="text-base font-semibold text-slate-800">
+                <div className="bg-card border border-border rounded-[4px] shadow-xs overflow-hidden">
+                    <div className="bg-muted/30 border-b border-border px-5 py-4">
+                        <h2 className="text-base font-semibold text-foreground">
                             Produtos da Transferência
-                        </CardTitle>
-                    </CardHeader>
+                        </h2>
+                    </div>
 
                     <Table>
                         <TableHeader>
@@ -158,14 +158,14 @@ export default function Show({ transfer }: ShowProps) {
                                 </TableRow>
                             ) : (
                                 transfer.items.map((i, index) => (
-                                    <TableRow key={i.id} className="hover:bg-slate-50/50">
+                                    <TableRow key={i.id} className="hover:bg-muted/50">
                                         <TableCell className="text-muted-foreground font-mono">
                                             {String(index + 1).padStart(2, '0')}
                                         </TableCell>
-                                        <TableCell className="font-medium text-slate-700">
+                                        <TableCell className="font-medium text-foreground">
                                             {i.product.name}
                                         </TableCell>
-                                        <TableCell className="text-right font-semibold text-slate-900">
+                                        <TableCell className="text-right font-semibold text-foreground">
                                             {i.quantity}
                                         </TableCell>
                                     </TableRow>
@@ -173,7 +173,7 @@ export default function Show({ transfer }: ShowProps) {
                             )}
                         </TableBody>
                     </Table>
-                </Card>
+                </div>
 
                 {/* VISUAL FOOTER ACTIONS */}
                 <div className="flex justify-end gap-3 pt-2">
@@ -194,7 +194,7 @@ export default function Show({ transfer }: ShowProps) {
 
                     {/* APROVAR */}
                     {transfer.status === 'pending' && (
-                        <Button variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50 gap-2" asChild>
+                        <Button variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900/50 dark:hover:bg-blue-950/20 gap-2" asChild>
                             <Link 
                                 href={`/inventory/transfers/${transfer.id}/approve`} 
                                 method="post" 

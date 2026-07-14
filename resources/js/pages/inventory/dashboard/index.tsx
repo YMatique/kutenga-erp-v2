@@ -170,35 +170,35 @@ export default function InventoryDashboard() {
                     {/* Stock por Armazém */}
                     <div className="xl:col-span-2 space-y-4">
                         <TableCard className="overflow-visible">
-                            <div className="px-5 py-4 border-b border-slate-100">
-                                <h2 className="text-sm font-semibold text-slate-900">Stock por Armazém</h2>
+                            <div className="px-5 py-4 border-b border-border">
+                                <h2 className="text-sm font-semibold text-foreground">Stock por Armazém</h2>
                                 <p className="text-xs text-slate-500 mt-0.5">Quantidade por unidade logística</p>
                             </div>
                             <div className="p-4 space-y-2">
                                 {warehouseSummary.length === 0 ? (
-                                    <p className="text-sm text-slate-400 text-center py-4">Nenhum armazém.</p>
+                                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum armazém.</p>
                                 ) : (
                                     warehouseSummary.map((warehouse: any) => (
                                         <div
                                             key={warehouse.id}
-                                            className="flex items-center justify-between rounded-[4px] border border-slate-100 bg-slate-50/50 px-4 py-3 hover:border-[#2DB8A0]/40 transition-all"
+                                            className="flex items-center justify-between rounded-[4px] border border-border bg-muted/30 px-4 py-3 hover:border-[#2DB8A0]/40 transition-all"
                                         >
                                             <div className="min-w-0">
                                                 <Link
                                                     href={`/inventory/warehouses/${warehouse.id}`}
-                                                    className="text-sm font-semibold text-slate-900 hover:text-[#2DB8A0] transition-colors truncate block"
+                                                    className="text-sm font-semibold text-foreground hover:text-[#2DB8A0] transition-colors truncate block"
                                                 >
                                                     {warehouse.name}
                                                 </Link>
-                                                <div className="text-xs text-slate-400 mt-0.5">
+                                                <div className="text-xs text-muted-foreground mt-0.5">
                                                     {warehouse.products} produto{warehouse.products !== 1 ? 's' : ''}
                                                 </div>
                                             </div>
                                             <div className="text-right flex-shrink-0 ml-4">
-                                                <div className="text-sm font-bold text-slate-900">
+                                                <div className="text-sm font-bold text-foreground">
                                                     {Number(warehouse.quantity).toLocaleString()}
                                                 </div>
-                                                <div className="text-[10px] text-slate-400 uppercase tracking-wide">
+                                                <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
                                                     unidades
                                                 </div>
                                             </div>

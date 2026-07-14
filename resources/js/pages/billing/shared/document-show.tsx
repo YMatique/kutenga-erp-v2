@@ -281,7 +281,7 @@ return;
                     )}
 
                     <a href={`/billing/documents/${doc.id}/pdf`} target="_blank" rel="noopener noreferrer" className="inline-block">
-                        <Button variant="outline" size="sm" className="gap-1.5 border-zinc-200 text-zinc-700 hover:bg-zinc-50 font-medium">
+                        <Button variant="outline" size="sm" className="gap-1.5 border-border text-foreground hover:bg-muted font-medium">
                             <FileDown size={14} />
                             Descarregar PDF
                         </Button>
@@ -289,7 +289,7 @@ return;
 
                     <Dialog open={isEmailOpen} onOpenChange={setIsEmailOpen}>
                         <DialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="gap-1.5 border-zinc-200 text-zinc-700 hover:bg-zinc-50 font-medium">
+                            <Button variant="outline" size="sm" className="gap-1.5 border-border text-foreground hover:bg-muted font-medium">
                                 <Mail size={14} />
                                 Enviar por Email
                             </Button>
