@@ -28,6 +28,9 @@ Route::middleware(['auth', 'verified', 'role:Admin|owner'])->group(function () {
     Route::post('settings/company', [\App\Http\Controllers\Settings\CompanySettingsController::class, 'update'])->name('company-settings.update');
     Route::post('settings/company/test-smtp', [\App\Http\Controllers\Settings\CompanySettingsController::class, 'testSmtp'])->name('company-settings.test-smtp');
 
+    Route::get('settings/subscription', [\App\Http\Controllers\Settings\SubscriptionController::class, 'edit'])->name('settings.subscription.edit');
+    Route::post('settings/subscription/upgrade', [\App\Http\Controllers\Settings\SubscriptionController::class, 'upgrade'])->name('settings.subscription.upgrade');
+
     Route::resource('settings/users', \App\Http\Controllers\Settings\UserController::class)->except(['create', 'show', 'edit']);
     Route::resource('settings/roles', \App\Http\Controllers\Settings\RoleController::class)->except(['create', 'show', 'edit']);
 });

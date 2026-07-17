@@ -110,9 +110,9 @@ export default function ReportsIndex() {
             />
 
             <Tabs value={category} onValueChange={setCategory} className="space-y-6">
-                <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full p-1 pb-2 bg-card shadow-xs border border-border rounded-[4px]">
-                    <TabsTrigger value="sales" className="rounded-[4px] data-[state=active]:bg-[#2DB8A0]/10 data-[state=active]:text-[#2DB8A0]">
-                        <TrendingUp className="w-4 h-4 mr-2" /> Vendas
+                <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full  bg-card shadow-xs border border-border rounded-[4px]">
+                    <TabsTrigger value="sales" className="rounded-[4px]  data-[state=active]:bg-[#2DB8A0]/10 data-[state=active]:text-[#2DB8A0]">
+                        <TrendingUp className="w-4 h-4 mr-2 " /> Vendas
                     </TabsTrigger>
                     <TabsTrigger value="inventory" className="rounded-[4px] data-[state=active]:bg-[#E8A020]/10 data-[state=active]:text-[#E8A020]">
                         <Package className="w-4 h-4 mr-2" /> Inventário

@@ -31,7 +31,7 @@ use Laravel\Fortify\Features;
 Route::inertia('/', 'index')->name('home');
 Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(function () {
     Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
-    
+
     // Onboarding
     Route::get('/onboarding', [\App\Http\Controllers\OnboardingController::class, 'index'])->name('onboarding.index');
     Route::post('/onboarding', [\App\Http\Controllers\OnboardingController::class, 'store'])->name('onboarding.store');
@@ -201,6 +201,9 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
 
     // Docs / User Manual
     Route::inertia('/docs', 'docs/index')->name('docs.index');
+
+    // Subscription Expired Lockscreen
+    Route::inertia('/subscription/expired', 'errors/subscription-expired')->name('subscription.expired');
 
     // Configs
 });

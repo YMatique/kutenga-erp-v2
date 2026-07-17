@@ -164,6 +164,20 @@ class BillingService
                 throw new Exception("Este documento já se encontra emitido ou cancelado.");
             }
 
+            $company = $document->company;
+            if ($company) {
+                if ($company->isSubscriptionExpired()) {
+                    throw new Exception("A subscrição da sua empresa expirou. Por favor, regularize a sua conta para poder emitir documentos comerciais.");
+                }
+
+                $limits = $company->getSubscriptionLimits();
+                if ($limits['documents_month'] !== null) {
+                    if ($company->getCurrentMonthDocumentsCount() >= $limits['documents_month']) {
+                        throw new Exception("Limite de faturamento atingido! O seu plano atual (Inicial) permite emitir no máximo " . $limits['documents_month'] . " documentos por mês. Faça o upgrade do seu plano para faturamento ilimitado.");
+                    }
+                }
+            }
+
             // Validar regras de retificação para NC e ND
             if (in_array($document->document_type, ['NC', 'ND'])) {
                 if (empty($document->referenced_document_id)) {

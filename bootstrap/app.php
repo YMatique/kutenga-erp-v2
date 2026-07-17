@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
             \App\Http\Middleware\CheckOnboarding::class,
             SetCompanyContext::class,
+            \App\Http\Middleware\CheckSubscription::class,
         ]);
 
         $middleware->alias([

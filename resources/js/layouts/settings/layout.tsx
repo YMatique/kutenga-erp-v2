@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { User, Shield, Palette, Building2, Users, KeyRound } from 'lucide-react';
+import { User, Shield, Palette, Building2, Users, KeyRound, CreditCard } from 'lucide-react';
 import type { PropsWithChildren } from 'react';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
@@ -16,6 +16,7 @@ const sidebarNavItems: NavItem[] = [
     { title: 'Segurança',   href: editSecurity(),   icon: Shield },
     { title: 'Aparência',   href: editAppearance(), icon: Palette },
     { title: 'Empresa',     href: editCompany(),    icon: Building2 },
+    { title: 'Subscrição',  href: '/settings/subscription', icon: CreditCard },
     { title: 'Equipa',      href: usersIndex(),     icon: Users },
     { title: 'Papéis',      href: rolesIndex(),     icon: KeyRound },
 ];

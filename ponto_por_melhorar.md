@@ -52,9 +52,9 @@
 ## Recuperação de senha e redefinição [feito]
 - permitir que senhas de usuários seja recuperável atraves de um link [feito]
 
-## Trabalhar em Subscrições e Planos para as empresas
-- Cada empresa deverá estar subscrita em um determinado plano e consoante a esse plano ter limites de uso;
-- Ter telas de bloquio quando os limites forem atingidos
+## Trabalhar em Subscrições e Planos para as empresas [feito]
+- Cada empresa deverá estar subscrita em um determinado plano e consoante a esse plano ter limites de uso; [feito]
+- Ter telas de bloquio quando os limites forem atingidos [feito]
 
 ## Trabalhar nas Telas de Auditoria [feito]
 - Mapear bem os registos alterados (os atributos ainda não são apresentados na página: antigo e o novo valor) [feito]
@@ -85,7 +85,7 @@
 - Na página de produtos, deve especificar o tamanho recomendável de imagem
 - Para logotipos, carimbos, etc, deve especificar tambem o tamanho da imagem para o usuário fazer upload de imagens que não quebrarão o layout
  
- ## Criar uma página de documentação do sistema
+ ## Criar uma página de documentação do sistema [feito]
 - Manual de utilizador
 - Documentação na optica de desenvolvedor (readme.md)
 

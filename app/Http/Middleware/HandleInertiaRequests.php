@@ -41,6 +41,23 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user()?->load(['company.branches']),
             ],
+            'subscription' => function () use ($request) {
+                if (! $request->user()?->company) {
+                    return null;
+                }
+                $company = $request->user()->company;
+                return [
+                    'plan' => $company->subscription_plan ?? 'inicial',
+                    'status' => $company->subscription_status ?? 'active',
+                    'ends_at' => $company->subscription_ends_at ? $company->subscription_ends_at->toIso8601String() : null,
+                    'usage' => [
+                        'documents_month' => $company->getCurrentMonthDocumentsCount(),
+                        'products' => $company->getProductsCount(),
+                        'warehouses' => $company->getWarehousesCount(),
+                    ],
+                    'limits' => $company->getSubscriptionLimits(),
+                ];
+            },
             'active_company_id' => session('current_company_id'),
             'active_branch_id' => session('current_branch_id'),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
