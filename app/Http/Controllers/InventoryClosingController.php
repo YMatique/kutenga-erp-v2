@@ -82,7 +82,7 @@ class InventoryClosingController extends Controller
         // Preview do stock atual para pré-visualização
         $warehouseId = $request->warehouse_id;
         $stockQuery  = ProductStock::where('company_id', $companyId)
-            ->with(['product:id,name,sku,unit_id', 'product.unit:id,abbreviation', 'warehouse:id,name'])
+            ->with(['product:id,name,sku,unit_id', 'product.unit:id,short_name', 'warehouse:id,name'])
             ->where('quantity', '>', 0);
 
         if ($warehouseId) {
@@ -93,7 +93,7 @@ class InventoryClosingController extends Controller
             'product_id'       => $s->product_id,
             'product_name'     => $s->product?->name ?? '—',
             'product_sku'      => $s->product?->sku ?? '—',
-            'unit'             => $s->product?->unit?->abbreviation ?? '—',
+            'unit'             => $s->product?->unit?->short_name ?? '—',
             'warehouse_id'     => $s->warehouse_id,
             'warehouse_name'   => $s->warehouse?->name ?? '—',
             'quantity_current' => (float) $s->quantity,
@@ -178,7 +178,7 @@ class InventoryClosingController extends Controller
             'warehouse:id,name',
             'creator:id,name',
             'items.product:id,name,sku',
-            'items.product.unit:id,abbreviation',
+            'items.product.unit:id,short_name',
             'items.warehouse:id,name',
         ]);
 
@@ -189,7 +189,7 @@ class InventoryClosingController extends Controller
                 'product_id'        => $item->product_id,
                 'product_name'      => $item->product?->name ?? '—',
                 'product_sku'       => $item->product?->sku ?? '—',
-                'unit'              => $item->product?->unit?->abbreviation ?? '—',
+                'unit'              => $item->product?->unit?->short_name ?? '—',
                 'warehouse_name'    => $item->warehouse?->name ?? '—',
                 'quantity_expected' => (float) $item->quantity_expected,
                 'quantity_counted'  => $item->quantity_counted !== null ? (float) $item->quantity_counted : null,

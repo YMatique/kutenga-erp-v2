@@ -89,23 +89,15 @@ export default function InventoryClosingsShow({ closing, items, summary }: any) 
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <Link href="/inventory/closings">
-                            <Button variant="outline" size="sm" className="gap-2">
-                                <ArrowLeft className="h-4 w-4" />
-                                Voltar
-                            </Button>
-                        </Link>
-                        <div>
-                            <h1 className="text-2xl font-bold text-foreground">
-                                Fecho de Inventário
-                            </h1>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Referência: {new Date(closing.reference_date).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' })}
-                                {' · '}{closing.warehouse}
-                                {' · '}Criado por {closing.creator}
-                            </p>
-                        </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-foreground">
+                            Fecho de Inventário
+                        </h1>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Referência: {new Date(closing.reference_date).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            {' · '}{closing.warehouse}
+                            {' · '}Criado por {closing.creator}
+                        </p>
                     </div>
                     <div className="flex items-center gap-2">
                         {closing.blocks_movements && (
@@ -117,6 +109,12 @@ export default function InventoryClosingsShow({ closing, items, summary }: any) 
                         <Badge variant={isCompleted ? 'default' : 'secondary'}>
                             {isCompleted ? 'Concluído' : 'Rascunho'}
                         </Badge>
+                        <Link href="/inventory/closings">
+                            <Button variant="outline" size="sm" className="gap-2 ml-2">
+                                <ArrowLeft className="h-4 w-4" />
+                                Voltar
+                            </Button>
+                        </Link>
                     </div>
                 </div>
 

@@ -41,6 +41,15 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     Route::post('unlock-screen', [\App\Http\Controllers\LockScreenController::class, 'unlock'])->name('unlock.screen');
     Route::post('lock-screen', [\App\Http\Controllers\LockScreenController::class, 'lock'])->name('lock.screen');
 
+    // Catalog Edit
+    Route::middleware('can:catalog.edit')->group(function () {
+        Route::resource('branches', BranchController::class)->except(['index', 'show']);
+        Route::resource('products', ProductController::class)->except(['index', 'show']);
+        Route::resource('categories', CategoryController::class)->except(['index', 'show']);
+        Route::resource('units', UnitController::class)->except(['index', 'show']);
+        Route::resource('brands', BrandController::class)->except(['index', 'show']);
+    });
+
     // Catalog View
     Route::middleware('can:catalog.view')->group(function () {
         Route::get('branches', [BranchController::class, 'index'])->name('branches.index');
@@ -53,15 +62,6 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
         Route::get('units/{unit}', [UnitController::class, 'show'])->name('units.show');
         Route::get('brands', [BrandController::class, 'index'])->name('brands.index');
         Route::get('brands/{brand}', [BrandController::class, 'show'])->name('brands.show');
-    });
-
-    // Catalog Edit
-    Route::middleware('can:catalog.edit')->group(function () {
-        Route::resource('branches', BranchController::class)->except(['index', 'show']);
-        Route::resource('products', ProductController::class)->except(['index', 'show']);
-        Route::resource('categories', CategoryController::class)->except(['index', 'show']);
-        Route::resource('units', UnitController::class)->except(['index', 'show']);
-        Route::resource('brands', BrandController::class)->except(['index', 'show']);
     });
 
     // Settings
@@ -98,12 +98,12 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
             Route::get('/stocks', [ProductStockController::class, 'index']);
             Route::get('/stocks/{product}', [ProductStockController::class, 'show']);
             Route::get('/transfers', [StockTransferController::class, 'index'])->name('inventory.transfers.index');
-            Route::get('/transfers/{transfer}', [StockTransferController::class, 'show'])->name('inventory.transfers.show');
+            Route::get('/transfers/{transfer}', [StockTransferController::class, 'show'])->name('inventory.transfers.show')->where('transfer', '[0-9]+');
             Route::get('/adjustments', [StockAdjustmentController::class, 'index'])->name('inventory.adjustments.index');
-            Route::get('/adjustments/{adjustment}', [StockAdjustmentController::class, 'show'])->name('inventory.adjustments.show');
+            Route::get('/adjustments/{adjustment}', [StockAdjustmentController::class, 'show'])->name('inventory.adjustments.show')->where('adjustment', '[0-9]+');
             // Inventory Closings
             Route::get('/closings', [InventoryClosingController::class, 'index'])->name('inventory.closings.index');
-            Route::get('/closings/{closing}', [InventoryClosingController::class, 'show'])->name('inventory.closings.show');
+            Route::get('/closings/{closing}', [InventoryClosingController::class, 'show'])->name('inventory.closings.show')->where('closing', '[0-9]+');
         });
 
         // Inventory Adjust

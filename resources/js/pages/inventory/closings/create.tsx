@@ -46,21 +46,21 @@ export default function InventoryClosingsCreate({ warehouses, stockPreview, toda
         <>
             <Head title="Novo Fecho de Inventário" />
 
-            <div className="space-y-6 max-w-5xl">
+            <div className="space-y-6 ">
                 {/* Header */}
-                <div className="flex items-center gap-4">
-                    <Link href="/inventory/closings">
-                        <Button variant="outline" size="sm" className="gap-2">
-                            <ArrowLeft className="h-4 w-4" />
-                            Voltar
-                        </Button>
-                    </Link>
+                <div className="flex items-start justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-foreground">Novo Fecho de Inventário</h1>
                         <p className="text-muted-foreground text-sm mt-1">
                             Será gerado automaticamente um snapshot do stock atual.
                         </p>
                     </div>
+                    <Link href="/inventory/closings">
+                        <Button variant="outline" size="sm" className="gap-2">
+                            <ArrowLeft className="h-4 w-4" />
+                            Voltar
+                        </Button>
+                    </Link>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
