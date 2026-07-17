@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\PosShift;
-use App\Models\Customer;
-use App\Models\Warehouse;
-use App\Models\DocumentSeries;
-use App\Models\Payment;
-use App\Models\PaymentAllocation;
+use App\Models\Pos\PosShift;
+use App\Models\Billing\Customer;
+use App\Models\Inventory\Warehouse;
+use App\Models\Billing\DocumentSeries;
+use App\Models\Billing\Payment;
+use App\Models\Billing\PaymentAllocation;
 use App\Services\Billing\BillingService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

@@ -2,16 +2,16 @@
 
 namespace App\Services\Billing;
 
-use App\Models\Customer;
-use App\Models\Document;
-use App\Models\DocumentItem;
-use App\Models\DocumentSeries;
-use App\Models\Payment;
-use App\Models\PaymentAllocation;
-use App\Models\Product;
-use App\Models\Warehouse;
+use App\Models\Billing\Customer;
+use App\Models\Billing\Document;
+use App\Models\Billing\DocumentItem;
+use App\Models\Billing\DocumentSeries;
+use App\Models\Billing\Payment;
+use App\Models\Billing\PaymentAllocation;
+use App\Models\Catalog\Product;
+use App\Models\Inventory\Warehouse;
 use App\Services\Inventory\StockService;
-use App\Models\StockMovement;
+use App\Models\Inventory\StockMovement;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

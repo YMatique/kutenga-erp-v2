@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Customer;
-use App\Models\Document;
-use App\Models\Product;
-use App\Models\ProductStock;
-use App\Models\StockMovement;
+use App\Models\Billing\Customer;
+use App\Models\Billing\Document;
+use App\Models\Catalog\Product;
+use App\Models\Inventory\ProductStock;
+use App\Models\Inventory\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;

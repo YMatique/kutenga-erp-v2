@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Catalog\Branch;
+
+
 // use App\Traits\HasAudit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -54,19 +57,19 @@ class Company extends Model
 
     public function getCurrentMonthDocumentsCount(): int
     {
-        return \App\Models\Document::where('company_id', $this->id)
+        return \App\Models\Billing\Document::where('company_id', $this->id)
             ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->count();
     }
 
     public function getProductsCount(): int
     {
-        return \App\Models\Product::where('company_id', $this->id)->count();
+        return \App\Models\Catalog\Product::where('company_id', $this->id)->count();
     }
 
     public function getWarehousesCount(): int
     {
-        return \App\Models\Warehouse::where('company_id', $this->id)->count();
+        return \App\Models\Inventory\Warehouse::where('company_id', $this->id)->count();
     }
 
     public function isSubscriptionExpired(): bool

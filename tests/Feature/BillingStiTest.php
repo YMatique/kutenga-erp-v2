@@ -3,17 +3,17 @@
 namespace Tests\Feature;
 
 use App\Models\Company;
-use App\Models\Customer;
-use App\Models\Document;
-use App\Models\DocumentSeries;
-use App\Models\Invoice;
-use App\Models\Product;
-use App\Models\Quote;
-use App\Models\CreditNote;
-use App\Models\Receipt;
+use App\Models\Billing\Customer;
+use App\Models\Billing\Document;
+use App\Models\Billing\DocumentSeries;
+use App\Models\Billing\Invoice;
+use App\Models\Catalog\Product;
+use App\Models\Billing\Quote;
+use App\Models\Billing\CreditNote;
+use App\Models\Billing\Receipt;
 use App\Models\User;
-use App\Models\Warehouse;
-use App\Models\ProductStock;
+use App\Models\Inventory\Warehouse;
+use App\Models\Inventory\ProductStock;
 use App\Services\Billing\BillingService;
 use App\Services\Inventory\StockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;

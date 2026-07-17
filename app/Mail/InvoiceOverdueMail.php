@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Document;
+use App\Models\Billing\Document;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;

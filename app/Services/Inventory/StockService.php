@@ -2,10 +2,10 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\Product;
-use App\Models\ProductStock;
-use App\Models\StockMovement;
-use App\Models\Warehouse;
+use App\Models\Catalog\Product;
+use App\Models\Inventory\ProductStock;
+use App\Models\Inventory\StockMovement;
+use App\Models\Inventory\Warehouse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;

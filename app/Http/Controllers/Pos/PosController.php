@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
 use Inertia\Inertia;
-use App\Models\PosShift;
-use App\Models\Category;
-use App\Models\Product;
+use App\Models\Pos\PosShift;
+use App\Models\Catalog\Category;
+use App\Models\Catalog\Product;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 

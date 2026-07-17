@@ -3,13 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Customer;
-use App\Models\DocumentSeries;
-use App\Models\PosShift;
-use App\Models\Product;
+use App\Models\Catalog\Branch;
+use App\Models\Billing\Customer;
+use App\Models\Billing\DocumentSeries;
+use App\Models\Pos\PosShift;
+use App\Models\Catalog\Product;
 use App\Models\User;
-use App\Models\Warehouse;
+use App\Models\Inventory\Warehouse;
 use App\Services\Inventory\StockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

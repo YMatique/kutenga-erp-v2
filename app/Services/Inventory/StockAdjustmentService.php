@@ -2,7 +2,7 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\StockAdjustment;
+use App\Models\Inventory\StockAdjustment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 

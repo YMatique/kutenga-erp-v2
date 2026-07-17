@@ -2,7 +2,7 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\StockTransfer;
+use App\Models\Inventory\StockTransfer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 

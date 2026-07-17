@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Pos;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Models\PosShift;
+use App\Models\Pos\PosShift;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 

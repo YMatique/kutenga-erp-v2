@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Product;
+use App\Models\Catalog\Product;
 use App\Models\SystemNotification;
 use App\Models\Company;
 use Illuminate\Console\Command;

@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Document;
+use App\Models\Billing\Document;
 use App\Models\SystemNotification;
 use App\Mail\InvoiceOverdueMail;
 use Carbon\Carbon;
