@@ -103,12 +103,19 @@ export function NotificationsDropdown({ notifications }: { notifications: Notifi
                                     <span className="font-semibold text-sm truncate flex-1">{n.title}</span>
                                 </div>
                                 <span className="text-xs text-slate-500 line-clamp-2 w-full mt-1">
-                                    {n.message}
+                                     {n.message}
                                 </span>
                             </DropdownMenuItem>
                         ))}
                     </div>
                 )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                    className="p-2 text-center flex justify-center text-xs text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer"
+                    onClick={() => router.visit('/notifications')}
+                >
+                    Ver todas as notificações
+                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );

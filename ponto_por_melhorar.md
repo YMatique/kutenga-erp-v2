@@ -114,8 +114,8 @@
 ## ROLES E PERMISSÕES [feito]
 - aplicar as roles e permissões nas rotas, criar uma página que diz: você não tem permissão ou algo do género. [feito]
 
-## PÁGINA DE NOTIFICAÇÕES PARA LISTAR E VER DETALHES DAS NOTIFICAÇÕES
-- Deverá haver uma página de listar as notificações do sistema
+## PÁGINA DE NOTIFICAÇÕES PARA LISTAR E VER DETALHES DAS NOTIFICAÇÕES [feito]
+- Deverá haver uma página de listar as notificações do sistema [feito]
 
 ## APLICAR CONCEITOS DE DARK-MODE NO INDEX DA APLICAÇÃO
 - O dark mode precisar ser revisto na página index da aplicação (A landing page)

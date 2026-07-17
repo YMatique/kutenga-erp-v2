@@ -194,7 +194,9 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
 
 
     // Users
+    Route::get('/notifications', [\App\Http\Controllers\SystemNotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\SystemNotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\SystemNotificationController::class, 'markAllAsRead'])->name('notifications.markAllRead');
 
     // Configs
 });
