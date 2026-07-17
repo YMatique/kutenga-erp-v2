@@ -69,7 +69,9 @@ class AuditLogController extends Controller
                     'subject_id' => $activity->subject_id,
                     'causer_name' => $activity->causer ? $activity->causer->name : 'Sistema',
                     'causer_email' => $activity->causer ? $activity->causer->email : null,
-                    'properties' => $activity->properties,
+                    'properties' => $activity->attribute_changes && $activity->attribute_changes->isNotEmpty()
+                        ? $activity->attribute_changes
+                        : $activity->properties,
                     'created_at' => $activity->created_at->format('Y-m-d H:i:s'),
                     'created_at_human' => $activity->created_at->diffForHumans(),
                 ];

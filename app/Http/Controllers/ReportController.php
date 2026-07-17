@@ -138,7 +138,7 @@ class ReportController extends Controller
             ->where('document_type', 'FT')
             ->whereIn('status', ['confirmed', 'partial'])
             ->whereIn('payment_status', ['unpaid', 'partial'])
-            ->selectRaw('customer_id, sum(grand_total - amount_paid) as pending_balance')
+            ->selectRaw('customer_id, sum(grand_total) as pending_balance')
             ->groupBy('customer_id')
             ->orderByDesc('pending_balance')
             ->limit(10)
