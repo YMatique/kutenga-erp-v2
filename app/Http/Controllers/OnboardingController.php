@@ -49,6 +49,8 @@ class OnboardingController extends Controller
             'phone' => 'required|string|max:50',
             'address' => 'required|string',
             'default_currency' => 'required|string|max:3',
+            'invoice_prefix' => 'nullable|string|max:10',
+            'default_due_days' => 'nullable|integer|min:0',
         ]);
 
         DB::beginTransaction();
@@ -63,6 +65,8 @@ class OnboardingController extends Controller
                     'phone' => $validated['phone'],
                     'address' => $validated['address'],
                     'default_currency' => $validated['default_currency'],
+                    'invoice_prefix' => $validated['invoice_prefix'] ?? 'FT',
+                    'default_due_days' => $validated['default_due_days'] ?? 15,
                 ]);
             } else {
                 // Criar a nova empresa
@@ -73,6 +77,8 @@ class OnboardingController extends Controller
                     'phone' => $validated['phone'],
                     'address' => $validated['address'],
                     'default_currency' => $validated['default_currency'],
+                    'invoice_prefix' => $validated['invoice_prefix'] ?? 'FT',
+                    'default_due_days' => $validated['default_due_days'] ?? 15,
                     'status' => 'active',
                 ]);
 

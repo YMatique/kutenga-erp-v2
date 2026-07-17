@@ -63,8 +63,8 @@
 - No onbording pedir informações mais completas da empresa, como: NUIT, número de telefone, email, morada, moeda oficial, etc [feito]
 - Deve enviar um email de boas-vindas ao usuário [feito]
 - Deve enviar um email de confirmação de cadastro [feito]
-- **[Pendente]** Melhorar o UI para usar o logo real da aplicação em vez de ícones genéricos.
-- **[Pendente]** Transformar o Onboarding num fluxo por etapas (Step-by-step Wizard), incluindo a recolha de configurações opcionais da empresa.
+- **[Feito]** Melhorar o UI para usar o logo real da aplicação em vez de ícones genéricos.
+- **[Feito]** Transformar o Onboarding num fluxo por etapas (Step-by-step Wizard), incluindo a recolha de configurações opcionais da empresa.
 
 ## Fatura/Cotação [feito]
 - Melhorar o documento pdf de fatura e cotação: deixar um pouco mais customizado. [feito]
@@ -134,16 +134,16 @@
 - Em muitas páginas o toast notification aparece muitas vezes (por cima e baixo), deve ser padronizado, aparecer apenas no canto superior direito [feito]
 
 
-## POLIMENTOS
-- Verificar se as configuração são de facto carregadas ou não.
-- logs gerados pelo sistema não devem ser listados em nenhum user (mesmo o admin da empresa), mas pode haver um super-user para questões de configuração (este não deve pertencer a nenhuma empresa).
-- O lockscreen parece ter bugs, quando refresco, já não pede senha.
-- Verificar questões de emails (Se usa as configurações de SMPT próprio ou não, caso esteja configurado) e notificações (mapear as possiveis categorias). Nem todos usuários têm permissão de ver notificações.
-- Remover auditoria de dentro de configurações.
-- Por ser ainda uma MPV, não estamos a trabalhar com mult-empresa, pouco menos o filiais.
-- Rever vendas: o que vem de POS como mapear e diferenciar doque é gerado da parte de fatura-recibo;
-- Pagamento de Fatura, como ficará? Gerará um recibo ou etc.
-- Na parte de configurações, no dark-mode o sidebar interno que contem Perfil, Segurança, etc, o hover não está muito amigável.
-- O Admin pode ver todos as sessões, mas um user normal, ou o seller, só pode ver o que ele vendeu, seus turnos, etc.
-- Expandir as Permissões e Roles:
-- Ver assunto de fechamento de Inventário (não sei se isso existe, para certificar que no dia anterior ou semana, o inventário culminou com, coisa xyz)
+## POLIMENTOS [feito]
+- Verificar se as configuração são de facto carregadas ou não. [feito]
+- logs gerados pelo sistema não devem ser listados em nenhum user (mesmo o admin da empresa), mas pode haver um super-user para questões de configuração (este não deve pertencer a nenhuma empresa). [feito]
+- O lockscreen parece ter bugs, quando refresco, já não pede senha. [feito]
+- Verificar questões de emails (Se usa as configurações de SMPT próprio ou não, caso esteja configurado) e notificações (mapear as possiveis categorias). Nem todos usuários têm permissão de ver notificações. [feito]
+- Remover auditoria de dentro de configurações. [feito]
+- Por ser ainda uma MPV, não estamos a trabalhar com mult-empresa, pouco menos o filiais. [feito]
+- Rever vendas: o que vem de POS como mapear e diferenciar doque é gerado da parte de fatura-recibo; [feito]
+- Pagamento de Fatura, como ficará? Gerará um recibo ou etc. [feito]
+- Na parte de configurações, no dark-mode o sidebar interno que contem Perfil, Segurança, etc, o hover não está muito amigável. [feito]
+- O Admin pode ver todos as sessões, mas um user normal, ou o seller, só pode ver o que ele vendeu, seus turnos, etc. [feito]
+- Expandir as Permissões e Roles: [feito]
+- Ver assunto de fechamento de Inventário (não sei se isso existe, para certificar que no dia anterior ou semana, o inventário culminou com, coisa xyz) [feito]
