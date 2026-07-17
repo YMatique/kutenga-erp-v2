@@ -86,8 +86,8 @@
 - Para logotipos, carimbos, etc, deve especificar tambem o tamanho da imagem para o usuário fazer upload de imagens que não quebrarão o layout [feito]
  
  ## Criar uma página de documentação do sistema [feito]
-- Manual de utilizador
-- Documentação na optica de desenvolvedor (readme.md)
+- Manual de utilizador [feito]
+- Documentação na optica de desenvolvedor (readme.md) [feito]
 
  ## Padrão de Telas de Produtos, Faturação [feito]
  - Deve conter cards estatísticos no topo, com informações relevantes para a página em causa, por exemplo, na página de produtos, deve mostrar o número de produtos cadastrados, o número de produtos com estoque baixo, o número de produtos com estoque zerado, etc [feito]
@@ -118,7 +118,7 @@
 ## PÁGINA DE NOTIFICAÇÕES PARA LISTAR E VER DETALHES DAS NOTIFICAÇÕES [feito]
 - Deverá haver uma página de listar as notificações do sistema [feito]
 
-## APLICAR CONCEITOS DE DARK-MODE NO INDEX DA APLICAÇÃO
+## APLICAR CONCEITOS DE DARK-MODE NO INDEX DA APLICAÇÃO [feito]
 - O dark mode precisar ser revisto na página index da aplicação (A landing page) [feito]
 
 ## MAPEAMENTO DE STATUS NA VIEW

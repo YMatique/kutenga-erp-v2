@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -22,7 +23,7 @@ class InvoiceOverdueMail extends Mailable implements ShouldQueue
      */
     public function __construct(Document $document)
     {
-        $this->document = $document;
+        $this->document = $document->loadMissing(['company', 'customer']);
     }
 
     /**
@@ -30,8 +31,15 @@ class InvoiceOverdueMail extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
+        $companyName = $this->document->company->name ?? config('app.name', 'Kutenga');
+        $subject = "{$companyName} - AVISO: Fatura " . ($this->document->document_number ?? 'Rascunho') . " em atraso";
+
         return new Envelope(
-            subject: "AVISO: Pagamento em Atraso - Fatura " . ($this->document->document_number ?? 'Rascunho'),
+            from: new Address(
+                $this->document->company->email ?: config('mail.from.address'),
+                $companyName
+            ),
+            subject: $subject,
         );
     }
 

@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -22,7 +23,7 @@ class DocumentMail extends Mailable implements ShouldQueue
      */
     public function __construct(Document $document)
     {
-        $this->document = $document;
+        $this->document = $document->loadMissing(['company', 'customer']);
     }
 
     /**
@@ -40,9 +41,15 @@ class DocumentMail extends Mailable implements ShouldQueue
         ];
         
         $label = $typeLabels[$this->document->document_type] ?? 'Documento';
-        $subject = "Kutenga ERP - " . $label . " " . ($this->document->document_number ?? 'Rascunho');
+        
+        $companyName = $this->document->company->name ?? config('app.name', 'Kutenga');
+        $subject = "{$companyName} - {$label} " . ($this->document->document_number ?? 'Rascunho');
 
         return new Envelope(
+            from: new Address(
+                $this->document->company->email ?: config('mail.from.address'),
+                $companyName
+            ),
             subject: $subject,
         );
     }
