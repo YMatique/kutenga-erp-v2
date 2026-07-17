@@ -26,7 +26,7 @@ class DebitNoteController extends Controller
     {
         $companyId = $request->user()->company_id;
 
-        $notes = DebitNote::where('company_id', $companyId)
+        $query = DebitNote::where('company_id', $companyId)
             ->with(['series', 'customer', 'referencedDocument'])
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -39,14 +39,23 @@ class DebitNoteController extends Controller
                 if ($status !== 'all') {
                     $query->where('status', $status);
                 }
-            })
-            ->orderBy('created_at', 'desc')
+            });
+
+        $kpis = [
+            'total_count' => (clone $query)->count(),
+            'total_amount' => (clone $query)->sum('grand_total'),
+            'paid_amount' => (clone $query)->where('status', 'paid')->sum('grand_total'),
+            'pending_amount' => (clone $query)->whereIn('status', ['draft', 'confirmed', 'partial', 'overdue'])->sum('grand_total'),
+        ];
+
+        $notes = $query->orderBy('created_at', 'desc')
             ->paginate(15)
             ->withQueryString();
 
         return Inertia::render('billing/debit-notes/index', [
             'documents' => $notes,
             'filters' => $request->only(['search', 'status']),
+            'kpis' => $kpis,
             'type' => 'ND',
             'title' => 'Notas de Débito'
         ]);
