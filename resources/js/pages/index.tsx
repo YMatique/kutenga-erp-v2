@@ -20,6 +20,7 @@ import {
     Percent
 } from 'lucide-react';
 import { useState } from 'react';
+import { useAppearance } from '@/hooks/use-appearance';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -211,11 +212,11 @@ return true;
                 <meta name="description" content="O ERP modular definitivo para gerir vendas (POS), stock multi-armazém, faturação eletrónica e relatórios em tempo real." />
             </Head>
 
-            <div className="min-h-screen bg-slate-50 font-sans antialiased text-slate-800">
+            <div className="min-h-screen bg-slate-50 dark:bg-[#0B0F19] font-sans antialiased text-slate-800 dark:text-slate-200 transition-colors duration-300">
                 {/* 1. GLASSMORPHIC NAVBAR */}
-                <header className="sticky top-0 z-50 backdrop-blur-md bg-white/85 border-b border-slate-200/60 shadow-xs transition-all">
+                <header className="sticky top-0 z-50 backdrop-blur-md bg-white/85 dark:bg-[#0B0F19]/85 border-b border-slate-200/60 dark:border-slate-800/60 shadow-xs transition-all">
                     <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-                        <div className="flex items-center gap-2.5 font-bold text-xl text-[#1A2332]">
+                        <div className="flex items-center gap-2.5 font-bold text-xl text-[#1A2332] dark:text-white">
                             <div className="w-9 h-9 rounded-[4px] bg-[#2DB8A0] flex items-center justify-center text-white font-extrabold text-lg shadow-sm shadow-[#2DB8A0]/20">
                                 K
                             </div>
@@ -224,7 +225,7 @@ return true;
                             </span>
                         </div>
 
-                        <nav className="hidden md:flex gap-8 text-sm font-medium text-slate-600">
+                        <nav className="hidden md:flex gap-8 text-sm font-medium text-slate-600 dark:text-slate-300">
                             <a href="#features" className="hover:text-[#2DB8A0] transition-colors">Funcionalidades</a>
                             <a href="#demo" className="hover:text-[#2DB8A0] transition-colors">Demonstração</a>
                             <a href="#flow" className="hover:text-[#2DB8A0] transition-colors">Fluxo</a>
@@ -233,7 +234,7 @@ return true;
 
                         <div className="flex items-center gap-3">
                             <Link href="/login">
-                                <Button variant="outline" className="border-slate-200 text-slate-700 hover:bg-slate-50 font-medium">
+                                <Button variant="outline" className="border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 font-medium bg-transparent">
                                     Entrar
                                 </Button>
                             </Link>
@@ -257,13 +258,13 @@ return true;
                                 <span>ERP Modular de Nova Geração</span>
                             </div>
 
-                            <h1 className="text-4xl md:text-5xl lg:text-[54px] font-extrabold leading-[1.1] text-[#1A2332] tracking-tight">
+                            <h1 className="text-4xl md:text-5xl lg:text-[54px] font-extrabold leading-[1.1] text-[#1A2332] dark:text-white tracking-tight">
                                 O controlo da sua empresa,
                                 <br />
                                 <span className="text-[#2DB8A0] bg-clip-text">num único sistema.</span>
                             </h1>
 
-                            <p className="mt-6 text-slate-600 text-base md:text-lg max-w-xl leading-relaxed">
+                            <p className="mt-6 text-slate-600 dark:text-slate-300 text-base md:text-lg max-w-xl leading-relaxed">
                                 Gerencie cotações, fature em segundos, controle o stock em múltiplos armazéns e simplifique a sua operação de vendas no POS. Feito para empresas modernas de qualquer dimensão.
                             </p>
 
@@ -275,26 +276,26 @@ return true;
                                 </Link>
 
                                 <a href="#demo" className="w-full sm:w-auto">
-                                    <Button variant="outline" size="lg" className="w-full sm:w-auto border-slate-200 text-slate-700 hover:bg-white text-base px-8 py-6 rounded-[4px]">
+                                    <Button variant="outline" size="lg" className="w-full sm:w-auto border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900 bg-transparent text-base px-8 py-6 rounded-[4px]">
                                         Testar Demo Interativa
                                     </Button>
                                 </a>
                             </div>
 
-                            <div className="mt-10 flex gap-8 items-center border-t border-slate-200 pt-8 w-full">
+                            <div className="mt-10 flex gap-8 items-center border-t border-slate-200 dark:border-slate-800 pt-8 w-full">
                                 <div>
-                                    <h4 className="text-2xl font-bold text-[#1A2332]">100%</h4>
-                                    <p className="text-xs text-slate-500 font-medium">Faturação Eletrónica</p>
+                                    <h4 className="text-2xl font-bold text-[#1A2332] dark:text-white">100%</h4>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Faturação Eletrónica</p>
                                 </div>
-                                <div className="border-l border-slate-200 h-8"></div>
+                                <div className="border-l border-slate-200 dark:border-slate-800 h-8"></div>
                                 <div>
-                                    <h4 className="text-2xl font-bold text-[#1A2332]">Multi</h4>
-                                    <p className="text-xs text-slate-500 font-medium">Armazém & Localização</p>
+                                    <h4 className="text-2xl font-bold text-[#1A2332] dark:text-white">Multi</h4>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Armazém & Localização</p>
                                 </div>
-                                <div className="border-l border-slate-200 h-8"></div>
+                                <div className="border-l border-slate-200 dark:border-slate-800 h-8"></div>
                                 <div>
-                                    <h4 className="text-2xl font-bold text-[#1A2332]">24/7</h4>
-                                    <p className="text-xs text-slate-500 font-medium">Suporte e Atualizações</p>
+                                    <h4 className="text-2xl font-bold text-[#1A2332] dark:text-white">24/7</h4>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Suporte e Atualizações</p>
                                 </div>
                             </div>
                         </div>
@@ -304,9 +305,9 @@ return true;
                             {/* Decorative background glow */}
                             <div className="absolute -inset-4 bg-radial-[circle_at_center] from-[#2DB8A0]/10 via-[#E8A020]/5 to-transparent blur-3xl opacity-75 -z-10" />
 
-                            <Card className="border-slate-200/80 bg-white/95 rounded-lg shadow-xl shadow-slate-200/50 overflow-hidden backdrop-blur-xs">
+                            <Card className="border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-[#111827]/95 rounded-lg shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden backdrop-blur-xs">
                                 {/* System Top Bar */}
-                                <div className="bg-[#1A2332] px-4 py-3 flex items-center justify-between border-b border-[#2DB8A0]/10">
+                                <div className="bg-[#1A2332] dark:bg-[#0B0F19] px-4 py-3 flex items-center justify-between border-b border-[#2DB8A0]/10 dark:border-slate-850">
                                     <div className="flex items-center gap-1.5">
                                         <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
                                         <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
@@ -321,25 +322,25 @@ return true;
                                 </div>
 
                                 {/* Mock Interface Content */}
-                                <div className="p-6 bg-slate-50/50 space-y-6">
+                                <div className="p-6 bg-slate-50/50 dark:bg-[#0B0F19]/50 space-y-6">
                                     {/* Stats grid */}
                                     <div className="grid grid-cols-3 gap-3">
-                                        <div className="bg-white border border-slate-200 p-3.5 rounded-[4px] shadow-xs">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Faturamento</p>
-                                            <p className="text-lg font-extrabold text-[#1A2332] mt-1">1.84M MZN</p>
+                                        <div className="bg-white dark:bg-[#151B26] border border-slate-200 dark:border-slate-800 p-3.5 rounded-[4px] shadow-xs">
+                                            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Faturamento</p>
+                                            <p className="text-lg font-extrabold text-[#1A2332] dark:text-slate-100 mt-1">1.84M MZN</p>
                                             <span className="text-[9px] text-emerald-600 font-semibold flex items-center mt-1">
                                                 ▲ +12% esta semana
                                             </span>
                                         </div>
-                                        <div className="bg-white border border-slate-200 p-3.5 rounded-[4px] shadow-xs">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Artigos em Stock</p>
+                                        <div className="bg-white dark:bg-[#151B26] border border-slate-200 dark:border-slate-800 p-3.5 rounded-[4px] shadow-xs">
+                                            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Artigos em Stock</p>
                                             <p className="text-lg font-extrabold text-[#2DB8A0] mt-1">378</p>
                                             <span className="text-[9px] text-slate-500 font-medium flex items-center mt-1">
                                                 4 armazéns ativos
                                             </span>
                                         </div>
-                                        <div className="bg-white border border-slate-200 p-3.5 rounded-[4px] shadow-xs">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Margem Média</p>
+                                        <div className="bg-white dark:bg-[#151B26] border border-slate-200 dark:border-slate-800 p-3.5 rounded-[4px] shadow-xs">
+                                            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Margem Média</p>
                                             <p className="text-lg font-extrabold text-[#E8A020] mt-1">32.8%</p>
                                             <span className="text-[9px] text-emerald-600 font-semibold flex items-center mt-1">
                                                 Meta atingida
@@ -349,9 +350,9 @@ return true;
 
                                     {/* Chart / List split */}
                                     <div className="grid md:grid-cols-2 gap-4">
-                                        <div className="bg-white border border-slate-200 p-4 rounded-[4px] shadow-xs space-y-3">
+                                        <div className="bg-white dark:bg-[#151B26] border border-slate-200 dark:border-slate-800 p-4 rounded-[4px] shadow-xs space-y-3">
                                             <div className="flex justify-between items-center">
-                                                <h5 className="text-[11px] font-bold text-[#1A2332] uppercase tracking-wide">Vendas por Categoria</h5>
+                                                <h5 className="text-[11px] font-bold text-[#1A2332] dark:text-slate-300 uppercase tracking-wide">Vendas por Categoria</h5>
                                                 <TrendingUp className="w-3.5 h-3.5 text-[#2DB8A0]" />
                                             </div>
                                             {/* Simulated Mini Chart */}
@@ -361,7 +362,7 @@ return true;
                                                         <span>Alimentação</span>
                                                         <span>48%</span>
                                                     </div>
-                                                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                                    <div className="w-full bg-slate-100 dark:bg-slate-850 h-2 rounded-full overflow-hidden">
                                                         <div className="bg-[#2DB8A0] h-full rounded-full" style={{ width: '48%' }} />
                                                     </div>
                                                 </div>
@@ -370,7 +371,7 @@ return true;
                                                         <span>Bebidas</span>
                                                         <span>32%</span>
                                                     </div>
-                                                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                                    <div className="w-full bg-slate-100 dark:bg-slate-850 h-2 rounded-full overflow-hidden">
                                                         <div className="bg-[#E8A020] h-full rounded-full" style={{ width: '32%' }} />
                                                     </div>
                                                 </div>
@@ -379,36 +380,36 @@ return true;
                                                         <span>Tecnologia</span>
                                                         <span>20%</span>
                                                     </div>
-                                                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                                    <div className="w-full bg-slate-100 dark:bg-slate-850 h-2 rounded-full overflow-hidden">
                                                         <div className="bg-[#1A2332] h-full rounded-full" style={{ width: '20%' }} />
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="bg-white border border-slate-200 p-4 rounded-[4px] shadow-xs space-y-3">
-                                            <h5 className="text-[11px] font-bold text-[#1A2332] uppercase tracking-wide">Últimas Transações</h5>
+                                        <div className="bg-white dark:bg-[#151B26] border border-slate-200 dark:border-slate-800 p-4 rounded-[4px] shadow-xs space-y-3">
+                                            <h5 className="text-[11px] font-bold text-[#1A2332] dark:text-slate-300 uppercase tracking-wide">Últimas Transações</h5>
                                             <div className="space-y-2.5">
                                                 <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                                                     <div>
-                                                        <p className="text-xs font-semibold text-slate-800">Fatura Simplificada</p>
+                                                        <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">Fatura Simplificada</p>
                                                         <p className="text-[9px] text-slate-400">Há 2 mins • FS 2026/0129</p>
                                                     </div>
-                                                    <span className="text-xs font-bold text-slate-800">+12,450 MZN</span>
+                                                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">+12,450 MZN</span>
                                                 </div>
                                                 <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                                                     <div>
-                                                        <p className="text-xs font-semibold text-slate-800">Venda Direta POS</p>
+                                                        <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">Venda Direta POS</p>
                                                         <p className="text-[9px] text-slate-400">Há 15 mins • PDV #8410</p>
                                                     </div>
-                                                    <span className="text-xs font-bold text-slate-800">+3,200 MZN</span>
+                                                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">+3,200 MZN</span>
                                                 </div>
                                                 <div className="flex justify-between items-center">
                                                     <div>
-                                                        <p className="text-xs font-semibold text-slate-800">Ajuste de Stock</p>
+                                                        <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">Ajuste de Stock</p>
                                                         <p className="text-[9px] text-slate-400">Há 1 hora • Armazém Central</p>
                                                     </div>
-                                                    <span className="text-[10px] text-amber-600 font-semibold px-2 py-0.5 bg-amber-50 rounded">
+                                                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold px-2 py-0.5 bg-amber-50 dark:bg-amber-950/20 rounded">
                                                         -40 Itens
                                                     </span>
                                                 </div>
@@ -433,16 +434,16 @@ return true;
                 </section>
 
                 {/* 3. INTERACTIVE SIMULATOR SHOWCASE */}
-                <section id="demo" className="py-24 bg-white border-y border-slate-200">
+                <section id="demo" className="py-24 bg-white dark:bg-[#0B0F19] border-y border-slate-200 dark:border-slate-800">
                     <div className="max-w-7xl mx-auto px-6">
                         <div className="text-center max-w-3xl mx-auto mb-16">
                             <Badge className="bg-[#2DB8A0]/10 text-[#2DB8A0] border border-[#2DB8A0]/20 hover:bg-[#2DB8A0]/10 px-3 py-1 text-xs font-semibold rounded-full mb-3">
                                 Teste você mesmo
                             </Badge>
-                            <h2 className="text-3xl md:text-4xl font-extrabold text-[#1A2332] tracking-tight">
+                            <h2 className="text-3xl md:text-4xl font-extrabold text-[#1A2332] dark:text-white tracking-tight">
                                 Experimente a Demonstração Interativa
                             </h2>
-                            <p className="text-slate-500 mt-4 text-base">
+                            <p className="text-slate-500 dark:text-slate-400 mt-4 text-base">
                                 Veja como o Kutenga ERP gere as operações diárias da sua empresa em tempo real. Escolha um módulo e interaja diretamente com o simulador.
                             </p>
                         </div>
@@ -485,7 +486,7 @@ return true;
                         </div>
 
                         {/* Simulator device frame */}
-                        <Card className="border-slate-200 shadow-xl overflow-hidden max-w-5xl mx-auto bg-slate-50">
+                        <Card className="border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden max-w-5xl mx-auto bg-slate-50 dark:bg-[#111827]">
                             {/* Device top frame */}
                             <div className="bg-slate-900 px-4 py-3 flex items-center justify-between border-b border-slate-800">
                                 <div className="flex items-center gap-2">
@@ -503,9 +504,9 @@ return true;
                             {activeTab === 'pos' && (
                                 <div className="grid lg:grid-cols-12 min-h-[460px]">
                                     {/* Products Grid */}
-                                    <div className="lg:col-span-8 p-6 bg-white border-r border-slate-200">
+                                    <div className="lg:col-span-8 p-6 bg-white dark:bg-[#151B26] border-r border-slate-200 dark:border-slate-800">
                                         <div className="flex justify-between items-center mb-6">
-                                            <h3 className="font-bold text-slate-800 text-lg">Catálogo de Vendas</h3>
+                                            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg">Catálogo de Vendas</h3>
                                             <Badge className="bg-[#2DB8A0]/10 text-[#2DB8A0] hover:bg-[#2DB8A0]/15">
                                                 Terminal #01
                                             </Badge>
@@ -528,17 +529,17 @@ return true;
                                                             Stock: {p.stock}
                                                         </Badge>
                                                     </div>
-                                                    <h4 className="font-bold text-slate-800 mt-1.5 group-hover:text-[#2DB8A0] transition-colors">{p.name}</h4>
-                                                    <p className="font-extrabold text-[#1A2332] text-lg mt-2">{p.price.toLocaleString('pt-PT')} MZN</p>
+                                                    <h4 className="font-bold text-slate-800 dark:text-slate-200 mt-1.5 group-hover:text-[#2DB8A0] transition-colors">{p.name}</h4>
+                                                    <p className="font-extrabold text-[#1A2332] dark:text-[#2DB8A0] text-lg mt-2">{p.price.toLocaleString('pt-PT')} MZN</p>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
 
                                     {/* Cart Panel */}
-                                    <div className="lg:col-span-4 p-6 bg-slate-50/50 flex flex-col justify-between">
+                                    <div className="lg:col-span-4 p-6 bg-slate-50/50 dark:bg-[#0B0F19]/50 flex flex-col justify-between border-t lg:border-t-0 border-slate-200 dark:border-slate-800">
                                         <div>
-                                            <h3 className="font-bold text-slate-800 text-base border-b border-slate-200 pb-3 flex justify-between items-center">
+                                            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base border-b border-slate-200 dark:border-slate-800 pb-3 flex justify-between items-center">
                                                 <span>Carrinho de Vendas</span>
                                                 <span className="text-xs text-[#2DB8A0] font-bold">({cart.length} itens)</span>
                                             </h3>
@@ -554,13 +555,13 @@ return true;
                                                     {cart.map(item => (
                                                         <div key={item.product.id} className="flex justify-between items-center text-sm border-b border-slate-200/60 pb-2">
                                                             <div className="min-w-0 flex-1">
-                                                                <p className="font-bold text-slate-800 truncate text-xs">{item.product.name}</p>
+                                                                <p className="font-bold text-slate-800 dark:text-slate-200 truncate text-xs">{item.product.name}</p>
                                                                 <p className="text-[11px] text-slate-500 font-medium">
                                                                     {item.qty}x • {item.product.price.toLocaleString('pt-PT')} MZN
                                                                 </p>
                                                             </div>
                                                             <div className="flex items-center gap-2">
-                                                                <span className="font-extrabold text-[#1A2332] text-xs">
+                                                                <span className="font-extrabold text-[#1A2332] dark:text-white text-xs">
                                                                     {(item.product.price * item.qty).toLocaleString('pt-PT')} MZN
                                                                 </span>
                                                                 <button
@@ -577,7 +578,7 @@ return true;
                                         </div>
 
                                         {/* Cart Summary & Checkout */}
-                                        <div className="mt-6 border-t border-slate-200 pt-4 space-y-4">
+                                        <div className="mt-6 border-t border-slate-200 dark:border-slate-800 pt-4 space-y-4">
                                             {cart.length > 0 && (
                                                 <div className="space-y-1.5 text-xs">
                                                     <div className="flex justify-between text-slate-500">
@@ -588,7 +589,7 @@ return true;
                                                         <span>IVA (14%)</span>
                                                         <span>{(cart.reduce((a, b) => a + (b.product.price * b.qty), 0) * 0.14).toLocaleString('pt-PT')} MZN</span>
                                                     </div>
-                                                    <div className="flex justify-between font-extrabold text-[#1A2332] text-sm pt-1 border-t border-slate-200/50">
+                                                    <div className="flex justify-between font-extrabold text-[#1A2332] dark:text-white text-sm pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
                                                         <span>Total Geral</span>
                                                         <span>{Math.round(cart.reduce((a, b) => a + (b.product.price * b.qty), 0) * 1.14).toLocaleString('pt-PT')} MZN</span>
                                                     </div>
@@ -605,7 +606,7 @@ return true;
 
                                             {/* Success receipt toast */}
                                             {receipt && (
-                                                <div className="bg-emerald-50 border border-emerald-200 rounded-[4px] p-3 text-left space-y-1">
+                                                <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/30 rounded-[4px] p-3 text-left space-y-1">
                                                     <p className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
                                                         <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                                                         Venda Concluída!
@@ -627,24 +628,24 @@ return true;
                             {activeTab === 'stock' && (
                                 <div className="grid lg:grid-cols-12 min-h-[460px]">
                                     {/* Stock list table */}
-                                    <div className="lg:col-span-7 p-6 bg-white border-r border-slate-200">
-                                        <h3 className="font-bold text-slate-800 text-lg mb-4">Stock Multi-Armazém</h3>
+                                    <div className="lg:col-span-7 p-6 bg-white dark:bg-[#151B26] border-r border-slate-200 dark:border-slate-800">
+                                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg mb-4">Stock Multi-Armazém</h3>
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-left border-collapse">
                                                 <thead>
-                                                    <tr className="border-b border-slate-200 text-xs text-slate-400 uppercase tracking-wide">
+                                                    <tr className="border-b border-slate-200 dark:border-slate-800 text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">
                                                         <th className="pb-3 font-semibold">Artigo</th>
                                                         <th className="pb-3 font-semibold">Localização</th>
                                                         <th className="pb-3 font-semibold text-right">Qtd</th>
                                                         <th className="pb-3 font-semibold text-center">Estado</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody className="divide-y divide-slate-100 text-sm">
+                                                <tbody className="divide-y divide-slate-100 dark:divide-slate-850 text-sm">
                                                     {stockItems.map(item => (
                                                         <tr key={item.id} className="hover:bg-slate-50/50">
-                                                            <td className="py-3.5 font-bold text-slate-800">{item.name}</td>
+                                                            <td className="py-3.5 font-bold text-slate-800 dark:text-slate-200">{item.name}</td>
                                                             <td className="py-3.5 text-slate-500 text-xs">{item.warehouse}</td>
-                                                            <td className="py-3.5 font-extrabold text-[#1A2332] text-right">{item.qty}</td>
+                                                            <td className="py-3.5 font-extrabold text-[#1A2332] dark:text-slate-300 text-right">{item.qty}</td>
                                                             <td className="py-3.5 text-center">
                                                                 <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-[4px] ${
                                                                     item.status === 'in_stock'
@@ -664,9 +665,9 @@ return true;
                                     </div>
 
                                     {/* Stock Adjustment Controls */}
-                                    <div className="lg:col-span-5 p-6 bg-slate-50/50 flex flex-col justify-between">
+                                    <div className="lg:col-span-5 p-6 bg-slate-50/50 dark:bg-[#0B0F19]/50 flex flex-col justify-between border-t lg:border-t-0 border-slate-200 dark:border-slate-800">
                                         <div className="space-y-4">
-                                            <h3 className="font-bold text-slate-800 text-base border-b border-slate-200 pb-3">
+                                            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base border-b border-slate-200 dark:border-slate-800 pb-3">
                                                 Lançamento de Ajuste
                                             </h3>
 
@@ -675,7 +676,7 @@ return true;
                                                 <select
                                                     value={selectedStockId}
                                                     onChange={e => setSelectedStockId(Number(e.target.value))}
-                                                    className="w-full bg-white border border-slate-200 rounded-[4px] p-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:border-[#2DB8A0]"
+                                                    className="w-full bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-[4px] p-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-[#2DB8A0]"
                                                 >
                                                     {stockItems.map(item => (
                                                         <option key={item.id} value={item.id}>
@@ -692,13 +693,13 @@ return true;
                                                         type="number"
                                                         value={adjustQty}
                                                         onChange={e => setAdjustQty(e.target.value)}
-                                                        className="w-full bg-white border border-slate-200 rounded-[4px] p-2.5 text-sm font-extrabold text-[#1A2332] focus:outline-none focus:border-[#2DB8A0]"
+                                                        className="w-full bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-[4px] p-2.5 text-sm font-extrabold text-[#1A2332] dark:text-white focus:outline-none focus:border-[#2DB8A0]"
                                                         placeholder="Ex: 50 ou -20"
                                                     />
                                                     <Button
                                                         onClick={() => setAdjustQty(prev => String(parseInt(prev || '0') * -1))}
                                                         variant="outline"
-                                                        className="border-slate-200 text-slate-600 text-xs px-3 font-semibold"
+                                                        className="border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 text-xs px-3 font-semibold bg-transparent"
                                                         title="Inverter Sinal"
                                                     >
                                                         +/-
@@ -717,7 +718,7 @@ return true;
                                             </Button>
 
                                             {stockMessage && (
-                                                <div className="bg-emerald-50 border border-emerald-200 rounded-[4px] p-3 text-left space-y-1">
+                                                <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/30 rounded-[4px] p-3 text-left space-y-1">
                                                     <p className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
                                                         <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                                                         Inventário Atualizado!
@@ -736,16 +737,16 @@ return true;
                             {activeTab === 'billing' && (
                                 <div className="grid lg:grid-cols-12 min-h-[460px]">
                                     {/* Invoice lists */}
-                                    <div className="lg:col-span-7 p-6 bg-white border-r border-slate-200">
+                                    <div className="lg:col-span-7 p-6 bg-white dark:bg-[#151B26] border-r border-slate-200 dark:border-slate-800">
                                         <div className="flex justify-between items-center mb-4">
-                                            <h3 className="font-bold text-slate-800 text-lg">Histórico de Faturas</h3>
-                                            <div className="flex gap-1.5 bg-slate-100 p-0.5 rounded-[4px] text-[11px] font-bold">
+                                            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg">Histórico de Faturas</h3>
+                                            <div className="flex gap-1.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-[4px] text-[11px] font-bold">
                                                 {['Todos', 'Paga', 'Pendente'].map(status => (
                                                     <button
                                                         key={status}
                                                         onClick={() => setFilterStatus(status)}
                                                         className={`px-2 py-1 rounded-[3px] transition-colors ${
-                                                            filterStatus === status ? 'bg-white text-[#1A2332] shadow-xs' : 'text-slate-500 hover:text-slate-700'
+                                                            filterStatus === status ? 'bg-white dark:bg-[#151B26] text-[#1A2332] dark:text-white shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                                                         }`}
                                                     >
                                                         {status}
@@ -757,19 +758,19 @@ return true;
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-left border-collapse">
                                                 <thead>
-                                                    <tr className="border-b border-slate-200 text-xs text-slate-400 uppercase tracking-wide">
+                                                    <tr className="border-b border-slate-200 dark:border-slate-800 text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">
                                                         <th className="pb-3 font-semibold">Fatura</th>
                                                         <th className="pb-3 font-semibold">Cliente</th>
                                                         <th className="pb-3 font-semibold text-right">Valor</th>
                                                         <th className="pb-3 font-semibold text-center">Estado</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody className="divide-y divide-slate-100 text-sm">
+                                                <tbody className="divide-y divide-slate-100 dark:divide-slate-850 text-sm">
                                                     {filteredInvoices.map(inv => (
                                                         <tr key={inv.id} className="hover:bg-slate-50/50">
-                                                            <td className="py-3.5 font-mono text-xs font-semibold text-[#1A2332]">{inv.id}</td>
-                                                            <td className="py-3.5 text-slate-600 font-semibold">{inv.customer}</td>
-                                                            <td className="py-3.5 font-extrabold text-[#1A2332] text-right">{inv.total.toLocaleString('pt-PT')} MZN</td>
+                                                            <td className="py-3.5 font-mono text-xs font-semibold text-[#1A2332] dark:text-slate-300">{inv.id}</td>
+                                                            <td className="py-3.5 text-slate-600 dark:text-slate-300 font-semibold">{inv.customer}</td>
+                                                            <td className="py-3.5 font-extrabold text-[#1A2332] dark:text-slate-300 text-right">{inv.total.toLocaleString('pt-PT')} MZN</td>
                                                             <td className="py-3.5 text-center">
                                                                 <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-[3px] border ${inv.color}`}>
                                                                     {inv.status}
@@ -790,9 +791,9 @@ return true;
                                     </div>
 
                                     {/* Fast Billing controls */}
-                                    <div className="lg:col-span-5 p-6 bg-slate-50/50 flex flex-col justify-between">
+                                    <div className="lg:col-span-5 p-6 bg-slate-50/50 dark:bg-[#0B0F19]/50 flex flex-col justify-between border-t lg:border-t-0 border-slate-200 dark:border-slate-800">
                                         <form onSubmit={handleAddInvoice} className="space-y-4">
-                                            <h3 className="font-bold text-slate-800 text-base border-b border-slate-200 pb-3">
+                                            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base border-b border-slate-200 dark:border-slate-800 pb-3">
                                                 Criar Nova Fatura
                                             </h3>
 
@@ -815,7 +816,7 @@ return true;
                                                     required
                                                     value={newInvTotal}
                                                     onChange={e => setNewInvTotal(e.target.value)}
-                                                    className="w-full bg-white border border-slate-200 rounded-[4px] p-2.5 text-sm font-extrabold text-[#1A2332] focus:outline-none focus:border-[#2DB8A0]"
+                                                    className="w-full bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-[4px] p-2.5 text-sm font-extrabold text-[#1A2332] dark:text-white focus:outline-none focus:border-[#2DB8A0]"
                                                     placeholder="Ex: 75000"
                                                 />
                                             </div>
@@ -871,83 +872,83 @@ return true;
                 </section>
 
                 {/* 5. FEATURES / MODULES SECTION */}
-                <section id="features" className="py-24 bg-slate-50">
+                <section id="features" className="py-24 bg-slate-50 dark:bg-[#0B0F19]">
                     <div className="max-w-7xl mx-auto px-6">
                         <div className="text-center max-w-3xl mx-auto mb-16">
                             <Badge className="bg-[#E8A020]/10 text-[#E8A020] border border-[#E8A020]/20 hover:bg-[#E8A020]/10 px-3 py-1 text-xs font-semibold rounded-full mb-3">
                                 Funcionalidades
                             </Badge>
-                            <h2 className="text-3xl md:text-4xl font-extrabold text-[#1A2332] tracking-tight">
+                            <h2 className="text-3xl md:text-4xl font-extrabold text-[#1A2332] dark:text-white tracking-tight">
                                 Módulos Completos para o seu Negócio
                             </h2>
-                            <p className="text-slate-500 mt-4 text-base">
+                            <p className="text-slate-500 dark:text-slate-400 mt-4 text-base">
                                 O Kutenga ERP integra todas as áreas vitais da sua empresa numa única interface moderna e fácil de usar.
                             </p>
                         </div>
 
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {/* Feature 1 */}
-                            <Card className="p-8 bg-white border-slate-200/80 hover:border-[#2DB8A0]/40 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+                            <Card className="p-8 bg-white dark:bg-[#151B26] border border-slate-200 dark:border-slate-800 hover:border-[#2DB8A0]/40 dark:hover:border-[#2DB8A0]/40 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
                                 <div className="w-12 h-12 rounded-[4px] bg-[#2DB8A0]/10 flex items-center justify-center text-[#2DB8A0] mb-6 group-hover:bg-[#2DB8A0] group-hover:text-white transition-colors duration-300">
                                     <ShoppingCart className="w-6 h-6" />
                                 </div>
-                                <h3 className="font-bold text-[#1A2332] text-xl mb-3">Ponto de Venda (POS)</h3>
-                                <p className="text-slate-500 text-sm leading-relaxed">
+                                <h3 className="font-bold text-[#1A2332] dark:text-slate-100 text-xl mb-3">Ponto de Venda (POS)</h3>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
                                     Interface otimizada para computadores ou tablets. Registe vendas rapidamente, escolha métodos de pagamento e emita talões instantâneos.
                                 </p>
                             </Card>
 
                             {/* Feature 2 */}
-                            <Card className="p-8 bg-white border-slate-200/80 hover:border-[#2DB8A0]/40 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+                            <Card className="p-8 bg-white dark:bg-[#151B26] border border-slate-200 dark:border-slate-800 hover:border-[#2DB8A0]/40 dark:hover:border-[#2DB8A0]/40 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
                                 <div className="w-12 h-12 rounded-[4px] bg-[#2DB8A0]/10 flex items-center justify-center text-[#2DB8A0] mb-6 group-hover:bg-[#2DB8A0] group-hover:text-white transition-colors duration-300">
                                     <Package className="w-6 h-6" />
                                 </div>
-                                <h3 className="font-bold text-[#1A2332] text-xl mb-3">Gestão de Inventário</h3>
-                                <p className="text-slate-500 text-sm leading-relaxed">
+                                <h3 className="font-bold text-[#1A2332] dark:text-slate-100 text-xl mb-3">Gestão de Inventário</h3>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
                                     Rastreie stock por lote, controle validades e faça a movimentação ou transferência automatizada de produtos entre os seus armazéns.
                                 </p>
                             </Card>
 
                             {/* Feature 3 */}
-                            <Card className="p-8 bg-white border-slate-200/80 hover:border-[#2DB8A0]/40 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+                            <Card className="p-8 bg-white dark:bg-[#151B26] border border-slate-200 dark:border-slate-800 hover:border-[#2DB8A0]/40 dark:hover:border-[#2DB8A0]/40 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
                                 <div className="w-12 h-12 rounded-[4px] bg-[#2DB8A0]/10 flex items-center justify-center text-[#2DB8A0] mb-6 group-hover:bg-[#2DB8A0] group-hover:text-white transition-colors duration-300">
                                     <FileText className="w-6 h-6" />
                                 </div>
-                                <h3 className="font-bold text-[#1A2332] text-xl mb-3">Faturação Eletrónica</h3>
-                                <p className="text-slate-500 text-sm leading-relaxed">
+                                <h3 className="font-bold text-[#1A2332] dark:text-slate-100 text-xl mb-3">Faturação Eletrónica</h3>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
                                     Emita faturas, cotações, notas de crédito e faturas-recibo em total conformidade legal e com envio automático aos clientes por e-mail.
                                 </p>
                             </Card>
 
                             {/* Feature 4 */}
-                            <Card className="p-8 bg-white border-slate-200/80 hover:border-[#2DB8A0]/40 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+                            <Card className="p-8 bg-white dark:bg-[#151B26] border border-slate-200 dark:border-slate-800 hover:border-[#2DB8A0]/40 dark:hover:border-[#2DB8A0]/40 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
                                 <div className="w-12 h-12 rounded-[4px] bg-[#2DB8A0]/10 flex items-center justify-center text-[#2DB8A0] mb-6 group-hover:bg-[#2DB8A0] group-hover:text-white transition-colors duration-300">
                                     <BarChart3 className="w-6 h-6" />
                                 </div>
-                                <h3 className="font-bold text-[#1A2332] text-xl mb-3">Relatórios Dinâmicos</h3>
-                                <p className="text-slate-500 text-sm leading-relaxed">
+                                <h3 className="font-bold text-[#1A2332] dark:text-slate-100 text-xl mb-3">Relatórios Dinâmicos</h3>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
                                     Analise margens de lucro, volume de vendas, performance de vendedores e gráficos de inventário com relatórios exportáveis em PDF ou Excel.
                                 </p>
                             </Card>
 
                             {/* Feature 5 */}
-                            <Card className="p-8 bg-white border-slate-200/80 hover:border-[#2DB8A0]/40 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+                            <Card className="p-8 bg-white dark:bg-[#151B26] border border-slate-200 dark:border-slate-800 hover:border-[#2DB8A0]/40 dark:hover:border-[#2DB8A0]/40 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
                                 <div className="w-12 h-12 rounded-[4px] bg-[#2DB8A0]/10 flex items-center justify-center text-[#2DB8A0] mb-6 group-hover:bg-[#2DB8A0] group-hover:text-white transition-colors duration-300">
                                     <ArrowRightLeft className="w-6 h-6" />
                                 </div>
-                                <h3 className="font-bold text-[#1A2332] text-xl mb-3">Ajustes & Transferências</h3>
-                                <p className="text-slate-500 text-sm leading-relaxed">
+                                <h3 className="font-bold text-[#1A2332] dark:text-slate-100 text-xl mb-3">Ajustes & Transferências</h3>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
                                     Corrija quebras de stock e realize transferências de forma segura através de fluxos de aprovação de gerentes antes da efetivação física.
                                 </p>
                             </Card>
 
                             {/* Feature 6 */}
-                            <Card className="p-8 bg-white border-slate-200/80 hover:border-[#2DB8A0]/40 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+                            <Card className="p-8 bg-white dark:bg-[#151B26] border border-slate-200 dark:border-slate-800 hover:border-[#2DB8A0]/40 dark:hover:border-[#2DB8A0]/40 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
                                 <div className="w-12 h-12 rounded-[4px] bg-[#2DB8A0]/10 flex items-center justify-center text-[#2DB8A0] mb-6 group-hover:bg-[#2DB8A0] group-hover:text-white transition-colors duration-300">
                                     <Building2 className="w-6 h-6" />
                                 </div>
-                                <h3 className="font-bold text-[#1A2332] text-xl mb-3">Gestão de Filiais</h3>
-                                <p className="text-slate-500 text-sm leading-relaxed">
+                                <h3 className="font-bold text-[#1A2332] dark:text-slate-100 text-xl mb-3">Gestão de Filiais</h3>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
                                     Centralize as operações de múltiplos estabelecimentos comerciais ou lojas. Alterne de contexto em 1 clique para gerir filiais.
                                 </p>
                             </Card>
@@ -956,16 +957,16 @@ return true;
                 </section>
 
                 {/* 6. OPERATIONAL FLOW (STEPPER) */}
-                <section id="flow" className="py-24 bg-white border-t border-slate-200">
+                <section id="flow" className="py-24 bg-white dark:bg-[#0B0F19] border-t border-slate-200 dark:border-slate-850">
                     <div className="max-w-7xl mx-auto px-6">
                         <div className="text-center max-w-3xl mx-auto mb-20">
                             <Badge className="bg-[#2DB8A0]/10 text-[#2DB8A0] hover:bg-[#2DB8A0]/10 px-3 py-1 text-xs font-semibold rounded-full mb-3">
                                 Fluxo Integrado
                             </Badge>
-                            <h2 className="text-3xl md:text-4xl font-extrabold text-[#1A2332] tracking-tight">
+                            <h2 className="text-3xl md:text-4xl font-extrabold text-[#1A2332] dark:text-white tracking-tight">
                                 Operação perfeitamente coordenada
                             </h2>
-                            <p className="text-slate-500 mt-4 text-base">
+                            <p className="text-slate-500 dark:text-slate-400 mt-4 text-base">
                                 Compreenda como as ações no Ponto de Venda refletem de forma automatizada em todo o sistema.
                             </p>
                         </div>
@@ -973,15 +974,15 @@ return true;
                         {/* Stepper design */}
                         <div className="relative">
                             {/* Horizontal connector line for large screens */}
-                            <div className="hidden lg:block absolute top-[54px] left-[15%] right-[15%] h-0.5 bg-slate-200 -z-10" />
+                            <div className="hidden lg:block absolute top-[54px] left-[15%] right-[15%] h-0.5 bg-slate-200 dark:bg-slate-800 -z-10" />
 
                             <div className="grid lg:grid-cols-4 gap-8">
                                 {/* Step 1 */}
                                 <div className="text-center space-y-4 group">
-                                    <div className="w-16 h-16 rounded-full bg-[#1A2332] border-4 border-slate-100 mx-auto flex items-center justify-center text-white text-lg font-bold shadow-md transition-all duration-300 group-hover:scale-110 group-hover:bg-[#2DB8A0] group-hover:shadow-[#2DB8A0]/20">
+                                    <div className="w-16 h-16 rounded-full bg-[#1A2332] dark:bg-zinc-800 border-4 border-slate-100 dark:border-zinc-900 mx-auto flex items-center justify-center text-white text-lg font-bold shadow-md transition-all duration-300 group-hover:scale-110 group-hover:bg-[#2DB8A0] group-hover:shadow-[#2DB8A0]/20">
                                         <ShoppingCart className="w-6 h-6 text-white" />
                                     </div>
-                                    <h4 className="font-extrabold text-[#1A2332] text-lg">1. Venda Registada</h4>
+                                    <h4 className="font-extrabold text-[#1A2332] dark:text-white text-lg">1. Venda Registada</h4>
                                     <p className="text-slate-500 text-xs px-4 leading-relaxed">
                                         O caixa regista o produto no POS. O pagamento é processado eletronicamente.
                                     </p>
@@ -989,10 +990,10 @@ return true;
 
                                 {/* Step 2 */}
                                 <div className="text-center space-y-4 group">
-                                    <div className="w-16 h-16 rounded-full bg-[#1A2332] border-4 border-slate-100 mx-auto flex items-center justify-center text-white text-lg font-bold shadow-md transition-all duration-300 group-hover:scale-110 group-hover:bg-[#2DB8A0] group-hover:shadow-[#2DB8A0]/20">
+                                    <div className="w-16 h-16 rounded-full bg-[#1A2332] dark:bg-zinc-800 border-4 border-slate-100 dark:border-zinc-900 mx-auto flex items-center justify-center text-white text-lg font-bold shadow-md transition-all duration-300 group-hover:scale-110 group-hover:bg-[#2DB8A0] group-hover:shadow-[#2DB8A0]/20">
                                         <Package className="w-6 h-6 text-white" />
                                     </div>
-                                    <h4 className="font-extrabold text-[#1A2332] text-lg">2. Baixa de Stock</h4>
+                                    <h4 className="font-extrabold text-[#1A2332] dark:text-white text-lg">2. Baixa de Stock</h4>
                                     <p className="text-slate-500 text-xs px-4 leading-relaxed">
                                         O inventário deduz automaticamente os itens do armazém de origem em tempo real.
                                     </p>
@@ -1000,10 +1001,10 @@ return true;
 
                                 {/* Step 3 */}
                                 <div className="text-center space-y-4 group">
-                                    <div className="w-16 h-16 rounded-full bg-[#1A2332] border-4 border-slate-100 mx-auto flex items-center justify-center text-white text-lg font-bold shadow-md transition-all duration-300 group-hover:scale-110 group-hover:bg-[#2DB8A0] group-hover:shadow-[#2DB8A0]/20">
+                                    <div className="w-16 h-16 rounded-full bg-[#1A2332] dark:bg-zinc-800 border-4 border-slate-100 dark:border-zinc-900 mx-auto flex items-center justify-center text-white text-lg font-bold shadow-md transition-all duration-300 group-hover:scale-110 group-hover:bg-[#2DB8A0] group-hover:shadow-[#2DB8A0]/20">
                                         <FileText className="w-6 h-6 text-white" />
                                     </div>
-                                    <h4 className="font-extrabold text-[#1A2332] text-lg">3. Emissão Eletrónica</h4>
+                                    <h4 className="font-extrabold text-[#1A2332] dark:text-white text-lg">3. Emissão Eletrónica</h4>
                                     <p className="text-slate-500 text-xs px-4 leading-relaxed">
                                         A fatura eletrónica assinada é gerada legalmente e vinculada à transação do cliente.
                                     </p>
@@ -1011,10 +1012,10 @@ return true;
 
                                 {/* Step 4 */}
                                 <div className="text-center space-y-4 group">
-                                    <div className="w-16 h-16 rounded-full bg-[#1A2332] border-4 border-slate-100 mx-auto flex items-center justify-center text-white text-lg font-bold shadow-md transition-all duration-300 group-hover:scale-110 group-hover:bg-[#2DB8A0] group-hover:shadow-[#2DB8A0]/20">
+                                    <div className="w-16 h-16 rounded-full bg-[#1A2332] dark:bg-zinc-800 border-4 border-slate-100 dark:border-zinc-900 mx-auto flex items-center justify-center text-white text-lg font-bold shadow-md transition-all duration-300 group-hover:scale-110 group-hover:bg-[#2DB8A0] group-hover:shadow-[#2DB8A0]/20">
                                         <BarChart3 className="w-6 h-6 text-white" />
                                     </div>
-                                    <h4 className="font-extrabold text-[#1A2332] text-lg">4. Relatório Atualizado</h4>
+                                    <h4 className="font-extrabold text-[#1A2332] dark:text-white text-lg">4. Relatório Atualizado</h4>
                                     <p className="text-slate-500 text-xs px-4 leading-relaxed">
                                         O dashboard reflete a receita bruta, o lucro e as margens, tudo pronto para análise fiscal.
                                     </p>
@@ -1025,31 +1026,31 @@ return true;
                 </section>
 
                 {/* 7. PRICING PLANS */}
-                <section id="pricing" className="py-24 bg-slate-50">
+                <section id="pricing" className="py-24 bg-slate-50 dark:bg-[#0B0F19]">
                     <div className="max-w-7xl mx-auto px-6">
                         <div className="text-center max-w-3xl mx-auto mb-16">
                             <Badge className="bg-[#2DB8A0]/10 text-[#2DB8A0] border border-[#2DB8A0]/20 hover:bg-[#2DB8A0]/10 px-3 py-1 text-xs font-semibold rounded-full mb-3">
                                 Preços Justos
                             </Badge>
-                            <h2 className="text-3xl md:text-4xl font-extrabold text-[#1A2332] tracking-tight">
+                            <h2 className="text-3xl md:text-4xl font-extrabold text-[#1A2332] dark:text-white tracking-tight">
                                 Planos Flexíveis para qualquer escala
                             </h2>
-                            <p className="text-slate-500 mt-4 text-base">
+                            <p className="text-slate-500 dark:text-slate-400 mt-4 text-base">
                                 Comece de forma gratuita e faça o upgrade conforme o seu volume de vendas cresce. Sem fidelizações obrigatórias.
                             </p>
                         </div>
 
                         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                             {/* Plan 1 */}
-                            <Card className="p-8 bg-white border-slate-200 flex flex-col justify-between shadow-xs">
+                            <Card className="p-8 bg-white dark:bg-[#151B26] border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xs">
                                 <div>
-                                    <h3 className="font-bold text-slate-800 text-lg">Plano Inicial</h3>
+                                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg">Plano Inicial</h3>
                                     <p className="text-slate-400 text-xs mt-1">Para novos empreendedores</p>
                                     <div className="my-6">
-                                        <span className="text-3xl font-extrabold text-[#1A2332]">Grátis</span>
+                                        <span className="text-3xl font-extrabold text-[#1A2332] dark:text-white">Grátis</span>
                                         <span className="text-slate-400 text-xs font-medium"> / sempre</span>
                                     </div>
-                                    <ul className="space-y-3.5 text-slate-600 text-xs border-t border-slate-100 pt-6">
+                                    <ul className="space-y-3.5 text-slate-600 dark:text-slate-300 text-xs border-t border-slate-100 dark:border-slate-800 pt-6">
                                         <li className="flex items-center gap-2.5">
                                             <Check className="w-4 h-4 text-[#2DB8A0] flex-shrink-0" />
                                             <span>Até 50 faturas eletrónicas / mês</span>
@@ -1070,7 +1071,7 @@ return true;
                                 </div>
                                 <div className="mt-8">
                                     <Link href="/register" className="w-full">
-                                        <Button variant="outline" className="w-full border-slate-200 text-[#1A2332] hover:bg-slate-50 font-bold rounded-[4px]">
+                                        <Button variant="outline" className="w-full border-slate-200 dark:border-slate-800 text-[#1A2332] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold rounded-[4px] bg-transparent">
                                             Começar agora
                                         </Button>
                                     </Link>
@@ -1078,22 +1079,22 @@ return true;
                             </Card>
 
                             {/* Plan 2 - Recommended */}
-                            <Card className="p-8 bg-white border-2 border-[#2DB8A0] relative flex flex-col justify-between shadow-md">
+                            <Card className="p-8 bg-white dark:bg-[#151B26] border-2 border-[#2DB8A0] relative flex flex-col justify-between shadow-md">
                                 <div className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 bg-[#2DB8A0] text-white text-[10px] font-black uppercase px-3 py-1 rounded-full tracking-wider shadow-sm">
                                     Recomendado
                                 </div>
 
                                 <div>
-                                    <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg flex items-center gap-2">
                                         <span>Plano Crescimento</span>
                                         <Badge className="bg-[#2DB8A0]/10 text-[#2DB8A0] border border-[#2DB8A0]/20 hover:bg-[#2DB8A0]/10 text-[9px] font-bold">Popular</Badge>
                                     </h3>
                                     <p className="text-slate-400 text-xs mt-1">Para pequenas e médias empresas</p>
                                     <div className="my-6">
-                                        <span className="text-3xl font-extrabold text-[#1A2332]">3,500 MZN</span>
+                                        <span className="text-3xl font-extrabold text-[#1A2332] dark:text-white">3,500 MZN</span>
                                         <span className="text-slate-400 text-xs font-medium"> / mês</span>
                                     </div>
-                                    <ul className="space-y-3.5 text-slate-600 text-xs border-t border-slate-100 pt-6">
+                                    <ul className="space-y-3.5 text-slate-600 dark:text-slate-300 text-xs border-t border-slate-100 dark:border-slate-800 pt-6">
                                         <li className="flex items-center gap-2.5 font-semibold">
                                             <Check className="w-4 h-4 text-[#2DB8A0] flex-shrink-0" />
                                             <span>Faturação eletrónica ILIMITADA</span>
@@ -1126,14 +1127,14 @@ return true;
                             </Card>
 
                             {/* Plan 3 */}
-                            <Card className="p-8 bg-white border-slate-200 flex flex-col justify-between shadow-xs">
+                            <Card className="p-8 bg-white dark:bg-[#151B26] border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xs">
                                 <div>
-                                    <h3 className="font-bold text-slate-800 text-lg">Plano Empresarial</h3>
+                                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg">Plano Empresarial</h3>
                                     <p className="text-slate-400 text-xs mt-1">Para grandes corporações</p>
                                     <div className="my-6">
-                                        <span className="text-3xl font-extrabold text-[#1A2332]">Sob Consulta</span>
+                                        <span className="text-3xl font-extrabold text-[#1A2332] dark:text-white">Sob Consulta</span>
                                     </div>
-                                    <ul className="space-y-3.5 text-slate-600 text-xs border-t border-slate-100 pt-6">
+                                    <ul className="space-y-3.5 text-slate-600 dark:text-slate-300 text-xs border-t border-slate-100 dark:border-slate-800 pt-6">
                                         <li className="flex items-center gap-2.5">
                                             <Check className="w-4 h-4 text-[#2DB8A0] flex-shrink-0" />
                                             <span>Tudo do Plano Crescimento</span>
@@ -1158,7 +1159,7 @@ return true;
                                 </div>
                                 <div className="mt-8">
                                     <a href="mailto:suporte@kutenga.co" className="w-full">
-                                        <Button variant="outline" className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 font-bold rounded-[4px]">
+                                        <Button variant="outline" className="w-full border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold rounded-[4px] bg-transparent">
                                             Contactar Vendas
                                         </Button>
                                     </a>
@@ -1169,7 +1170,7 @@ return true;
                 </section>
 
                 {/* 8. FINAL CTA */}
-                <section className="bg-radial-[circle_at_bottom_left] from-[#2DB8A0] to-[#1A2332] text-white py-24 text-center px-6 relative overflow-hidden">
+                <section className="bg-radial-[circle_at_bottom_left] from-[#2DB8A0] to-[#1A2332] dark:to-[#0B0F19] text-white py-24 text-center px-6 relative overflow-hidden">
                     {/* Background pattern layer */}
                     <div className="absolute inset-0 bg-black/10 opacity-30 -z-10" />
 
@@ -1191,7 +1192,7 @@ return true;
                 </section>
 
                 {/* 9. PREMIUM FOOTER */}
-                <footer className="bg-[#1A2332] border-t border-slate-800 text-slate-400 py-16 text-sm">
+                <footer className="bg-[#1A2332] dark:bg-[#0B0F19] border-t border-slate-800 dark:border-slate-850 text-slate-400 py-16 text-sm">
                     <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
                         <div className="space-y-4 col-span-2 md:col-span-1">
                             <div className="flex items-center gap-2 font-bold text-white text-lg">
@@ -1239,7 +1240,7 @@ return true;
                         </div>
                     </div>
 
-                    <div className="max-w-7xl mx-auto px-6 border-t border-slate-800/80 mt-12 pt-8 text-center text-xs text-slate-500 font-medium flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div className="max-w-7xl mx-auto px-6 border-t border-slate-800/80 dark:border-slate-850 mt-12 pt-8 text-center text-xs text-slate-500 dark:text-slate-400 font-medium flex flex-col sm:flex-row justify-between items-center gap-4">
                         <p>© {new Date().getFullYear()} Kutenga ERP. Todos os direitos reservados.</p>
                         <p className="text-slate-600">Desenvolvido com carinho e conformidade.</p>
                     </div>
