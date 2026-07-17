@@ -193,3 +193,4 @@ class QuoteController extends Controller
         }
     }
 }
+

@@ -25,7 +25,7 @@ class InvoiceController extends Controller
     {
         $companyId = $request->user()->company_id;
 
-        $invoices = Invoice::where('company_id', $companyId)
+        $query = Invoice::where('company_id', $companyId)
             ->with(['series', 'customer'])
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -38,14 +38,23 @@ class InvoiceController extends Controller
                 if ($status !== 'all') {
                     $query->where('status', $status);
                 }
-            })
-            ->orderBy('created_at', 'desc')
+            });
+
+        $kpis = [
+            'total_count' => (clone $query)->count(),
+            'total_amount' => (clone $query)->sum('grand_total'),
+            'paid_amount' => (clone $query)->where('status', 'paid')->sum('grand_total'),
+            'pending_amount' => (clone $query)->whereIn('status', ['draft', 'confirmed', 'partial', 'overdue'])->sum('grand_total'),
+        ];
+
+        $invoices = $query->orderBy('created_at', 'desc')
             ->paginate(15)
             ->withQueryString();
 
         return Inertia::render('billing/invoices/index', [
             'documents' => $invoices,
             'filters' => $request->only(['search', 'status']),
+            'kpis' => $kpis,
             'type' => 'FT',
             'title' => 'Faturas a Crédito'
         ]);

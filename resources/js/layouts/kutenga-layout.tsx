@@ -78,6 +78,7 @@ function KutengaLayoutContent({
 import { ConfirmDeleteProvider } from '@/contexts/confirm-delete-context';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
+import { Toaster } from '@/components/ui/sonner';
 
 export default function KutengaLayout({
     children,
@@ -93,6 +94,7 @@ export default function KutengaLayout({
                         {children}
                     </KutengaLayoutContent>
                     <InactivityLock />
+                    <Toaster richColors position="top-right" />
                 </SidebarProvider>
             </TooltipProvider>
         </ConfirmDeleteProvider>

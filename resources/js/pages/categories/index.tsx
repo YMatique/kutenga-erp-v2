@@ -57,11 +57,16 @@ export default function CategoriesIndex() {
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [search, setSearch] = useState('');
 
-    const { data, setData, post, put, processing, reset, errors } = useForm({
+    const { data, setData, post, put, processing, reset, errors, transform } = useForm({
         name: '',
-        parent_id: '',
+        parent_id: 'none',
         description: '',
     });
+
+    transform((data) => ({
+        ...data,
+        parent_id: data.parent_id === 'none' ? null : data.parent_id,
+    }));
 
     const filteredCategories = categories.filter(c =>
         c.name.toLowerCase().includes(search.toLowerCase())

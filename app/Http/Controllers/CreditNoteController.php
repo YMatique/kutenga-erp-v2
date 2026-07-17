@@ -231,3 +231,4 @@ class CreditNoteController extends Controller
         }
     }
 }
+
