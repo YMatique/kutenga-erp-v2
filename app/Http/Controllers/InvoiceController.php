@@ -125,7 +125,8 @@ class InvoiceController extends Controller
         return Inertia::render('billing/invoices/show', [
             'document' => $invoice,
             'warehouses' => $warehouses,
-            'type' => 'FT'
+            'type' => 'FT',
+            'receivePaymentRoute' => route('billing.invoices.receive-payment')
         ]);
     }
 

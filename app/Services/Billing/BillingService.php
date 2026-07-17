@@ -327,6 +327,70 @@ class BillingService
                 }
             }
 
+            // --- Geração do Recibo (RC) Automático ---
+            $series = DocumentSeries::where('company_id', $customer->company_id)
+                ->where('year', date('Y'))
+                ->where('is_active', true)
+                ->first();
+
+            if ($series) {
+                $rcData = [
+                    'company_id' => $customer->company_id,
+                    'series_id' => $series->id,
+                    'customer_id' => $customer->id,
+                    'customer_name' => $customer->name,
+                    'customer_nuit' => $customer->nuit,
+                    'customer_phone' => $customer->phone,
+                    'customer_email' => $customer->email,
+                    'customer_address' => $customer->address,
+                    'document_type' => 'RC',
+                    'status' => 'draft',
+                    'issue_date' => date('Y-m-d'),
+                    'due_date' => date('Y-m-d'),
+                    'created_by' => Auth::id() ?? $payment->created_by,
+                ];
+
+                $rcDoc = Document::create($rcData);
+
+                // Adicionar itens com base nas alocações feitas
+                $allocations = PaymentAllocation::where('payment_id', $payment->id)->with('document')->get();
+                $totalAllocated = 0;
+
+                foreach ($allocations as $alloc) {
+                    $desc = "Pagamento da Fatura " . ($alloc->document ? $alloc->document->document_number : '');
+                    $this->addItem($rcDoc, [
+                        'product_name' => $desc,
+                        'quantity' => 1,
+                        'unit_price' => $alloc->amount_allocated,
+                        'tax_rate' => 0, // Já foi tributado na fatura
+                        'discount_percent' => 0,
+                    ]);
+                    $totalAllocated += $alloc->amount_allocated;
+                }
+
+                $unallocated = $amount - $totalAllocated;
+                if ($unallocated > 0) {
+                    $this->addItem($rcDoc, [
+                        'product_name' => 'Adiantamento / Pagamento Não Alocado',
+                        'quantity' => 1,
+                        'unit_price' => $unallocated,
+                        'tax_rate' => 0,
+                        'discount_percent' => 0,
+                    ]);
+                }
+
+                $this->recalculateTotals($rcDoc);
+
+                // Confirmar e Emitir Oficialmente o RC
+                $this->confirmAndEmit($rcDoc->id, null);
+
+                // Vincular o Payment ao Recibo para fácil consulta futura
+                $rcNumber = Document::find($rcDoc->id)->document_number;
+                $payment->update([
+                    'reference' => ($payment->reference ? $payment->reference . ' | ' : '') . 'Recibo: ' . $rcNumber
+                ]);
+            }
+
             return $payment->load('allocations');
         });
     }

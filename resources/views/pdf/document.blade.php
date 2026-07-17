@@ -233,6 +233,7 @@
             'NC' => 'Nota de Crédito',
             'ND' => 'Nota de Débito',
             'GR' => 'Guia de Remessa',
+            'RC' => 'Recibo',
         ];
     @endphp
 
@@ -269,7 +270,7 @@
                 </div>
                 <div class="document-meta">
                     <strong>Data Emissão:</strong> {{ $document->issue_date ? $document->issue_date->format('d/m/Y') : '—' }}<br>
-                    @if($document->document_type !== 'GR' && $document->document_type !== 'FR')
+                    @if($document->document_type !== 'GR' && $document->document_type !== 'FR' && $document->document_type !== 'RC')
                         <strong>Vencimento:</strong> {{ $document->due_date ? $document->due_date->format('d/m/Y') : '—' }}<br>
                     @endif
                     @if($document->series)

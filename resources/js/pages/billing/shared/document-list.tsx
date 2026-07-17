@@ -44,7 +44,7 @@ interface Props {
     filters: Filters;
     type: string;
     title: string;
-    createHref: string;
+    createHref?: string;
     showHrefPrefix: string;
     kpis?: {
         total_count: number;
@@ -141,12 +141,14 @@ export default function DocumentList({ documents, filters, type, title, createHr
                     title={title}
                     subtitle={`${documents.total} registo${documents.total !== 1 ? 's' : ''} encontrado${documents.total !== 1 ? 's' : ''}`}
                     actions={
-                        <Link href={createHref}>
-                            <PrimaryButton>
-                                <Plus className="h-4 w-4" />
-                                Novo Registo
-                            </PrimaryButton>
-                        </Link>
+                        createHref ? (
+                            <Link href={createHref}>
+                                <PrimaryButton>
+                                    <Plus className="h-4 w-4" />
+                                    Novo Registo
+                                </PrimaryButton>
+                            </Link>
+                        ) : null
                     }
                 />
 
@@ -241,7 +243,7 @@ export default function DocumentList({ documents, filters, type, title, createHr
                                         <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">CLIENTE</th>
                                         <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">NUIT</th>
                                         <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">EMISSÃO</th>
-                                        {type !== 'FR' && type !== 'GR' && (
+                                        {type !== 'FR' && type !== 'GR' && type !== 'RC' && (
                                             <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">VENCIMENTO</th>
                                         )}
                                         <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400">TOTAL</th>
@@ -269,7 +271,7 @@ export default function DocumentList({ documents, filters, type, title, createHr
                                             <td className="px-4 py-3 text-sm text-slate-500">
                                                 {formatDate(doc.issue_date)}
                                             </td>
-                                            {type !== 'FR' && type !== 'GR' && (
+                                            {type !== 'FR' && type !== 'GR' && type !== 'RC' && (
                                                 <td className="px-4 py-3 text-sm text-slate-500">
                                                     {formatDate(doc.due_date)}
                                                 </td>

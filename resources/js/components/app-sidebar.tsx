@@ -64,6 +64,7 @@ const mainNavItems: NavItem[] = [
             { title: 'Cotações', href: '/billing/quotes' },
             { title: 'Faturas a Crédito', href: '/billing/invoices' },
             { title: 'Faturas-Recibo', href: '/billing/receipts' },
+            { title: 'Recibos (Pagamentos)', href: '/billing/payment-receipts' },
             { title: 'Notas de Crédito', href: '/billing/credit-notes' },
             { title: 'Notas de Débito', href: '/billing/debit-notes' },
             { title: 'Clientes', href: '/billing/customers' },

@@ -10,6 +10,7 @@ use App\Http\Controllers\DocumentSeriesController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\ReceiptController;
+use App\Http\Controllers\PaymentReceiptController;
 use App\Http\Controllers\CreditNoteController;
 use App\Http\Controllers\DebitNoteController;
 use App\Http\Controllers\InventoryDashboardController;
@@ -155,6 +156,7 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
         Route::middleware('can:invoice.create')->group(function () {
             Route::resource('invoices', InvoiceController::class)->except(['index', 'show']);
             Route::resource('receipts', ReceiptController::class)->except(['index', 'show']);
+            Route::resource('payment-receipts', PaymentReceiptController::class)->except(['index', 'show']);
             Route::resource('credit-notes', CreditNoteController::class)->except(['index', 'show']);
             Route::resource('debit-notes', DebitNoteController::class)->except(['index', 'show']);
             Route::resource('series', DocumentSeriesController::class)->except(['index']);
@@ -171,6 +173,7 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
         Route::middleware('can:invoice.view')->group(function () {
             Route::resource('invoices', InvoiceController::class)->only(['index', 'show']);
             Route::resource('receipts', ReceiptController::class)->only(['index', 'show']);
+            Route::resource('payment-receipts', PaymentReceiptController::class)->only(['index', 'show']);
             Route::resource('credit-notes', CreditNoteController::class)->only(['index', 'show']);
             Route::resource('debit-notes', DebitNoteController::class)->only(['index', 'show']);
             Route::resource('series', DocumentSeriesController::class)->only(['index']);

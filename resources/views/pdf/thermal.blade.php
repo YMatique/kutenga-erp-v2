@@ -6,6 +6,7 @@
         'NC' => 'Nota de Crédito',
         'ND' => 'Nota de Débito',
         'GR' => 'Guia de Remessa',
+        'RC' => 'Recibo',
     ];
 @endphp
 

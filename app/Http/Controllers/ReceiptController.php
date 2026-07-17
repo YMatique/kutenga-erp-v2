@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Warehouse;
 use App\Services\Billing\BillingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -190,24 +191,53 @@ class ReceiptController extends Controller
 
     public function confirm(Request $request, $id)
     {
-        $companyId = $request->user()->company_id;
+        $user = $request->user();
+        $companyId = $user->company_id;
         $receipt = Receipt::where('company_id', $companyId)->findOrFail($id);
 
         $hasPhysicalProducts = $receipt->has_physical_products;
 
         $validated = $request->validate([
             'warehouse_id' => $hasPhysicalProducts ? 'required|exists:warehouses,id' : 'nullable|exists:warehouses,id',
+            'payment_method' => 'required|string|in:cash,card,transfer',
         ]);
 
         try {
+            DB::beginTransaction();
+
             $warehouse = null;
             if (!empty($validated['warehouse_id'])) {
                 $warehouse = Warehouse::where('company_id', $companyId)->findOrFail($validated['warehouse_id']);
             }
             $this->billingService->confirmAndEmit($receipt->id, $warehouse);
 
-            return redirect()->back()->with('success', 'Fatura-Recibo emitido oficialmente e stock atualizado!');
+            // Refetch to get updated grand_total if any
+            $receipt->refresh();
+
+            // Register Payment
+            $payment = \App\Models\Payment::create([
+                'company_id' => $companyId,
+                'customer_id' => $receipt->customer_id,
+                'payment_date' => now(),
+                'payment_method' => $validated['payment_method'],
+                'amount' => $receipt->grand_total,
+                'status' => 'completed',
+                'reference' => 'FR-' . $receipt->id . '-' . time(),
+                'created_by' => $user->id,
+            ]);
+
+            \App\Models\PaymentAllocation::create([
+                'payment_id' => $payment->id,
+                'document_id' => $receipt->id,
+                'amount_allocated' => $receipt->grand_total,
+                'created_by' => $user->id,
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Fatura-Recibo emitido oficialmente e pagamento registado!');
         } catch (\Exception $e) {
+            DB::rollBack();
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }
     }

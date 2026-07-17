@@ -35,6 +35,7 @@ class Document extends Model
         'NC' => CreditNote::class,
         'ND' => DebitNote::class,
         'GR' => DeliveryNote::class,
+        'RC' => PaymentReceipt::class,
     ];
 
     /**

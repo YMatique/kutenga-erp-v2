@@ -158,7 +158,10 @@ export default function DocumentShow({
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const [isEmailOpen, setIsEmailOpen] = useState(false);
 
-    const confirmForm = useForm({ warehouse_id: warehouses[0]?.id?.toString() ?? '' });
+    const confirmForm = useForm({ 
+        warehouse_id: warehouses[0]?.id?.toString() ?? '',
+        payment_method: 'cash'
+    });
     const paymentForm = useForm({
         customer_id: doc.customer_id?.toString() ?? '',
         amount: doc.grand_total,
@@ -408,6 +411,22 @@ return;
                                     </Select>
                                 </div>
                             )}
+                            {type === 'FR' && (
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-medium text-zinc-500 flex items-center gap-1">
+                                        <CreditCard size={10} /> Pagamento
+                                    </p>
+                                    <Select value={confirmForm.data.payment_method}
+                                        onValueChange={(v) => confirmForm.setData('payment_method', v)}>
+                                        <SelectTrigger className="h-9 min-w-[140px]"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="cash">Numerário</SelectItem>
+                                            <SelectItem value="card">Cartão</SelectItem>
+                                            <SelectItem value="transfer">Transferência</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
                             <Button id="confirm-document" onClick={handleConfirm} disabled={confirmForm.processing}
                                 className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
                                 <CheckCircle2 size={15} />
@@ -451,7 +470,7 @@ return;
                                     <p className="text-xs text-zinc-500 mt-1 flex items-center gap-1 justify-end">
                                         <Calendar size={11} /> Emissão: {formatDate(doc.issue_date)}
                                     </p>
-                                    {type !== 'GR' && type !== 'FR' && (
+                                    {type !== 'GR' && type !== 'FR' && type !== 'RC' && (
                                         <p className="text-xs text-zinc-500">Vencimento: {formatDate(doc.due_date)}</p>
                                     )}
                                 </div>
