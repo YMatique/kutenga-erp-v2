@@ -43,7 +43,7 @@ export default function InventoryClosingsCreate({ warehouses, stockPreview, toda
     };
 
     return (
-        <KutengaLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title="Novo Fecho de Inventário" />
 
             <div className="space-y-6 max-w-5xl">
@@ -208,6 +208,12 @@ export default function InventoryClosingsCreate({ warehouses, stockPreview, toda
                     </div>
                 </div>
             </div>
-        </KutengaLayout>
+        </>
     );
 }
+
+InventoryClosingsCreate.layout = (page: any) => (
+    <KutengaLayout breadcrumbs={breadcrumbs}>
+        {page}
+    </KutengaLayout>
+);

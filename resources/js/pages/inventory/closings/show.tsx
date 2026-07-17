@@ -83,7 +83,7 @@ export default function InventoryClosingsShow({ closing, items, summary }: any) 
     };
 
     return (
-        <KutengaLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title={`Fecho — ${new Date(closing.reference_date).toLocaleDateString('pt-PT')}`} />
 
             <div className="space-y-6">
@@ -253,6 +253,12 @@ export default function InventoryClosingsShow({ closing, items, summary }: any) 
                     </div>
                 </div>
             </div>
-        </KutengaLayout>
+        </>
     );
 }
+
+InventoryClosingsShow.layout = (page: any) => (
+    <KutengaLayout breadcrumbs={breadcrumbs}>
+        {page}
+    </KutengaLayout>
+);

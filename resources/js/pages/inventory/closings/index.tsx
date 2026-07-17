@@ -44,8 +44,8 @@ export default function InventoryClosingsIndex({ closings, stats, warehouses, fi
     };
 
     return (
-        <KutengaLayout breadcrumbs={breadcrumbs}>
-            <Head title="Fecho de Inventário" />
+        <>
+            <Head title="Fecho de Stock" />
 
             <div className="space-y-6">
                 {/* Header */}
@@ -213,6 +213,12 @@ export default function InventoryClosingsIndex({ closings, stats, warehouses, fi
                     )}
                 </div>
             </div>
-        </KutengaLayout>
+        </>
     );
 }
+
+InventoryClosingsIndex.layout = (page: any) => (
+    <KutengaLayout breadcrumbs={breadcrumbs}>
+        {page}
+    </KutengaLayout>
+);
