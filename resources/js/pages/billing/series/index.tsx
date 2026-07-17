@@ -1,8 +1,6 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
-import { Plus, Pencil, Trash2, Search, X, Hash, Calendar, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, X, Hash, Calendar, CheckCircle2, XCircle, Settings2 } from 'lucide-react';
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog, DialogContent, DialogDescription, DialogFooter,
     DialogHeader, DialogTitle, DialogTrigger,
@@ -10,11 +8,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table';
 import { useConfirmDelete } from '@/contexts/confirm-delete-context';
-import type {BreadcrumbItem} from '@/types';
+import type { BreadcrumbItem } from '@/types';
+import { PageHeader, TableCard, PrimaryButton, OutlineButton } from '@/components/ui/brand';
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 
 interface Series {
     id: number;
@@ -38,11 +36,6 @@ interface Props {
     series: PaginatedSeries;
     filters: { search?: string };
 }
-
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Faturação', href: '#' },
-    { title: 'Séries', href: '/billing/series' },
-];
 
 export default function SeriesIndex({ series, filters }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
@@ -100,9 +93,7 @@ export default function SeriesIndex({ series, filters }: Props) {
     };
 
     const handleUpdate = () => {
-        if (!editingSeries) {
-return;
-}
+        if (!editingSeries) return;
 
         editForm.put(`/billing/series/${editingSeries.id}`, {
             onSuccess: () => {
@@ -122,253 +113,283 @@ return;
         });
     };
 
-    const hasActiveFilters = filters.search;
+    const hasActiveFilters = !!filters.search;
 
     return (
         <>
             <Head title="Séries Documentais" />
 
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">Séries Documentais</h1>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        {series.total} série{series.total !== 1 ? 's' : ''} encontrada{series.total !== 1 ? 's' : ''}
-                    </p>
-                </div>
-                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="gap-2">
-                            <Plus size={16} />
-                            Nova Série
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Criar Nova Série</DialogTitle>
-                            <DialogDescription>
-                                Defina a série para numeração dos documentos fiscais.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="code">Código <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="code"
-                                        placeholder="Ex: A"
-                                        value={createForm.data.code}
-                                        onChange={(e) => createForm.setData('code', e.target.value.toUpperCase())}
-                                    />
-                                    {createForm.errors.code && <p className="text-xs text-red-500">{createForm.errors.code}</p>}
+            <div className="space-y-4 bg-slate-50 ">
+                <PageHeader
+                    title="Séries Documentais"
+                    subtitle={`${series.total} série${series.total !== 1 ? 's' : ''} encontrada${series.total !== 1 ? 's' : ''}`}
+                    actions={
+                        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                            <DialogTrigger asChild>
+                                <PrimaryButton>
+                                    <Plus className="h-4 w-4" />
+                                    Nova Série
+                                </PrimaryButton>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Criar Nova Série</DialogTitle>
+                                    <DialogDescription>
+                                        Defina a série para numeração dos documentos fiscais.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="code">Código <span className="text-red-500">*</span></Label>
+                                            <Input
+                                                id="code"
+                                                placeholder="Ex: A"
+                                                value={createForm.data.code}
+                                                onChange={(e) => createForm.setData('code', e.target.value.toUpperCase())}
+                                            />
+                                            {createForm.errors.code && <p className="text-xs text-red-500">{createForm.errors.code}</p>}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="year">Ano <span className="text-red-500">*</span></Label>
+                                            <Input
+                                                id="year"
+                                                type="number"
+                                                value={createForm.data.year}
+                                                onChange={(e) => createForm.setData('year', parseInt(e.target.value) || new Date().getFullYear())}
+                                            />
+                                            {createForm.errors.year && <p className="text-xs text-red-500">{createForm.errors.year}</p>}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="name">Nome <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="name"
+                                            placeholder="Ex: Série Principal - Faturas 2026"
+                                            value={createForm.data.name}
+                                            onChange={(e) => createForm.setData('name', e.target.value)}
+                                        />
+                                        {createForm.errors.name && <p className="text-xs text-red-500">{createForm.errors.name}</p>}
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <Label htmlFor="is_active">Activa</Label>
+                                        <Switch
+                                            id="is_active"
+                                            checked={createForm.data.is_active}
+                                            onCheckedChange={(v) => createForm.setData('is_active', v)}
+                                        />
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="year">Ano <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="year"
-                                        type="number"
-                                        value={createForm.data.year}
-                                        onChange={(e) => createForm.setData('year', parseInt(e.target.value) || new Date().getFullYear())}
-                                    />
-                                    {createForm.errors.year && <p className="text-xs text-red-500">{createForm.errors.year}</p>}
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="name">Nome <span className="text-red-500">*</span></Label>
-                                <Input
-                                    id="name"
-                                    placeholder="Ex: Série Principal - Faturas 2026"
-                                    value={createForm.data.name}
-                                    onChange={(e) => createForm.setData('name', e.target.value)}
-                                />
-                                {createForm.errors.name && <p className="text-xs text-red-500">{createForm.errors.name}</p>}
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="is_active">Activa</Label>
-                                <Switch
-                                    id="is_active"
-                                    checked={createForm.data.is_active}
-                                    onCheckedChange={(v) => createForm.setData('is_active', v)}
-                                />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancelar</Button>
-                            <Button onClick={handleCreate} disabled={createForm.processing}>
-                                {createForm.processing ? 'A criar...' : 'Criar Série'}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </div>
+                                <DialogFooter>
+                                    <OutlineButton onClick={() => setIsCreateOpen(false)}>Cancelar</OutlineButton>
+                                    <PrimaryButton onClick={handleCreate} disabled={createForm.processing}>
+                                        {createForm.processing ? 'A criar...' : 'Criar Série'}
+                                    </PrimaryButton>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    }
+                />
 
-            {/* Filtros */}
-            <Card className="mb-4">
-                <CardContent className="pt-4 pb-4">
-                    <div className="flex gap-3 items-center">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={15} />
-                            <Input
-                                className="pl-9"
-                                placeholder="Pesquisar por código ou nome..."
-                                value={search}
-                                onChange={handleSearch}
-                            />
-                        </div>
-                        {hasActiveFilters && (
-                            <Button variant="ghost" size="sm" onClick={clearSearch} className="gap-1">
-                                <X size={14} /> Limpar
-                            </Button>
-                        )}
+                {/* FILTERS BAR */}
+                <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs px-4 py-3 flex flex-col sm:flex-row gap-3 items-center">
+                    <div className="relative w-full sm:w-72">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Pesquisar por código ou nome..."
+                            value={search}
+                            onChange={handleSearch}
+                            className="w-full h-9 pl-9 pr-3 text-sm bg-white border border-slate-200 rounded-[4px] text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2DB8A0]/30 focus:border-[#2DB8A0]"
+                        />
                     </div>
-                </CardContent>
-            </Card>
+                    {hasActiveFilters && (
+                        <button
+                            onClick={clearSearch}
+                            className="ml-auto flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 transition-colors"
+                        >
+                            <X className="h-3.5 w-3.5" />
+                            Limpar
+                        </button>
+                    )}
+                </div>
 
-            {/* Tabela */}
-            <Card>
-                <CardContent className="pt-4">
-                    {series.data.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <Hash className="text-zinc-300 dark:text-zinc-600 mb-3" size={40} />
-                            <p className="text-zinc-500 dark:text-zinc-400 font-medium">Nenhuma série encontrada</p>
-                        </div>
-                    ) : (
-                        <>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Código</TableHead>
-                                        <TableHead>Nome</TableHead>
-                                        <TableHead>Ano</TableHead>
-                                        <TableHead className="text-right">Próximo Número</TableHead>
-                                        <TableHead className="text-center">Estado</TableHead>
-                                        <TableHead className="text-right">Acções</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {series.data.map((serie) => (
-                                        <TableRow key={serie.id}>
-                                            <TableCell className="font-mono font-bold text-blue-600 dark:text-blue-400">
-                                                {serie.code}
-                                            </TableCell>
-                                            <TableCell>{serie.name}</TableCell>
-                                            <TableCell>{serie.year}</TableCell>
-                                            <TableCell className="text-right font-mono">{serie.next_number}</TableCell>
-                                            <TableCell className="text-center">
-                                                {serie.is_active ? (
-                                                    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
-                                                        <CheckCircle2 size={12} /> Activa
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center gap-1 text-zinc-400 text-xs font-medium">
-                                                        <XCircle size={12} /> Inactiva
-                                                    </span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <div className="flex items-center justify-end gap-1">
-                                                    {/* Botão Editar */}
-                                                    <Dialog open={editingSeries?.id === serie.id} onOpenChange={(open) => !open && setEditingSeries(null)}>
-                                                        <DialogTrigger asChild>
-                                                            <Button variant="ghost" size="sm" onClick={() => handleEdit(serie)}>
-                                                                <Pencil size={14} />
-                                                            </Button>
-                                                        </DialogTrigger>
-                                                        <DialogContent>
-                                                            <DialogHeader>
-                                                                <DialogTitle>Editar Série</DialogTitle>
-                                                                <DialogDescription>Altere os dados da série.</DialogDescription>
-                                                            </DialogHeader>
-                                                            <div className="space-y-4 py-4">
-                                                                <div className="grid grid-cols-2 gap-4">
-                                                                    <div className="space-y-2">
-                                                                        <Label htmlFor="edit-code">Código</Label>
-                                                                        <Input
-                                                                            id="edit-code"
-                                                                            value={editForm.data.code}
-                                                                            onChange={(e) => editForm.setData('code', e.target.value.toUpperCase())}
-                                                                        />
-                                                                        {editForm.errors.code && <p className="text-xs text-red-500">{editForm.errors.code}</p>}
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        <Label htmlFor="edit-year">Ano</Label>
-                                                                        <Input
-                                                                            id="edit-year"
-                                                                            type="number"
-                                                                            value={editForm.data.year}
-                                                                            onChange={(e) => editForm.setData('year', parseInt(e.target.value) || new Date().getFullYear())}
-                                                                        />
-                                                                    </div>
+                {/* TABLE CARD */}
+                <TableCard>
+                    <table className="w-full text-sm">
+                        <thead className="bg-slate-50 border-b border-slate-100">
+                            <tr>
+                                <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400 w-[120px]">
+                                    Código
+                                </th>
+                                <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                    Nome
+                                </th>
+                                <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400 w-[100px]">
+                                    Ano
+                                </th>
+                                <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 w-[150px]">
+                                    Próximo Número
+                                </th>
+                                <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400 w-[120px]">
+                                    Estado
+                                </th>
+                                <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 w-[120px]">
+                                    Acções
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {series.data.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6}>
+                                        <div className="flex flex-col items-center justify-center py-16 text-center">
+                                            <Hash className="h-10 w-10 text-slate-300 mb-3" />
+                                            <p className="text-slate-500 font-medium">Nenhuma série encontrada</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : (
+                                series.data.map((serie) => (
+                                    <tr key={serie.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-4 py-3 font-mono font-bold text-[#2DB8A0]">
+                                            {serie.code}
+                                        </td>
+                                        <td className="px-4 py-3 font-medium text-slate-900">
+                                            {serie.name}
+                                        </td>
+                                        <td className="px-4 py-3 text-slate-600">
+                                            {serie.year}
+                                        </td>
+                                        <td className="px-4 py-3 text-right font-mono text-slate-700">
+                                            {serie.next_number}
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                            {serie.is_active ? (
+                                                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-[4px] bg-[#2DB8A0]/10 text-[#2DB8A0]">
+                                                    <CheckCircle2 className="h-3 w-3" /> Activa
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-500">
+                                                    <XCircle className="h-3 w-3" /> Inactiva
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="flex items-center justify-end gap-1.5">
+                                                <Dialog open={editingSeries?.id === serie.id} onOpenChange={(open) => !open && setEditingSeries(null)}>
+                                                    <DialogTrigger asChild>
+                                                        <button
+                                                            onClick={() => handleEdit(serie)}
+                                                            className="inline-flex items-center justify-center h-7 w-7 text-slate-400 hover:text-[#2DB8A0] hover:bg-[#2DB8A0]/10 rounded transition-colors"
+                                                        >
+                                                            <Pencil className="h-4 w-4" />
+                                                        </button>
+                                                    </DialogTrigger>
+                                                    <DialogContent>
+                                                        <DialogHeader>
+                                                            <DialogTitle>Editar Série</DialogTitle>
+                                                            <DialogDescription>Altere os dados da série.</DialogDescription>
+                                                        </DialogHeader>
+                                                        <div className="space-y-4 py-4">
+                                                            <div className="grid grid-cols-2 gap-4">
+                                                                <div className="space-y-2">
+                                                                    <Label htmlFor="edit-code">Código</Label>
+                                                                    <Input
+                                                                        id="edit-code"
+                                                                        value={editForm.data.code}
+                                                                        onChange={(e) => editForm.setData('code', e.target.value.toUpperCase())}
+                                                                    />
+                                                                    {editForm.errors.code && <p className="text-xs text-red-500">{editForm.errors.code}</p>}
                                                                 </div>
                                                                 <div className="space-y-2">
-                                                                    <Label htmlFor="edit-name">Nome</Label>
+                                                                    <Label htmlFor="edit-year">Ano</Label>
                                                                     <Input
-                                                                        id="edit-name"
-                                                                        value={editForm.data.name}
-                                                                        onChange={(e) => editForm.setData('name', e.target.value)}
-                                                                    />
-                                                                </div>
-                                                                <div className="flex items-center justify-between">
-                                                                    <Label htmlFor="edit-active">Activa</Label>
-                                                                    <Switch
-                                                                        id="edit-active"
-                                                                        checked={editForm.data.is_active}
-                                                                        onCheckedChange={(v) => editForm.setData('is_active', v)}
+                                                                        id="edit-year"
+                                                                        type="number"
+                                                                        value={editForm.data.year}
+                                                                        onChange={(e) => editForm.setData('year', parseInt(e.target.value) || new Date().getFullYear())}
                                                                     />
                                                                 </div>
                                                             </div>
-                                                            <DialogFooter>
-                                                                <Button variant="outline" onClick={() => setEditingSeries(null)}>Cancelar</Button>
-                                                                <Button onClick={handleUpdate} disabled={editForm.processing}>
-                                                                    {editForm.processing ? 'A atualizar...' : 'Actualizar'}
-                                                                </Button>
-                                                            </DialogFooter>
-                                                        </DialogContent>
-                                                    </Dialog>
- 
-                                                    <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-600" onClick={() => handleDelete(serie.id)}>
-                                                        <Trash2 size={14} />
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
- 
-                            {/* Paginação */}
-                            {series.last_page > 1 && (
-                                <div className="flex items-center justify-between mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-                                    <p className="text-sm text-zinc-500">
-                                        Página {series.current_page} de {series.last_page}
-                                    </p>
-                                    <div className="flex gap-1">
-                                        {series.links.map((link, i) => (
-                                            <button
-                                                key={i}
-                                                disabled={!link.url}
-                                                onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
-                                                className={[
-                                                    'px-3 py-1.5 text-sm rounded-md border transition-colors',
-                                                    link.active
-                                                        ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-transparent font-medium'
-                                                        : !link.url
-                                                            ? 'text-zinc-300 dark:text-zinc-600 border-transparent cursor-not-allowed'
-                                                            : 'border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800',
-                                                ].join(' ')}
-                                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
+                                                            <div className="space-y-2">
+                                                                <Label htmlFor="edit-name">Nome</Label>
+                                                                <Input
+                                                                    id="edit-name"
+                                                                    value={editForm.data.name}
+                                                                    onChange={(e) => editForm.setData('name', e.target.value)}
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-center justify-between">
+                                                                <Label htmlFor="edit-active">Activa</Label>
+                                                                <Switch
+                                                                    id="edit-active"
+                                                                    checked={editForm.data.is_active}
+                                                                    onCheckedChange={(v) => editForm.setData('is_active', v)}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <DialogFooter>
+                                                            <OutlineButton onClick={() => setEditingSeries(null)}>Cancelar</OutlineButton>
+                                                            <PrimaryButton onClick={handleUpdate} disabled={editForm.processing}>
+                                                                {editForm.processing ? 'A atualizar...' : 'Actualizar'}
+                                                            </PrimaryButton>
+                                                        </DialogFooter>
+                                                    </DialogContent>
+                                                </Dialog>
+
+                                                <button
+                                                    onClick={() => handleDelete(serie.id)}
+                                                    className="inline-flex items-center justify-center h-7 w-7 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
                             )}
-                        </>
+                        </tbody>
+                    </table>
+
+                    {/* Pagination */}
+                    {series.last_page > 1 && (
+                        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-white">
+                            <p className="text-xs text-slate-500">
+                                Página {series.current_page} de {series.last_page} · {series.total} registos
+                            </p>
+                            <div className="flex gap-1">
+                                {series.links.map((link, i) => (
+                                    <button
+                                        key={i}
+                                        disabled={!link.url}
+                                        onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
+                                        className={cn(
+                                            'px-3 py-1.5 text-xs rounded-[4px] border transition-colors',
+                                            link.active
+                                                ? 'bg-[#2DB8A0] text-white border-transparent font-medium'
+                                                : !link.url
+                                                ? 'text-slate-300 border-transparent cursor-not-allowed'
+                                                : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                                        )}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
                     )}
-                </CardContent>
-            </Card>
+                </TableCard>
+            </div>
         </>
     );
 }
 
-SeriesIndex.layout = {
-    breadcrumbs,
-};
+SeriesIndex.layout = (page: any) => (
+    <AppLayout breadcrumbs={[
+        { title: 'Faturação', href: '#' },
+        { title: 'Séries', href: '/billing/series' },
+    ]}>
+        {page}
+    </AppLayout>
+);

@@ -376,10 +376,10 @@ export default function Show({ warehouse, stocks, movements }: Props) {
                                                     </td>
                                                     <td className={cn(
                                                         'px-4 py-2.5 text-right font-mono font-semibold text-sm',
-                                                        mov.type === 'in' || mov.type === 'opening' ? 'text-[#2DB8A0]' : 'text-red-500'
+                                                        (mov.type === 'in' || mov.type === 'opening' || (mov.type === 'adjustment' && Number(mov.quantity) > 0)) ? 'text-[#2DB8A0]' : 'text-red-500'
                                                     )}>
-                                                        {mov.type === 'in' || mov.type === 'opening' ? '+' : '-'}
-                                                        {Number(mov.quantity).toLocaleString('pt-MZ')}
+                                                        {mov.type === 'in' || mov.type === 'opening' || (mov.type === 'adjustment' && Number(mov.quantity) > 0) ? '+' : '-'}
+                                                        {Math.abs(Number(mov.quantity)).toLocaleString('pt-MZ')}
                                                     </td>
                                                     <td className="px-4 py-2.5 text-slate-500 max-w-[200px] truncate" title={mov.notes || ''}>
                                                         {mov.notes || <span className="text-slate-300">—</span>}

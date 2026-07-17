@@ -30,13 +30,21 @@ class StockAdjustmentService
                     continue;
                 }
 
+                $reasonLabel = match ($adjustment->reason) {
+                    'physical_count' => 'Contagem Física',
+                    'damaged' => 'Produto Danificado',
+                    'loss' => 'Perda',
+                    'correction' => 'Correção',
+                    default => 'Outro',
+                };
+
                 $this->stockService->adjust(
                     product: $item->product,
                     warehouse: $adjustment->warehouse,
                     difference: $difference,
                     sourceType: StockAdjustment::class,
                     sourceId: $adjustment->id,
-                    notes: "Ajuste #{$adjustment->id}"
+                    notes: "Ajuste #{$adjustment->id} - {$reasonLabel}"
                 );
             }
 

@@ -65,6 +65,7 @@ const mainNavItems: NavItem[] = [
             { title: 'Notas de Débito', href: '/billing/debit-notes' },
             { title: 'Clientes', href: '/billing/customers' },
             { title: 'Pagamentos', href: '/payments' },
+            { title: 'Séries', href: '/billing/series' },
         ],
     },
     {

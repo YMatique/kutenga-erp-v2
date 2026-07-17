@@ -4,12 +4,10 @@ import React, { useState } from 'react';
 import { PageHeader, TableCard, PrimaryButton, OutlineButton } from '@/components/ui/brand';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table';
 import { useConfirmDelete } from '@/contexts/confirm-delete-context';
 import { cn } from '@/lib/utils';
-import type {BreadcrumbItem} from '@/types';
+import type { BreadcrumbItem } from '@/types';
+import AppLayout from '@/layouts/app-layout';
 
 interface Customer {
     id: number;
@@ -124,40 +122,40 @@ export default function CustomerIndex({ customers, filters }: Props) {
                         </div>
                     ) : (
                         <>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="bg-slate-50 border-b border-slate-100 hover:bg-slate-50">
-                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">
+                            <table className="w-full text-sm">
+                                <thead className="bg-slate-50 border-b border-slate-100">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                                             Cliente
-                                        </TableHead>
-                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                                             Tipo
-                                        </TableHead>
-                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                                             Contacto
-                                        </TableHead>
-                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                                             Localidade
-                                        </TableHead>
-                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold text-right">
+                                        </th>
+                                        <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                                             Saldo
-                                        </TableHead>
-                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold w-[100px]">
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400 w-[100px]">
                                             Estado
-                                        </TableHead>
-                                        <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold text-right w-[100px]">
+                                        </th>
+                                        <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 w-[100px]">
                                             Acções
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                                     {customers.data.map((customer) => (
-                                        <TableRow
+                                        <tr
                                             key={customer.id}
                                             className="hover:bg-slate-50/50 transition-colors border-b border-slate-100"
                                         >
                                             {/* CLIENTE */}
-                                            <TableCell className="py-3">
+                                            <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
                                                     <div className="h-8 w-8 rounded-[4px] bg-[#2DB8A0]/10 flex items-center justify-center flex-shrink-0">
                                                         <User className="h-4 w-4 text-[#2DB8A0]" />
@@ -169,17 +167,17 @@ export default function CustomerIndex({ customers, filters }: Props) {
                                                         </p>
                                                     </div>
                                                 </div>
-                                            </TableCell>
+                                            </td>
 
                                             {/* TIPO */}
-                                            <TableCell>
+                                            <td className="px-4 py-3">
                                                 <span className="inline-flex items-center text-[10px] font-semibold px-2 py-1 rounded-[4px] bg-slate-100 text-slate-600 uppercase tracking-wide">
                                                     {customer.nuit && customer.nuit.length > 9 ? 'Empresa' : 'Individual'}
                                                 </span>
-                                            </TableCell>
+                                            </td>
 
                                             {/* CONTACTO */}
-                                            <TableCell>
+                                            <td className="px-4 py-3">
                                                 <div className="flex flex-col gap-1">
                                                     {customer.phone && (
                                                         <span className="flex items-center gap-1.5 text-xs text-slate-600">
@@ -197,17 +195,17 @@ export default function CustomerIndex({ customers, filters }: Props) {
                                                         <span className="text-xs text-slate-400 italic">Sem contacto</span>
                                                     )}
                                                 </div>
-                                            </TableCell>
+                                            </td>
 
                                             {/* LOCALIDADE */}
-                                            <TableCell>
+                                            <td className="px-4 py-3">
                                                 <span className="text-xs text-slate-600">
                                                     {customer.address || <span className="text-slate-400 italic">—</span>}
                                                 </span>
-                                            </TableCell>
+                                            </td>
 
                                             {/* SALDO */}
-                                            <TableCell className="text-right">
+                                            <td className="px-4 py-3 text-right">
                                                 {Number(customer.balance) > 0 ? (
                                                     <span className="font-mono text-sm font-semibold text-red-500">
                                                         {Number(customer.balance).toLocaleString('pt-MZ', { minimumFractionDigits: 2 })} MZN
@@ -217,10 +215,10 @@ export default function CustomerIndex({ customers, filters }: Props) {
                                                         0,00 MZN
                                                     </span>
                                                 )}
-                                            </TableCell>
+                                            </td>
 
                                             {/* ESTADO */}
-                                            <TableCell>
+                                            <td className="px-4 py-3">
                                                 {customer.is_active ? (
                                                     <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px] bg-[#2DB8A0]/10 text-[#2DB8A0]">
                                                         <span className="h-1.5 w-1.5 rounded-full bg-[#2DB8A0] flex-shrink-0" />
@@ -232,43 +230,37 @@ export default function CustomerIndex({ customers, filters }: Props) {
                                                         Inactivo
                                                     </span>
                                                 )}
-                                            </TableCell>
+                                            </td>
 
                                             {/* ACÇÕES */}
-                                            <TableCell className="text-right">
+                                            <td className="px-4 py-3 text-right">
                                                 <div className="flex items-center justify-end gap-1">
                                                     <Link href={`/billing/customers/${customer.id}`}>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-[4px]"
+                                                        <button
+                                                            className="inline-flex items-center justify-center h-8 w-8 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-[4px] transition-colors"
                                                         >
                                                             <Eye className="h-3.5 w-3.5" />
-                                                        </Button>
+                                                        </button>
                                                     </Link>
                                                     <Link href={`/billing/customers/${customer.id}/edit`}>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-slate-400 hover:text-[#2DB8A0] hover:bg-[#2DB8A0]/10 rounded-[4px]"
+                                                        <button
+                                                            className="inline-flex items-center justify-center h-8 w-8 text-slate-400 hover:text-[#2DB8A0] hover:bg-[#2DB8A0]/10 rounded-[4px] transition-colors"
                                                         >
                                                             <Pencil className="h-3.5 w-3.5" />
-                                                        </Button>
+                                                        </button>
                                                     </Link>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-[4px]"
+                                                    <button
+                                                        className="inline-flex items-center justify-center h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-[4px] transition-colors"
                                                         onClick={() => handleDelete(customer.id, customer.name)}
                                                     >
                                                         <Trash2 className="h-3.5 w-3.5" />
-                                                    </Button>
+                                                    </button>
                                                 </div>
-                                            </TableCell>
-                                        </TableRow>
+                                            </td>
+                                        </tr>
                                     ))}
-                                </TableBody>
-                            </Table>
+                                </tbody>
+                            </table>
 
                             {/* PAGINAÇÃO */}
                             {customers.last_page > 1 && (
@@ -304,6 +296,8 @@ export default function CustomerIndex({ customers, filters }: Props) {
     );
 }
 
-CustomerIndex.layout = {
-    breadcrumbs,
-};
+CustomerIndex.layout = (page: any) => (
+    <AppLayout breadcrumbs={breadcrumbs}>
+        {page}
+    </AppLayout>
+);

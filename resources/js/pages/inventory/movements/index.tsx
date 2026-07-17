@@ -1,8 +1,10 @@
 import { Head, usePage, router } from '@inertiajs/react'
-import { ArrowDownCircle, ArrowUpCircle, RefreshCw, Package2, Activity } from 'lucide-react'
+import { ArrowDownCircle, ArrowUpCircle, RefreshCw, Package2, Activity, Search, FilterX, TrendingUp, TrendingDown, Layers } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import {
     PageHeader,
     TableCard,
+    KpiCard,
 } from '@/components/ui/brand'
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils'
@@ -77,7 +79,33 @@ function MovementTypeBadge({ type }: { type: Movement['type'] }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MovementsIndex() {
-    const { movements } = usePage<{ movements: any }>().props
+    const { movements, filters, warehouses, kpis } = usePage<any>().props
+
+    const [search, setSearch] = useState(filters?.search || '')
+    const [type, setType] = useState(filters?.type || 'all')
+    const [warehouseId, setWarehouseId] = useState(filters?.warehouse_id || 'all')
+
+    useEffect(() => {
+        if (type !== (filters?.type || 'all') || warehouseId !== (filters?.warehouse_id || 'all')) {
+            applyFilters({ newType: type, newWarehouse: warehouseId })
+        }
+    }, [type, warehouseId])
+
+    useEffect(() => {
+        if (search === (filters?.search || '')) return
+        const t = setTimeout(() => applyFilters({ newSearch: search }), 400)
+        return () => clearTimeout(t)
+    }, [search])
+
+    function applyFilters(overrides: { newSearch?: string; newType?: string; newWarehouse?: string } = {}) {
+        router.get('/inventory/movements', {
+            search: overrides.newSearch !== undefined ? overrides.newSearch : search,
+            type: overrides.newType !== undefined ? overrides.newType : type,
+            warehouse_id: overrides.newWarehouse !== undefined ? overrides.newWarehouse : warehouseId,
+        }, { preserveState: true, replace: true })
+    }
+
+    const hasFilters = search || type !== 'all' || warehouseId !== 'all'
 
     return (
         <>
@@ -96,6 +124,97 @@ export default function MovementsIndex() {
                         </div>
                     }
                 />
+
+                {/* KPIS */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <KpiCard
+                        label="Total de Movimentos"
+                        value={kpis?.total || 0}
+                        icon={<Activity className="h-5 w-5" />}
+                        accent="slate"
+                    />
+                    <KpiCard
+                        label="Total de Entradas"
+                        value={`+${kpis?.in || 0}`}
+                        icon={<TrendingUp className="h-5 w-5" />}
+                        accent="teal"
+                    />
+                    <KpiCard
+                        label="Total de Saídas"
+                        value={`-${kpis?.out || 0}`}
+                        icon={<TrendingDown className="h-5 w-5" />}
+                        accent="red"
+                    />
+                </div>
+
+                {/* FILTERS BAR */}
+                <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs px-4 py-3 flex flex-col sm:flex-row gap-3 items-center">
+                    {/* Search */}
+                    <div className="relative w-full sm:w-72">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Pesquisar por produto ou SKU..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full h-9 pl-9 pr-3 text-sm bg-white border border-slate-200 rounded-[4px] text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2DB8A0]/30 focus:border-[#2DB8A0]"
+                        />
+                    </div>
+
+                    {/* Type Filter */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                        {(['all', 'in', 'out', 'adjustment', 'opening'] as const).map((t) => {
+                            const isAll = t === 'all'
+                            const active = type === t
+                            const cfg = isAll ? null : movementTypeConfig[t as Movement['type']]
+
+                            return (
+                                <button
+                                    key={t}
+                                    onClick={() => setType(t)}
+                                    className={cn(
+                                        'h-9 px-3 text-xs font-medium rounded-[4px] transition-colors border flex items-center justify-center',
+                                        active
+                                            ? isAll
+                                                ? 'bg-[#1A2332] text-white border-[#1A2332]'
+                                                : cn(cfg?.cls, 'border-current')
+                                            : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700',
+                                    )}
+                                >
+                                    {isAll ? 'Todos' : cfg?.label}
+                                </button>
+                            )
+                        })}
+                    </div>
+
+                    {/* Warehouse Filter */}
+                    <div className="ml-auto flex items-center gap-2 w-full sm:w-auto">
+                        <Layers className="h-4 w-4 text-slate-400 hidden sm:block" />
+                        <select
+                            value={warehouseId}
+                            onChange={(e) => setWarehouseId(e.target.value)}
+                            className="w-full sm:w-48 h-9 text-sm bg-white border border-slate-200 rounded-[4px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#2DB8A0]/30 focus:border-[#2DB8A0]"
+                        >
+                            <option value="all">Todos Armazéns</option>
+                            {warehouses?.map((w: any) => (
+                                <option key={w.id} value={w.id}>{w.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Clear filters */}
+                    {hasFilters && (
+                        <button
+                            onClick={() => {
+                                setSearch(''); setType('all'); setWarehouseId('all');
+                            }}
+                            className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 transition-colors w-full sm:w-auto justify-center"
+                        >
+                            <FilterX className="h-3.5 w-3.5" />
+                            Limpar
+                        </button>
+                    )}
+                </div>
 
                 {/* TABLE CARD */}
                 <TableCard>
@@ -135,7 +254,7 @@ export default function MovementsIndex() {
                                     <td colSpan={7}>
                                         <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-400">
                                             <Activity className="h-10 w-10" />
-                                            <p className="text-sm font-medium">Nenhum movimento de stock registado.</p>
+                                            <p className="text-sm font-medium">Nenhum movimento encontrado{hasFilters ? ' com os filtros aplicados' : ''}.</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -179,13 +298,10 @@ export default function MovementsIndex() {
                                         {/* QUANTIDADE */}
                                         <td className={cn(
                                             'px-4 py-3 text-right font-mono font-semibold tabular-nums',
-                                            m.type === 'in' || m.type === 'opening'
-                                                ? 'text-[#2DB8A0]'
-                                                : m.type === 'out'
-                                                    ? 'text-red-500'
-                                                    : 'text-[#E8A020]'
+                                            (m.type === 'in' || m.type === 'opening' || (m.type === 'adjustment' && Number(m.quantity) > 0)) ? 'text-[#2DB8A0]' : 'text-red-500'
                                         )}>
-                                            {m.type === 'out' ? '-' : '+'}{m.quantity.toLocaleString('pt-MZ')}
+                                            {m.type === 'in' || m.type === 'opening' || (m.type === 'adjustment' && Number(m.quantity) > 0) ? '+' : '-'}
+                                            {Math.abs(Number(m.quantity)).toLocaleString('pt-MZ')}
                                         </td>
 
                                         {/* REFERÊNCIA */}
@@ -200,7 +316,7 @@ export default function MovementsIndex() {
                                         {/* UTILIZADOR */}
                                         <td className="px-4 py-3">
                                             <span className="text-slate-600 text-xs">
-                                                {m.user?.name ?? '—'}
+                                                {m.user?.name ?? 'Sistema'}
                                             </span>
                                         </td>
                                     </tr>
@@ -210,13 +326,13 @@ export default function MovementsIndex() {
                     </table>
 
                     {/* Pagination */}
-                    {movements.last_page > 1 && (
+                    {movements?.last_page > 1 && (
                         <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-white">
                             <p className="text-xs text-slate-500">
                                 Página {movements.current_page} de {movements.last_page} · {movements.total} registos
                             </p>
                             <div className="flex gap-1">
-                                {movements.links.map((link, i) => (
+                                {movements.links.map((link: any, i: number) => (
                                     <button
                                         key={i}
                                         disabled={!link.url}

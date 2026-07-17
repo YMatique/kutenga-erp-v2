@@ -121,16 +121,17 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
 
     // Sales/Billing
     Route::prefix('billing')->name('billing.')->group(function () {
-        // Sales View (Quotes index/show)
-        Route::middleware('can:sales.view')->group(function () {
-            Route::resource('quotes', QuoteController::class)->only(['index', 'show']);
-            Route::resource('customers', CustomerController::class);
-        });
-
-        // Sales Create (Quotes resource except index/show & confirm)
+        // Sales Create (Quotes and Customers edit/create)
         Route::middleware('can:sales.create')->group(function () {
             Route::resource('quotes', QuoteController::class)->except(['index', 'show']);
+            Route::resource('customers', CustomerController::class)->except(['index', 'show']);
             Route::post('quotes/{id}/confirm', [QuoteController::class, 'confirm'])->name('quotes.confirm');
+        });
+
+        // Sales View (Quotes and Customers index/show)
+        Route::middleware('can:sales.view')->group(function () {
+            Route::resource('quotes', QuoteController::class)->only(['index', 'show']);
+            Route::resource('customers', CustomerController::class)->only(['index', 'show']);
         });
 
         // Sales Cancel (Quotes cancel)
@@ -138,17 +139,7 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
             Route::post('quotes/{id}/cancel', [QuoteController::class, 'cancel'])->name('quotes.cancel');
         });
 
-        // Invoice View (Documents index/show, pdf)
-        Route::middleware('can:invoice.view')->group(function () {
-            Route::resource('invoices', InvoiceController::class)->only(['index', 'show']);
-            Route::resource('receipts', ReceiptController::class)->only(['index', 'show']);
-            Route::resource('credit-notes', CreditNoteController::class)->only(['index', 'show']);
-            Route::resource('debit-notes', DebitNoteController::class)->only(['index', 'show']);
-            Route::resource('series', DocumentSeriesController::class)->only(['index']);
-            Route::get('documents/{id}/pdf', [DocumentController::class, 'downloadPdf'])->name('documents.pdf');
-        });
-
-        // Invoice Create
+        // Invoice Create (Invoices/Receipts/Credit/Debit/Series edit/create)
         Route::middleware('can:invoice.create')->group(function () {
             Route::resource('invoices', InvoiceController::class)->except(['index', 'show']);
             Route::resource('receipts', ReceiptController::class)->except(['index', 'show']);
@@ -162,6 +153,16 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
             Route::post('credit-notes/{id}/confirm', [CreditNoteController::class, 'confirm'])->name('credit-notes.confirm');
             Route::post('debit-notes/{id}/confirm', [DebitNoteController::class, 'confirm'])->name('debit-notes.confirm');
             Route::post('documents/{id}/send-email', [DocumentController::class, 'sendEmail'])->name('documents.send-email');
+        });
+
+        // Invoice View (Documents index/show, pdf)
+        Route::middleware('can:invoice.view')->group(function () {
+            Route::resource('invoices', InvoiceController::class)->only(['index', 'show']);
+            Route::resource('receipts', ReceiptController::class)->only(['index', 'show']);
+            Route::resource('credit-notes', CreditNoteController::class)->only(['index', 'show']);
+            Route::resource('debit-notes', DebitNoteController::class)->only(['index', 'show']);
+            Route::resource('series', DocumentSeriesController::class)->only(['index']);
+            Route::get('documents/{id}/pdf', [DocumentController::class, 'downloadPdf'])->name('documents.pdf');
         });
 
         // Invoice Cancel

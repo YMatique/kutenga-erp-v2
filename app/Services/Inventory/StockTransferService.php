@@ -46,7 +46,7 @@ class StockTransferService
                     quantity: $item->quantity,
                     sourceType: StockTransfer::class,
                     sourceId: $transfer->id,
-                    notes: "Transferência #{$transfer->id}"
+                    notes: "Transferência #{$transfer->id} de {$transfer->fromWarehouse->name} para {$transfer->toWarehouse->name}"
                 );
 
                 // 📥 ENTRADA (destino)
@@ -56,7 +56,7 @@ class StockTransferService
                     quantity: $item->quantity,
                     sourceType: StockTransfer::class,
                     sourceId: $transfer->id,
-                    notes: "Transferência #{$transfer->id}"
+                    notes: "Transferência #{$transfer->id} de {$transfer->fromWarehouse->name} para {$transfer->toWarehouse->name}"
                 );
             }
 

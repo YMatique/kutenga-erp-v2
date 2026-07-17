@@ -5,9 +5,8 @@ import { toast } from 'sonner';
 import { AppHeader } from '@/components/app-header';
 import { AppSidebar } from '@/components/app-sidebar';
 import { InactivityLock } from '@/components/inactivity-lock';
-import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
-import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 
 function KutengaLayoutContent({
     children,
@@ -72,8 +71,6 @@ function KutengaLayoutContent({
                     </div>
                 </main>
             </div>
-
-            <Toaster richColors position="top-right" /> 
         </div>
     );
 }

@@ -22,10 +22,11 @@ class StockTransferController extends Controller
         $companyId = auth()->user()->company_id;
 
         $query = StockTransfer::with(['fromWarehouse', 'toWarehouse'])
+            ->withCount('items')
             ->where('company_id', $companyId);
 
         // filtro por status
-        if ($request->filled('status')) {
+        if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
 

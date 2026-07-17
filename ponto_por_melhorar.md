@@ -126,8 +126,8 @@
 - Um problema no stocks/show: há um produto que fiz ajuste de stock, mas na lista aparece: -19, enquanto aumentou a quantidade de estoque. E nas notas, deve estar muito bem claro, não apenas Ajuste #2; tanto quanto no warehouses/show na tabela de movimentações recentes. Não pode ser apenas Ajuste #2, Tranferência #3, etc.
 - Nas transferências: o mesmo problema de filtro com o de adjustment; também não mostra o total de itens 
 - A página de movimentos precisa ser customizada: deve haver filtros, cards e a tabela deve ser paginada.
-- Os cards da tela billing/customers/show|edit|create; billing/quotes|invoice|receipts/edit|create'; billing/series não seguem o padrão das bordas; na mesma billing/series a página deve seguir o padrão das demais páginas, tabelas, etc. Incluir Séries no sidebar.
+- Os cards da tela billing/customers/show|edit|create; billing/quotes|invoice|receipts/edit|create'; billing/series não seguem o padrão das bordas; na mesma billing/series a página deve seguir o padrão das demais páginas, tabelas, etc. Incluir Séries no sidebar. [feito]
 - Rever o link payments: não está abrir
 - Telas de faturação (cotação, faturas, notas, etc) devem ter cards estatísticos, filtros organizados.
 - A tela de categoria, o parente é opcional (A categoria pai não é obrigatória)
-- Em muitas páginas o toast notification aparece muitas vezes (por cima e baixo), deve ser padronizado, aparecer apenas no canto superior direito
+- Em muitas páginas o toast notification aparece muitas vezes (por cima e baixo), deve ser padronizado, aparecer apenas no canto superior direito [feito]
