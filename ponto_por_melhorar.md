@@ -56,7 +56,8 @@
 - Cada empresa deverá estar subscrita em um determinado plano e consoante a esse plano ter limites de uso;
 - Ter telas de bloquio quando os limites forem atingidos
 
-## Trabalhar nas Telas de Auditoria [feito]
+## Trabalhar nas Telas de Auditoria [parcilmente-feito]
+- Mapear bem os registos alterados (os atributos ainda não são apresentados na página: antigo e o novo valor)
 
 ## Onbording [feito]
 - No onbording pedir informações mais completas da empresa, como: NUIT, número de telefone, email, morada, moeda oficial, etc [feito]
@@ -73,7 +74,7 @@
 
 ## Ver A Implementação de dark mode 
 - A lógica de dark mode está completamente operacional a nível de CSS (ficheiro `resources/css/app.css` com variáveis sob `.dark`) e React (usando o custom hook `useAppearance`).
-- Para facilitar a experiência do utilizador, adicionámos um botão alternador (Toggle de Sol/Lua) no cabeçalho global (`AppHeader`) ao lado das notificações para poder alternar rapidamente entre modo claro e escuro a partir de qualquer página, além das configurações já existentes nas definições de aparência.
+- Para facilitar a experiência do utilizador, adicionámos um botão alternador (Toggle de Sol/Lua) no cabeçalho global (`AppHeader`) ao lado das notificações para poder alternar rapidamente entre modo claro e escuro a partir de qualquer página, além das configurações já existentes nas definições de aparência. [feito]
 - Todas as páginas deve aplicar o conceito de dark mode, os componentes, etc [feito]
 
 ## Relatórios
@@ -91,8 +92,8 @@
  - Deve conter cards estatísticos no topo, com informações relevantes para a página em causa, por exemplo, na página de produtos, deve mostrar o número de produtos cadastrados, o número de produtos com estoque baixo, o número de produtos com estoque zerado, etc [feito]
  - Algumas delas deve conter por exemplo filtros [feito]
  - rever a página inventory/adjustment/show [feito]
- - rever a página de pos/shifts/open: não está a seguir o padrão, não deveria extender o KutengaERP, pois já é carregado por padrão: veja outras páginas como implementaram
- - rever a página pos/reports e pos/shifts : não seguem o padrão da aplicação: as bordas, as tabelas, os cards
+ - rever a página de pos/shifts/open: não está a seguir o padrão, não deveria extender o KutengaERP, pois já é carregado por padrão: veja outras páginas como implementaram [feito]
+ - rever a página pos/reports e pos/shifts : não seguem o padrão da aplicação: as bordas, as tabelas, os cards [feito]
 
  ## Tabelas [feito]
  - Todas as tabelas devem usar paginação [feito]
@@ -112,3 +113,21 @@
 
 ## ROLES E PERMISSÕES
 - aplicar as roles e permissões nas rotas, criar uma página que diz: você não tem permissão ou algo do género.
+
+## PÁGINA DE NOTIFICAÇÕES PARA LISTAR E VER DETALHES DAS NOTIFICAÇÕES
+- Deverá haver uma página de listar as notificações do sistema
+
+## APLICAR CONCEITOS DE DARK-MODE NO INDEX DA APLICAÇÃO
+- O dark mode precisar ser revisto na página index da aplicação (A landing page)
+
+## MAPEAMENTO DE STATUS NA VIEW
+- adjustment: na tabela, na coluna MOTIVO, não pode aparecer o status da base de dados, mas sim o status já mapeado. o total de itens não aparece, o tipo também; e há um erro no filtro, quando clico em all, ele não carrega porque na base de dados não tem o estado all.
+- adjustment/show: o motivo ainda continua sendo mapeado de forma não apropriada
+- Um problema no stocks/show: há um produto que fiz ajuste de stock, mas na lista aparece: -19, enquanto aumentou a quantidade de estoque. E nas notas, deve estar muito bem claro, não apenas Ajuste #2; tanto quanto no warehouses/show na tabela de movimentações recentes. Não pode ser apenas Ajuste #2, Tranferência #3, etc.
+- Nas transferências: o mesmo problema de filtro com o de adjustment; também não mostra o total de itens 
+- A página de movimentos precisa ser customizada: deve haver filtros, cards e a tabela deve ser paginada.
+- Os cards da tela billing/customers/show|edit|create; billing/quotes|invoice|receipts/edit|create'; billing/series não seguem o padrão das bordas; na mesma billing/series a página deve seguir o padrão das demais páginas, tabelas, etc. Incluir Séries no sidebar.
+- Rever o link payments: não está abrir
+- Telas de faturação (cotação, faturas, notas, etc) devem ter cards estatísticos, filtros organizados.
+- A tela de categoria, o parente é opcional (A categoria pai não é obrigatória)
+- Em muitas páginas o toast notification aparece muitas vezes (por cima e baixo), deve ser padronizado, aparecer apenas no canto superior direito

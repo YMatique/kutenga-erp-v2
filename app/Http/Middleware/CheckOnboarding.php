@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckOnboarding
 {
-    /**
+    /*
 <?php
 
 namespace App\Http\Middleware;
@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckOnboarding
 {
+*/
     /**
      * Handle an incoming request.
      *

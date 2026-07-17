@@ -1,6 +1,6 @@
 import { usePage } from '@inertiajs/react';
-import {  useEffect } from 'react';
-import type {PropsWithChildren} from 'react';
+import { useEffect } from 'react';
+import type { PropsWithChildren } from 'react';
 import { toast } from 'sonner';
 import { AppHeader } from '@/components/app-header';
 import { AppSidebar } from '@/components/app-sidebar';
@@ -19,20 +19,20 @@ function KutengaLayoutContent({
 
     useEffect(() => {
         if (props.flash?.success) {
-toast.success(props.flash.success);
-}
+            toast.success(props.flash.success);
+        }
 
         if (props.flash?.error) {
-toast.error(props.flash.error);
-}
+            toast.error(props.flash.error);
+        }
 
         if (props.flash?.warning) {
-toast.warning(props.flash.warning);
-}
+            toast.warning(props.flash.warning);
+        }
 
         if (props.flash?.info) {
-toast.info(props.flash.info);
-}
+            toast.info(props.flash.info);
+        }
     }, [props.flash]);
 
     return (
@@ -73,14 +73,14 @@ toast.info(props.flash.info);
                 </main>
             </div>
 
-            <Toaster richColors position="top-right" />
+            <Toaster richColors position="top-right" /> 
         </div>
     );
 }
 
 import { ConfirmDeleteProvider } from '@/contexts/confirm-delete-context';
 import { cn } from '@/lib/utils';
-import type {BreadcrumbItem} from '@/types';
+import type { BreadcrumbItem } from '@/types';
 
 export default function KutengaLayout({
     children,

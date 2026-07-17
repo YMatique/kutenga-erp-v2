@@ -5,12 +5,13 @@ namespace App\Models;
 use App\Traits\BelongsToCompany;
 // use App\Traits\HasAudit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 class StockTransfer extends Model
 {
-    use BelongsToCompany /* , HasAudit */, LogsActivity;
+    use BelongsToCompany /* , HasAudit */ , LogsActivity;
 
     public function getActivitylogOptions(): LogOptions
     {

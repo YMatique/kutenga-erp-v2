@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Unit;
 use App\Services\Inventory\StockService;
+use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -25,7 +26,7 @@ class ProductController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+                    ->orWhere('sku', 'like', "%{$search}%");
             });
         }
 
@@ -98,15 +99,15 @@ class ProductController extends Controller
             'internal_notes' => 'nullable|string',
         ]);
 
-        $validated['slug'] = Str::slug($validated['name']).'-'.Str::random(5);
+        $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(5);
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('products', 'public');
-            $validated['image_path'] = '/storage/'.$path;
+            $validated['image_path'] = '/storage/' . $path;
         }
 
         $product = Product::create($validated);
-
+        $companyId = Auth::user()->company_id;
         \App\Models\SystemNotification::create([
             'company_id' => $companyId,
             'type' => 'product_created',
@@ -125,7 +126,7 @@ class ProductController extends Controller
             'category',
             'unit',
             'brand',
-             'stocks.warehouse'
+            'stocks.warehouse'
         ]);
         $stockByWarehouse = $stockService->getStockByWarehouses($product);
 
@@ -185,11 +186,11 @@ class ProductController extends Controller
                 Storage::disk('public')->delete($oldPath);
             }
             $path = $request->file('image')->store('products', 'public');
-            $validated['image_path'] = '/storage/'.$path;
+            $validated['image_path'] = '/storage/' . $path;
         }
 
         if ($request->name !== $product->name) {
-            $validated['slug'] = Str::slug($validated['name']).'-'.Str::random(5);
+            $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(5);
         }
 
         $product->update($validated);
