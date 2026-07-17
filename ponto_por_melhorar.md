@@ -111,8 +111,8 @@
 ## Dashboard [feito]
 - customizar o dashboard [feito]
 
-## ROLES E PERMISSÕES
-- aplicar as roles e permissões nas rotas, criar uma página que diz: você não tem permissão ou algo do género.
+## ROLES E PERMISSÕES [feito]
+- aplicar as roles e permissões nas rotas, criar uma página que diz: você não tem permissão ou algo do género. [feito]
 
 ## PÁGINA DE NOTIFICAÇÕES PARA LISTAR E VER DETALHES DAS NOTIFICAÇÕES
 - Deverá haver uma página de listar as notificações do sistema

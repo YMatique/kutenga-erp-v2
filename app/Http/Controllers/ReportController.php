@@ -70,12 +70,15 @@ class ReportController extends Controller
 
         // Vendas por mês/dia (para gráficos)
         $chartData = $sales->get()
-            ->groupBy(function ($date) {
-                return Carbon::parse($date->created_at)->format('Y-m-d');
+            ->groupBy(function($date) {
+                return Carbon::parse($date->created_at)->format('d/m');
             })
-            ->map(function ($row) {
-                return $row->sum('grand_total');
-            });
+            ->map(function ($row, $key) {
+                return [
+                    'label' => $key,
+                    'value' => (float) $row->sum('grand_total')
+                ];
+            })->values();
 
         // Faturas emitidas vs cotações
         $totalInvoices = Document::where('company_id', $companyId)
@@ -159,15 +162,30 @@ class ReportController extends Controller
             ->get();
 
         $totalShifts = $shifts->count();
-        $totalExpected = $shifts->sum('expected_amount');
-        $totalReported = $shifts->sum('reported_amount');
-        $totalVariances = $shifts->sum('difference_amount');
+        $startingCashTotal = (float) $shifts->sum('starting_cash');
+        $endingCashTotal = (float) $shifts->sum('ending_cash');
+
+        // Total sales from POS (Fatura-Recibo linked to a shift)
+        $posSales = Document::where('company_id', $companyId)
+            ->whereNotNull('pos_shift_id')
+            ->whereIn('status', ['confirmed', 'paid'])
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->sum('grand_total');
+
+        $totalSales = (float) $posSales;
+        
+        // Expected cash = Starting Cash + Sales
+        $expectedCash = $startingCashTotal + $totalSales;
+        
+        // Variance = Ending Cash (what user reported in drawer) - Expected Cash
+        $variance = $endingCashTotal - $expectedCash;
 
         return [
             'total_shifts' => $totalShifts,
-            'total_expected' => $totalExpected,
-            'total_reported' => $totalReported,
-            'total_variances' => $totalVariances,
+            'total_sales' => $totalSales,
+            'starting_cash' => $startingCashTotal,
+            'ending_cash' => $endingCashTotal,
+            'variance' => $variance,
         ];
     }
 
@@ -223,8 +241,10 @@ class ReportController extends Controller
         } elseif ($category === 'pos') {
             $writer->addRow(['Indicador', 'Valor']);
             $writer->addRow(['Total Turnos', $data['total_shifts']]);
-            $writer->addRow(['Total Esperado', $data['total_expected']]);
-            $writer->addRow(['Total Reportado', $data['total_reported']]);
+            $writer->addRow(['Total Vendas POS', $data['total_sales']]);
+            $writer->addRow(['Fundo de Maneio Inicial', $data['starting_cash']]);
+            $writer->addRow(['Caixa Final Reportado', $data['ending_cash']]);
+            $writer->addRow(['Variação / Quebras', $data['variance']]);
         }
 
         $writer->close();

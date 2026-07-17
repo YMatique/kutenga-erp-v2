@@ -8,6 +8,7 @@ import {
     Users,
     Warehouse,
     MapPin,
+    BarChart,
 } from 'lucide-react';
 import { CompanySwitcher } from '@/components/company-switcher';
 import { NavMain } from '@/components/nav-main';
@@ -90,6 +91,11 @@ const mainNavItems: NavItem[] = [
             { title: 'Usuários', href: '/settings/users' },
             { title: 'Funções', href: '/settings/roles' },
         ],
+    },
+    {
+        title: 'Relatórios',
+        href: '/reports',
+        icon: BarChart,
     },
     {
         title: 'Configurações',

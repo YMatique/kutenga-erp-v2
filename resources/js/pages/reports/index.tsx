@@ -1,25 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { PageHeader, KpiCard, TableCard, OutlineButton } from '@/components/ui/brand';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DownloadCloud, FileText, FileSpreadsheet, Loader2, TrendingUp, Users, Package, MonitorPlay } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { FileText, FileSpreadsheet, Loader2, TrendingUp, Users, Package, MonitorPlay, AlertCircle } from 'lucide-react';
+import { formatCurrency, cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function ReportsIndex() {
     const [category, setCategory] = useState('sales');
-
+    
     // Default to current month
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 0);
-
+    
     const [startDate, setStartDate] = useState(startOfMonth.toISOString().split('T')[0]);
     const [endDate, setEndDate] = useState(endOfMonth.toISOString().split('T')[0]);
-
+    
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -30,11 +28,11 @@ export default function ReportsIndex() {
         try {
             const params = new URLSearchParams({ category, start_date: startDate, end_date: endDate });
             const response = await fetch(`${route('reports.data')}?${params.toString()}`);
-
+            
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-
+            
             const result = await response.json();
             setData(result);
         } catch (error) {
@@ -49,371 +47,397 @@ export default function ReportsIndex() {
         fetchData();
     }, [category, startDate, endDate]);
 
-    const handleExportPdf = () => {
-        setIsExportingPdf(true);
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = route('reports.export.pdf');
-
-        const csrfToken = document.head.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        if (csrfToken) {
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = csrfToken;
-            form.appendChild(csrfInput);
-        }
-
-        const categoryInput = document.createElement('input');
-        categoryInput.type = 'hidden';
-        categoryInput.name = 'category';
-        categoryInput.value = category;
-        form.appendChild(categoryInput);
-
-        const startInput = document.createElement('input');
-        startInput.type = 'hidden';
-        startInput.name = 'start_date';
-        startInput.value = startDate;
-        form.appendChild(startInput);
-
-        const endInput = document.createElement('input');
-        endInput.type = 'hidden';
-        endInput.name = 'end_date';
-        endInput.value = endDate;
-        form.appendChild(endInput);
-
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
-
-        setTimeout(() => setIsExportingPdf(false), 2000);
+    const handleExport = (type: 'pdf' | 'excel') => {
+        if (type === 'pdf') setIsExportingPdf(true);
+        if (type === 'excel') setIsExportingExcel(true);
+        
+        const params = new URLSearchParams({ category, start_date: startDate, end_date: endDate });
+        const url = type === 'pdf' ? route('reports.export.pdf') : route('reports.export.excel');
+        
+        window.location.href = `${url}?${params.toString()}`;
+        
+        setTimeout(() => {
+            setIsExportingPdf(false);
+            setIsExportingExcel(false);
+        }, 3000);
     };
 
-    const handleExportExcel = () => {
-        setIsExportingExcel(true);
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = route('reports.export.excel');
-
-        const csrfToken = document.head.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        if (csrfToken) {
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = csrfToken;
-            form.appendChild(csrfInput);
-        }
-
-        const categoryInput = document.createElement('input');
-        categoryInput.type = 'hidden';
-        categoryInput.name = 'category';
-        categoryInput.value = category;
-        form.appendChild(categoryInput);
-
-        const startInput = document.createElement('input');
-        startInput.type = 'hidden';
-        startInput.name = 'start_date';
-        startInput.value = startDate;
-        form.appendChild(startInput);
-
-        const endInput = document.createElement('input');
-        endInput.type = 'hidden';
-        endInput.name = 'end_date';
-        endInput.value = endDate;
-        form.appendChild(endInput);
-
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
-
-        setTimeout(() => setIsExportingExcel(false), 2000);
-    };
+    // Calculate max chart value for SVG rendering
+    const maxChartValue = data?.chart_data?.length ? Math.max(...data.chart_data.map((d: any) => d.value), 1) : 1;
 
     return (
-        <AppLayout
-            header={
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                        Relatórios e Estatísticas
-                    </h2>
+        <div className="flex flex-col gap-6">
+            <Head title="Relatórios e Estatísticas" />
+
+            <PageHeader
+                title="Relatórios e Estatísticas"
+                subtitle="Análise detalhada do seu negócio por categorias."
+                actions={
                     <div className="flex flex-wrap items-center gap-2">
-                        <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 p-1 rounded-md shadow-sm border dark:border-zinc-800">
-                            <Input
-                                type="date"
-                                value={startDate}
+                        <div className="flex items-center gap-2 bg-card px-2 py-1 rounded-[4px] shadow-xs border border-border">
+                            <Input 
+                                type="date" 
+                                value={startDate} 
                                 onChange={(e) => setStartDate(e.target.value)}
-                                className="h-8 border-none shadow-none focus-visible:ring-0 w-36 text-sm"
+                                className="h-7 border-none shadow-none focus-visible:ring-0 w-32 text-xs"
                             />
-                            <span className="text-muted-foreground text-sm">até</span>
-                            <Input
-                                type="date"
-                                value={endDate}
+                            <span className="text-muted-foreground text-xs font-medium">até</span>
+                            <Input 
+                                type="date" 
+                                value={endDate} 
                                 onChange={(e) => setEndDate(e.target.value)}
-                                className="h-8 border-none shadow-none focus-visible:ring-0 w-36 text-sm"
+                                className="h-7 border-none shadow-none focus-visible:ring-0 w-32 text-xs"
                             />
                         </div>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleExportPdf}
+                        <OutlineButton 
+                            onClick={() => handleExport('pdf')}
                             disabled={isExportingPdf || loading}
-                            className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700 dark:bg-red-900/20 dark:border-red-900/50"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
-                            {isExportingPdf ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
+                            {isExportingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
                             PDF
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleExportExcel}
+                        </OutlineButton>
+                        <OutlineButton 
+                            onClick={() => handleExport('excel')}
                             disabled={isExportingExcel || loading}
-                            className="bg-green-50 text-green-600 border-green-200 hover:bg-green-100 hover:text-green-700 dark:bg-green-900/20 dark:border-green-900/50"
+                            className="text-[#2DB8A0] hover:text-[#239B86] hover:bg-[#2DB8A0]/10"
                         >
-                            {isExportingExcel ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
+                            {isExportingExcel ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
                             Excel
-                        </Button>
+                        </OutlineButton>
                     </div>
-                </div>
-            }
-        >
-            <Head title="Relatórios" />
+                }
+            />
 
-            <div className="py-8">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <Tabs value={category} onValueChange={setCategory} className="space-y-6">
-                        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full h-auto p-1 bg-white dark:bg-zinc-900 shadow-sm border dark:border-zinc-800 rounded-xl">
-                            <TabsTrigger value="sales" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600 rounded-lg py-2.5">
-                                <TrendingUp className="w-4 h-4 mr-2" /> Vendas
-                            </TabsTrigger>
-                            <TabsTrigger value="inventory" className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-600 rounded-lg py-2.5">
-                                <Package className="w-4 h-4 mr-2" /> Inventário
-                            </TabsTrigger>
-                            <TabsTrigger value="customers" className="data-[state=active]:bg-purple-50 data-[state=active]:text-purple-600 rounded-lg py-2.5">
-                                <Users className="w-4 h-4 mr-2" /> Clientes
-                            </TabsTrigger>
-                            <TabsTrigger value="pos" className="data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-600 rounded-lg py-2.5">
-                                <MonitorPlay className="w-4 h-4 mr-2" /> Ponto de Venda
-                            </TabsTrigger>
-                        </TabsList>
+            <Tabs value={category} onValueChange={setCategory} className="space-y-6">
+                <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full p-1 bg-card shadow-xs border border-border rounded-[4px]">
+                    <TabsTrigger value="sales" className="rounded-[4px] data-[state=active]:bg-[#2DB8A0]/10 data-[state=active]:text-[#2DB8A0]">
+                        <TrendingUp className="w-4 h-4 mr-2" /> Vendas
+                    </TabsTrigger>
+                    <TabsTrigger value="inventory" className="rounded-[4px] data-[state=active]:bg-[#E8A020]/10 data-[state=active]:text-[#E8A020]">
+                        <Package className="w-4 h-4 mr-2" /> Inventário
+                    </TabsTrigger>
+                    <TabsTrigger value="customers" className="rounded-[4px] data-[state=active]:bg-purple-500/10 data-[state=active]:text-purple-600">
+                        <Users className="w-4 h-4 mr-2" /> Clientes
+                    </TabsTrigger>
+                    <TabsTrigger value="pos" className="rounded-[4px] data-[state=active]:bg-blue-500/10 data-[state=active]:text-blue-600">
+                        <MonitorPlay className="w-4 h-4 mr-2" /> POS
+                    </TabsTrigger>
+                </TabsList>
 
-                        {loading ? (
-                            <div className="flex items-center justify-center h-64">
-                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                {loading ? (
+                    <div className="flex items-center justify-center h-64">
+                        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                    </div>
+                ) : (
+                    <>
+                        <TabsContent value="sales" className="space-y-6 animate-in fade-in-50 duration-500">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                <KpiCard
+                                    label="Receita Total"
+                                    value={formatCurrency(data?.total_revenue || 0)}
+                                    icon={<TrendingUp className="h-4 w-4" />}
+                                    accent="teal"
+                                    description="Faturas confirmadas/pagas"
+                                />
+                                <KpiCard
+                                    label="Impostos Recolhidos"
+                                    value={formatCurrency(data?.total_taxes || 0)}
+                                    icon={<FileText className="h-4 w-4" />}
+                                    accent="slate"
+                                />
+                                <KpiCard
+                                    label="Faturas Emitidas"
+                                    value={data?.total_invoices || 0}
+                                    icon={<FileText className="h-4 w-4" />}
+                                    accent="slate"
+                                />
+                                <KpiCard
+                                    label="Cotações Emitidas"
+                                    value={data?.total_quotes || 0}
+                                    icon={<FileText className="h-4 w-4" />}
+                                    accent="slate"
+                                />
                             </div>
-                        ) : (
-                            <>
-                                <TabsContent value="sales" className="space-y-6 animate-in fade-in-50 duration-500">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                        <Card>
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-sm font-medium text-muted-foreground">Receita Total</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-2xl font-bold text-blue-600">{formatCurrency(data?.total_revenue || 0)}</div>
-                                                <p className="text-xs text-muted-foreground mt-1">Faturas confirmadas e pagas</p>
-                                            </CardContent>
-                                        </Card>
-                                        <Card>
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-sm font-medium text-muted-foreground">Impostos Recolhidos</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-2xl font-bold text-red-500">{formatCurrency(data?.total_taxes || 0)}</div>
-                                            </CardContent>
-                                        </Card>
-                                        <Card>
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-sm font-medium text-muted-foreground">Faturas Emitidas</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-2xl font-bold">{data?.total_invoices || 0}</div>
-                                            </CardContent>
-                                        </Card>
-                                        <Card>
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-sm font-medium text-muted-foreground">Cotações Emitidas</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-2xl font-bold">{data?.total_quotes || 0}</div>
-                                            </CardContent>
-                                        </Card>
-                                    </div>
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle>Histórico de Receitas</CardTitle>
-                                            <CardDescription>Evolução diária de receitas no período selecionado</CardDescription>
-                                        </CardHeader>
-                                        <CardContent>
-                                            {/* Gráfico Placeholder - pode ser substituído por Recharts depois */}
-                                            <div className="h-64 w-full bg-slate-50 dark:bg-zinc-800/50 rounded-lg flex items-center justify-center border border-dashed border-slate-200 dark:border-zinc-700">
-                                                <p className="text-muted-foreground text-sm">Visualização de Gráfico (Requer biblioteca de gráficos)</p>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </TabsContent>
 
-                                <TabsContent value="inventory" className="space-y-6 animate-in fade-in-50 duration-500">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <Card>
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-sm font-medium text-muted-foreground">Total Entradas (Ins)</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-3xl font-bold text-green-600">{data?.total_ins || 0} <span className="text-base font-normal text-muted-foreground">unidades</span></div>
-                                            </CardContent>
-                                        </Card>
-                                        <Card>
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-sm font-medium text-muted-foreground">Total Saídas (Outs)</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-3xl font-bold text-orange-600">{data?.total_outs || 0} <span className="text-base font-normal text-muted-foreground">unidades</span></div>
-                                            </CardContent>
-                                        </Card>
+                            <TableCard>
+                                <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <TrendingUp className="h-4 w-4 text-[#2DB8A0]" />
+                                        <h2 className="text-[14px] font-semibold text-foreground">Receitas no Período</h2>
                                     </div>
+                                </div>
+                                <div className="p-5 overflow-x-auto">
+                                    {(!data?.chart_data || data.chart_data.length === 0) ? (
+                                        <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
+                                            Não há dados suficientes para gerar o gráfico.
+                                        </div>
+                                    ) : (
+                                        <svg viewBox="0 0 1000 180" width="100%" height="100%" className="overflow-visible font-sans min-w-[600px]">
+                                            <defs>
+                                                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor="#2DB8A0" stopOpacity="0.12" />
+                                                    <stop offset="100%" stopColor="#2DB8A0" stopOpacity="0.0" />
+                                                </linearGradient>
+                                            </defs>
+                                            {[0, 0.25, 0.5, 0.75, 1.0].map((ratio, idx) => {
+                                                const val = maxChartValue * ratio;
+                                                const y = 140 - ratio * 110;
+                                                return (
+                                                    <g key={idx}>
+                                                        <line x1="85" y1={y} x2="960" y2={y} className="stroke-border/40" strokeDasharray="4 4" strokeWidth="1" />
+                                                        <text x="75" y={y + 3} textAnchor="end" style={{ fontSize: '9px' }} className="fill-muted-foreground/60 font-mono">
+                                                            {ratio === 0 ? '0 MT' : new Intl.NumberFormat('pt-MZ', { maximumFractionDigits: 0 }).format(val) + ' MT'}
+                                                        </text>
+                                                    </g>
+                                                );
+                                            })}
+                                            <path
+                                                d={(() => {
+                                                    const spacing = 875 / Math.max(data.chart_data.length - 1, 1);
+                                                    const points = data.chart_data.map((item: any, idx: number) => ({
+                                                        x: 85 + (idx * spacing),
+                                                        y: 140 - (item.value / maxChartValue) * 110
+                                                    }));
+                                                    if(points.length === 1) {
+                                                        return `M 85 140 L ${points[0].x} ${points[0].y} L 960 140 Z`;
+                                                    }
+                                                    let d = `M ${points[0].x} ${points[0].y}`;
+                                                    for (let i = 0; i < points.length - 1; i++) {
+                                                        const p0 = points[i];
+                                                        const p1 = points[i + 1];
+                                                        const cp1x = p0.x + (p1.x - p0.x) * 0.3;
+                                                        const cp1y = p0.y + (p1.y - p0.y) * 0.05;
+                                                        const cp2x = p0.x + (p1.x - p0.x) * 0.7;
+                                                        const cp2y = p0.y + (p1.y - p0.y) * 0.95;
+                                                        d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
+                                                    }
+                                                    return `${d} L ${points[points.length - 1].x} 140 L 85 140 Z`;
+                                                })()}
+                                                fill="url(#areaGradient)"
+                                            />
+                                            <path
+                                                d={(() => {
+                                                    const spacing = 875 / Math.max(data.chart_data.length - 1, 1);
+                                                    const points = data.chart_data.map((item: any, idx: number) => ({
+                                                        x: 85 + (idx * spacing),
+                                                        y: 140 - (item.value / maxChartValue) * 110
+                                                    }));
+                                                    if(points.length === 1) {
+                                                        return `M ${points[0].x} ${points[0].y} L 960 ${points[0].y}`;
+                                                    }
+                                                    let d = `M ${points[0].x} ${points[0].y}`;
+                                                    for (let i = 0; i < points.length - 1; i++) {
+                                                        const p0 = points[i];
+                                                        const p1 = points[i + 1];
+                                                        const cp1x = p0.x + (p1.x - p0.x) * 0.3;
+                                                        const cp1y = p0.y + (p1.y - p0.y) * 0.05;
+                                                        const cp2x = p0.x + (p1.x - p0.x) * 0.7;
+                                                        const cp2y = p0.y + (p1.y - p0.y) * 0.95;
+                                                        d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
+                                                    }
+                                                    return d;
+                                                })()}
+                                                fill="none" stroke="#2DB8A0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                                            />
+                                            {data.chart_data.map((item: any, idx: number) => {
+                                                const spacing = 875 / Math.max(data.chart_data.length - 1, 1);
+                                                const x = 85 + (idx * spacing);
+                                                const y = 140 - (item.value / maxChartValue) * 110;
+                                                return (
+                                                    <g key={idx} className="group/point cursor-pointer">
+                                                        <circle cx={x} cy={y} r="12" fill="transparent" />
+                                                        <circle cx={x} cy={y} r="3.5" fill="#2DB8A0" className="transition-all duration-300 group-hover/point:r-5.5" />
+                                                        <circle cx={x} cy={y} r="3.5" fill="#ffffff" stroke="#2DB8A0" strokeWidth="2" className="transition-all duration-300 group-hover/point:r-4.5" />
+                                                        <text x={x} y="162" textAnchor="middle" style={{ fontSize: '9px' }} className="fill-muted-foreground font-semibold">{item.label}</text>
+                                                        <g className="opacity-0 group-hover/point:opacity-100 transition-opacity duration-200 pointer-events-none z-30">
+                                                            <rect x={x - 55} y={y - 32} width="110" height="22" rx="4" className="fill-slate-900 stroke-border shadow-md" />
+                                                            <text x={x} y={y - 18} textAnchor="middle" style={{ fontSize: '9px' }} className="fill-white font-bold">{formatCurrency(item.value)}</text>
+                                                        </g>
+                                                    </g>
+                                                );
+                                            })}
+                                        </svg>
+                                    )}
+                                </div>
+                            </TableCard>
+                        </TabsContent>
 
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center text-red-600">
-                                                <Package className="w-5 h-5 mr-2" />
-                                                Alertas de Stock Baixo
-                                            </CardTitle>
-                                            <CardDescription>Produtos que atingiram ou estão abaixo do stock mínimo</CardDescription>
-                                        </CardHeader>
-                                        <CardContent>
-                                            {data?.low_stock_products?.length > 0 ? (
-                                                <div className="overflow-x-auto">
-                                                    <table className="w-full text-sm text-left">
-                                                        <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
-                                                            <tr>
-                                                                <th className="px-4 py-3 rounded-tl-lg">Produto</th>
-                                                                <th className="px-4 py-3">Referência</th>
-                                                                <th className="px-4 py-3 text-right">Stock Atual</th>
-                                                                <th className="px-4 py-3 text-right rounded-tr-lg">Stock Mín.</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {data.low_stock_products.map((product: any, idx: number) => (
-                                                                <tr key={idx} className="border-b last:border-0 dark:border-zinc-800">
-                                                                    <td className="px-4 py-3 font-medium">{product.name}</td>
-                                                                    <td className="px-4 py-3">{product.reference || '-'}</td>
-                                                                    <td className="px-4 py-3 text-right font-bold text-red-600">{product.total_stock || 0}</td>
-                                                                    <td className="px-4 py-3 text-right text-muted-foreground">{product.min_stock}</td>
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
+                        <TabsContent value="inventory" className="space-y-6 animate-in fade-in-50 duration-500">
+                            <div className="grid grid-cols-2 gap-4">
+                                <KpiCard
+                                    label="Total Entradas"
+                                    value={data?.total_ins || 0}
+                                    icon={<Package className="h-4 w-4" />}
+                                    accent="teal"
+                                    description="Unidades recebidas"
+                                />
+                                <KpiCard
+                                    label="Total Saídas"
+                                    value={data?.total_outs || 0}
+                                    icon={<Package className="h-4 w-4" />}
+                                    accent="orange"
+                                    description="Unidades expedidas"
+                                />
+                            </div>
+
+                            <TableCard>
+                                <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <AlertCircle className="h-4 w-4 text-red-500" />
+                                        <h2 className="text-[14px] font-semibold text-foreground">Alertas de Stock Baixo</h2>
+                                    </div>
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead className="bg-muted/50 border-b border-border text-left">
+                                            <tr>
+                                                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Produto</th>
+                                                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Referência</th>
+                                                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground text-right">Stock Atual</th>
+                                                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground text-right">Mínimo Permitido</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border">
+                                            {(!data?.low_stock_products || data.low_stock_products.length === 0) ? (
+                                                <tr>
+                                                    <td colSpan={4} className="px-5 py-8 text-center text-muted-foreground text-xs">
+                                                        Nenhum alerta de stock baixo no momento.
+                                                    </td>
+                                                </tr>
                                             ) : (
-                                                <div className="text-center py-8 text-muted-foreground">
-                                                    Nenhum alerta de stock baixo no momento.
-                                                </div>
+                                                data.low_stock_products.map((product: any, idx: number) => (
+                                                    <tr key={idx} className="hover:bg-muted/50 transition-colors">
+                                                        <td className="px-5 py-3 font-semibold text-foreground text-xs">{product.name}</td>
+                                                        <td className="px-5 py-3 text-muted-foreground text-xs">{product.reference || '-'}</td>
+                                                        <td className="px-5 py-3 text-right font-mono font-bold text-red-600 text-xs">{product.total_stock || 0}</td>
+                                                        <td className="px-5 py-3 text-right text-muted-foreground text-xs">{product.min_stock}</td>
+                                                    </tr>
+                                                ))
                                             )}
-                                        </CardContent>
-                                    </Card>
-                                </TabsContent>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </TableCard>
+                        </TabsContent>
 
-                                <TabsContent value="customers" className="space-y-6 animate-in fade-in-50 duration-500">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle>Top Clientes (Receita)</CardTitle>
-                                                <CardDescription>Os 10 clientes que mais gastaram no período</CardDescription>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="space-y-4">
-                                                    {data?.top_customers?.map((tc: any, i: number) => (
-                                                        <div key={i} className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xs">
-                                                                    {i + 1}
-                                                                </div>
-                                                                <div>
-                                                                    <p className="text-sm font-medium">{tc.customer?.name || 'Cliente Desconhecido'}</p>
-                                                                </div>
-                                                            </div>
-                                                            <div className="font-bold">{formatCurrency(tc.total_spent)}</div>
-                                                        </div>
-                                                    ))}
-                                                    {(!data?.top_customers || data.top_customers.length === 0) && (
-                                                        <p className="text-center text-muted-foreground text-sm py-4">Nenhum dado encontrado.</p>
-                                                    )}
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle>Saldos Pendentes</CardTitle>
-                                                <CardDescription>Clientes com maiores dívidas</CardDescription>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="space-y-4">
-                                                    {data?.pending_balances?.map((pb: any, i: number) => (
-                                                        <div key={i} className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs">
-                                                                    !
-                                                                </div>
-                                                                <div>
-                                                                    <p className="text-sm font-medium">{pb.customer?.name || 'Cliente Desconhecido'}</p>
-                                                                </div>
-                                                            </div>
-                                                            <div className="font-bold text-red-500">{formatCurrency(pb.pending_balance)}</div>
-                                                        </div>
-                                                    ))}
-                                                    {(!data?.pending_balances || data.pending_balances.length === 0) && (
-                                                        <p className="text-center text-muted-foreground text-sm py-4">Nenhum saldo pendente encontrado.</p>
-                                                    )}
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+                        <TabsContent value="customers" className="space-y-6 animate-in fade-in-50 duration-500">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <TableCard>
+                                    <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Users className="h-4 w-4 text-purple-600" />
+                                            <h2 className="text-[14px] font-semibold text-foreground">Top 10 Clientes (Receita)</h2>
+                                        </div>
                                     </div>
-                                </TabsContent>
-
-                                <TabsContent value="pos" className="space-y-6 animate-in fade-in-50 duration-500">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                        <Card>
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-sm font-medium text-muted-foreground">Turnos Registados</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-2xl font-bold">{data?.total_shifts || 0}</div>
-                                            </CardContent>
-                                        </Card>
-                                        <Card>
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-sm font-medium text-muted-foreground">Valor Esperado</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-2xl font-bold text-blue-600">{formatCurrency(data?.total_expected || 0)}</div>
-                                            </CardContent>
-                                        </Card>
-                                        <Card>
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-sm font-medium text-muted-foreground">Valor Reportado</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-2xl font-bold text-green-600">{formatCurrency(data?.total_reported || 0)}</div>
-                                            </CardContent>
-                                        </Card>
-                                        <Card>
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-sm font-medium text-muted-foreground">Quebras de Caixa</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className={`text-2xl font-bold ${data?.total_variances < 0 ? 'text-red-500' : 'text-slate-600'}`}>
-                                                    {formatCurrency(data?.total_variances || 0)}
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm">
+                                            <thead className="bg-muted/50 border-b border-border text-left">
+                                                <tr>
+                                                    <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Pos</th>
+                                                    <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Cliente</th>
+                                                    <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground text-right">Total Gasto</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-border">
+                                                {(!data?.top_customers || data.top_customers.length === 0) ? (
+                                                    <tr>
+                                                        <td colSpan={3} className="px-5 py-8 text-center text-muted-foreground text-xs">
+                                                            Nenhum dado encontrado.
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    data.top_customers.map((tc: any, i: number) => (
+                                                        <tr key={i} className="hover:bg-muted/50 transition-colors">
+                                                            <td className="px-5 py-3 text-muted-foreground font-semibold text-xs">{i + 1}º</td>
+                                                            <td className="px-5 py-3 font-semibold text-foreground text-xs">{tc.customer?.name || 'Desconhecido'}</td>
+                                                            <td className="px-5 py-3 text-right font-mono font-bold text-[#2DB8A0] text-xs">{formatCurrency(tc.total_spent)}</td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
                                     </div>
-                                </TabsContent>
-                            </>
-                        )}
-                    </Tabs>
-                </div>
-            </div>
-        </AppLayout>
+                                </TableCard>
+
+                                <TableCard>
+                                    <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <TrendingUp className="h-4 w-4 text-orange-500" />
+                                            <h2 className="text-[14px] font-semibold text-foreground">Maiores Saldos Pendentes</h2>
+                                        </div>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm">
+                                            <thead className="bg-muted/50 border-b border-border text-left">
+                                                <tr>
+                                                    <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Cliente</th>
+                                                    <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground text-right">Dívida Pendente</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-border">
+                                                {(!data?.pending_balances || data.pending_balances.length === 0) ? (
+                                                    <tr>
+                                                        <td colSpan={2} className="px-5 py-8 text-center text-muted-foreground text-xs">
+                                                            Nenhum saldo pendente encontrado.
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    data.pending_balances.map((pb: any, i: number) => (
+                                                        <tr key={i} className="hover:bg-muted/50 transition-colors">
+                                                            <td className="px-5 py-3 font-semibold text-foreground text-xs">{pb.customer?.name || 'Desconhecido'}</td>
+                                                            <td className="px-5 py-3 text-right font-mono font-bold text-red-500 text-xs">{formatCurrency(pb.pending_balance)}</td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </TableCard>
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="pos" className="space-y-6 animate-in fade-in-50 duration-500">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                <KpiCard
+                                    label="Total Turnos"
+                                    value={data?.total_shifts || 0}
+                                    icon={<MonitorPlay className="h-4 w-4" />}
+                                    accent="slate"
+                                />
+                                <KpiCard
+                                    label="Vendas POS"
+                                    value={formatCurrency(data?.total_sales || 0)}
+                                    icon={<TrendingUp className="h-4 w-4" />}
+                                    accent="teal"
+                                />
+                                <KpiCard
+                                    label="Caixa Final (Reportado)"
+                                    value={formatCurrency(data?.ending_cash || 0)}
+                                    icon={<MonitorPlay className="h-4 w-4" />}
+                                    accent="gold"
+                                    description={`Abertura: ${formatCurrency(data?.starting_cash || 0)}`}
+                                />
+                                <KpiCard
+                                    label="Variação / Quebras"
+                                    value={formatCurrency(data?.variance || 0)}
+                                    icon={<AlertCircle className="h-4 w-4" />}
+                                    accent={(data?.variance || 0) < 0 ? 'red' : 'slate'}
+                                />
+                            </div>
+                        </TabsContent>
+                    </>
+                )}
+            </Tabs>
+        </div>
     );
 }
+
+ReportsIndex.layout = {
+    breadcrumbs: [
+        {
+            title: 'Relatórios e Estatísticas',
+            href: '/reports',
+        },
+    ],
+};

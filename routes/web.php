@@ -39,12 +39,28 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     Route::post('context/switch', [ContextController::class, 'switch'])->name('context.switch');
     Route::post('unlock-screen', [\App\Http\Controllers\LockScreenController::class, 'unlock'])->name('unlock.screen');
 
-    // Catalog
-    Route::resource('branches', BranchController::class);
-    Route::resource('products', ProductController::class);
-    Route::resource('categories', CategoryController::class);
-    Route::resource('units', UnitController::class);
-    Route::resource('brands', BrandController::class);
+    // Catalog View
+    Route::middleware('can:catalog.view')->group(function () {
+        Route::get('branches', [BranchController::class, 'index'])->name('branches.index');
+        Route::get('branches/{branch}', [BranchController::class, 'show'])->name('branches.show');
+        Route::get('products', [ProductController::class, 'index'])->name('products.index');
+        Route::get('products/{product}', [ProductController::class, 'show'])->name('products.show');
+        Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
+        Route::get('categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+        Route::get('units', [UnitController::class, 'index'])->name('units.index');
+        Route::get('units/{unit}', [UnitController::class, 'show'])->name('units.show');
+        Route::get('brands', [BrandController::class, 'index'])->name('brands.index');
+        Route::get('brands/{brand}', [BrandController::class, 'show'])->name('brands.show');
+    });
+
+    // Catalog Edit
+    Route::middleware('can:catalog.edit')->group(function () {
+        Route::resource('branches', BranchController::class)->except(['index', 'show']);
+        Route::resource('products', ProductController::class)->except(['index', 'show']);
+        Route::resource('categories', CategoryController::class)->except(['index', 'show']);
+        Route::resource('units', UnitController::class)->except(['index', 'show']);
+        Route::resource('brands', BrandController::class)->except(['index', 'show']);
+    });
 
     // Settings
     Route::prefix('settings')->group(function () {
@@ -52,111 +68,127 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
         Route::patch('profile', [ProfileController::class, 'update'])->name('settings.profile.update');
         Route::delete('profile', [ProfileController::class, 'destroy'])->name('settings.profile.destroy');
 
-        Route::get('company', [\App\Http\Controllers\CompanySettingsController::class, 'edit'])->name('settings.company.edit');
-        Route::patch('company', [\App\Http\Controllers\CompanySettingsController::class, 'update'])->name('settings.company.update');
 
-        Route::get('audits', [\App\Http\Controllers\AuditLogController::class, 'index'])->name('settings.audits');
+
+        Route::get('audits', [\App\Http\Controllers\AuditLogController::class, 'index'])
+            ->name('settings.audits')
+            ->middleware('can:audits.view');
     });
 
     // Reports
-    Route::prefix('reports')->name('reports.')->group(function () {
+    Route::prefix('reports')->name('reports.')->middleware('can:sales.view')->group(function () {
         Route::get('/', [\App\Http\Controllers\ReportController::class, 'index'])->name('index');
         Route::get('/data', [\App\Http\Controllers\ReportController::class, 'data'])->name('data');
-        Route::post('/export/pdf', [\App\Http\Controllers\ReportController::class, 'exportPdf'])->name('export.pdf');
-        Route::post('/export/excel', [\App\Http\Controllers\ReportController::class, 'exportExcel'])->name('export.excel');
+        Route::get('/export/pdf', [\App\Http\Controllers\ReportController::class, 'exportPdf'])->name('export.pdf');
+        Route::get('/export/excel', [\App\Http\Controllers\ReportController::class, 'exportExcel'])->name('export.excel');
     });
 
     // Inventory
     Route::prefix('/inventory')->group(function () {
-        Route::resource('warehouses', WarehouseController::class);
-        Route::get('movements', [StockMovementController::class, 'index'])
-            ->name('inventory.movements.index');
-        Route::get('/', [InventoryDashboardController::class, 'index'])
-            ->name('inventory.dashboard');
+        // Inventory View
+        Route::middleware('can:inventory.view')->group(function () {
+            Route::resource('warehouses', WarehouseController::class)->only(['index', 'show']);
+            Route::get('movements', [StockMovementController::class, 'index'])->name('inventory.movements.index');
+            Route::get('/', [InventoryDashboardController::class, 'index'])->name('inventory.dashboard');
+            Route::get('/opening', [InventoryOpeningController::class, 'index'])->name('inventory.opening.index');
+            Route::get('/stocks', [ProductStockController::class, 'index']);
+            Route::get('/stocks/{product}', [ProductStockController::class, 'show']);
+            Route::get('/transfers', [StockTransferController::class, 'index'])->name('inventory.transfers.index');
+            Route::get('/transfers/{transfer}', [StockTransferController::class, 'show'])->name('inventory.transfers.show');
+            Route::get('/adjustments', [StockAdjustmentController::class, 'index'])->name('inventory.adjustments.index');
+            Route::get('/adjustments/{adjustment}', [StockAdjustmentController::class, 'show'])->name('inventory.adjustments.show');
+        });
 
-        Route::get('/opening', [InventoryOpeningController::class, 'index'])
-            ->name('inventory.opening.index');
+        // Inventory Adjust
+        Route::middleware('can:inventory.adjust')->group(function () {
+            Route::post('/opening', [InventoryOpeningController::class, 'store'])->name('inventory.opening.store');
+            Route::resource('warehouses', WarehouseController::class)->except(['index', 'show']);
+            Route::get('/adjustments/create', [StockAdjustmentController::class, 'create'])->name('inventory.adjustments.create');
+            Route::post('/adjustments', [StockAdjustmentController::class, 'store'])->name('inventory.adjustments.store');
+            Route::post('/adjustments/{adjustment}/complete', [StockAdjustmentController::class, 'complete'])->name('inventory.adjustments.complete');
+            Route::post('/adjustments/{adjustment}/cancel', [StockAdjustmentController::class, 'cancel'])->name('inventory.adjustments.cancel');
+        });
 
-        Route::post('/opening', [InventoryOpeningController::class, 'store'])
-            ->name('inventory.opening.store');
-        Route::get('/stocks', [ProductStockController::class, 'index']);
-        Route::get('/stocks/{product}', [ProductStockController::class, 'show']);
-
-        Route::get('/transfers', [StockTransferController::class, 'index'])->name('inventory.transfers.index');
-        Route::get('/transfers/create', [StockTransferController::class, 'create']);
-        Route::get('/transfers/{transfer}', [StockTransferController::class, 'show'])->name('inventory.transfers.show');
-        Route::post('/transfers/{transfer}/cancel', [StockTransferController::class, 'cancel'])->name('inventory.transfers.cancel');
-        Route::post('/transfers/{transfer}/approve', [StockTransferController::class, 'approve'])->name('inventory.transfers.approve');
-
-        Route::post('/transfers', [StockTransferController::class, 'store']);
-        Route::post('/transfers/{transfer}/complete', [StockTransferController::class, 'complete']);
-
-        // Stock Adjustments
-        Route::get('/adjustments', [StockAdjustmentController::class, 'index'])->name('inventory.adjustments.index');
-        Route::get('/adjustments/create', [StockAdjustmentController::class, 'create'])->name('inventory.adjustments.create');
-
-        Route::get('/adjustments/{adjustment}', [StockAdjustmentController::class, 'show'])->name('inventory.adjustments.show');
-        Route::post('/adjustments', [StockAdjustmentController::class, 'store'])->name('inventory.adjustments.store');
-        Route::post('/adjustments/{adjustment}/complete', [StockAdjustmentController::class, 'complete'])->name('inventory.adjustments.complete');
-        Route::post('/adjustments/{adjustment}/cancel', [StockAdjustmentController::class, 'cancel'])->name('inventory.adjustments.cancel');
+        // Inventory Transfer
+        Route::middleware('can:inventory.transfer')->group(function () {
+            Route::get('/transfers/create', [StockTransferController::class, 'create']);
+            Route::post('/transfers/{transfer}/cancel', [StockTransferController::class, 'cancel'])->name('inventory.transfers.cancel');
+            Route::post('/transfers/{transfer}/approve', [StockTransferController::class, 'approve'])->name('inventory.transfers.approve');
+            Route::post('/transfers', [StockTransferController::class, 'store']);
+            Route::post('/transfers/{transfer}/complete', [StockTransferController::class, 'complete']);
+        });
     });
 
     // Sales/Billing
-
     Route::prefix('billing')->name('billing.')->group(function () {
-        Route::resource('series', DocumentSeriesController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-        // Faturas (FT)
-        Route::resource('invoices', InvoiceController::class);
-        Route::post('invoices/{id}/confirm', [InvoiceController::class, 'confirm'])->name('invoices.confirm');
-        Route::post('invoices/{id}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
-        Route::post('invoices/receive-payment', [InvoiceController::class, 'receivePayment'])->name('invoices.receive-payment');
+        // Sales View (Quotes index/show)
+        Route::middleware('can:sales.view')->group(function () {
+            Route::resource('quotes', QuoteController::class)->only(['index', 'show']);
+            Route::resource('customers', CustomerController::class);
+        });
 
-        // Cotações (CT)
-        Route::resource('quotes', QuoteController::class);
-        Route::post('quotes/{id}/confirm', [QuoteController::class, 'confirm'])->name('quotes.confirm');
-        Route::post('quotes/{id}/cancel', [QuoteController::class, 'cancel'])->name('quotes.cancel');
+        // Sales Create (Quotes resource except index/show & confirm)
+        Route::middleware('can:sales.create')->group(function () {
+            Route::resource('quotes', QuoteController::class)->except(['index', 'show']);
+            Route::post('quotes/{id}/confirm', [QuoteController::class, 'confirm'])->name('quotes.confirm');
+        });
 
-        // Faturas-Recibo (FR)
-        Route::resource('receipts', ReceiptController::class);
-        Route::post('receipts/{id}/confirm', [ReceiptController::class, 'confirm'])->name('receipts.confirm');
-        Route::post('receipts/{id}/cancel', [ReceiptController::class, 'cancel'])->name('receipts.cancel');
+        // Sales Cancel (Quotes cancel)
+        Route::middleware('can:sales.cancel')->group(function () {
+            Route::post('quotes/{id}/cancel', [QuoteController::class, 'cancel'])->name('quotes.cancel');
+        });
 
-        // Notas de Crédito (NC)
-        Route::resource('credit-notes', CreditNoteController::class);
-        Route::post('credit-notes/{id}/confirm', [CreditNoteController::class, 'confirm'])->name('credit-notes.confirm');
-        Route::post('credit-notes/{id}/cancel', [CreditNoteController::class, 'cancel'])->name('credit-notes.cancel');
+        // Invoice View (Documents index/show, pdf)
+        Route::middleware('can:invoice.view')->group(function () {
+            Route::resource('invoices', InvoiceController::class)->only(['index', 'show']);
+            Route::resource('receipts', ReceiptController::class)->only(['index', 'show']);
+            Route::resource('credit-notes', CreditNoteController::class)->only(['index', 'show']);
+            Route::resource('debit-notes', DebitNoteController::class)->only(['index', 'show']);
+            Route::resource('series', DocumentSeriesController::class)->only(['index']);
+            Route::get('documents/{id}/pdf', [DocumentController::class, 'downloadPdf'])->name('documents.pdf');
+        });
 
-        // Notas de Débito (ND)
-        Route::resource('debit-notes', DebitNoteController::class);
-        Route::post('debit-notes/{id}/confirm', [DebitNoteController::class, 'confirm'])->name('debit-notes.confirm');
-        Route::post('debit-notes/{id}/cancel', [DebitNoteController::class, 'cancel'])->name('debit-notes.cancel');
+        // Invoice Create
+        Route::middleware('can:invoice.create')->group(function () {
+            Route::resource('invoices', InvoiceController::class)->except(['index', 'show']);
+            Route::resource('receipts', ReceiptController::class)->except(['index', 'show']);
+            Route::resource('credit-notes', CreditNoteController::class)->except(['index', 'show']);
+            Route::resource('debit-notes', DebitNoteController::class)->except(['index', 'show']);
+            Route::resource('series', DocumentSeriesController::class)->except(['index']);
 
-        // Rotas de Clientes
-        Route::resource('customers', CustomerController::class);
+            Route::post('invoices/{id}/confirm', [InvoiceController::class, 'confirm'])->name('invoices.confirm');
+            Route::post('invoices/receive-payment', [InvoiceController::class, 'receivePayment'])->name('invoices.receive-payment');
+            Route::post('receipts/{id}/confirm', [ReceiptController::class, 'confirm'])->name('receipts.confirm');
+            Route::post('credit-notes/{id}/confirm', [CreditNoteController::class, 'confirm'])->name('credit-notes.confirm');
+            Route::post('debit-notes/{id}/confirm', [DebitNoteController::class, 'confirm'])->name('debit-notes.confirm');
+            Route::post('documents/{id}/send-email', [DocumentController::class, 'sendEmail'])->name('documents.send-email');
+        });
 
-        // Documentos PDF e Email
-        Route::get('documents/{id}/pdf', [DocumentController::class, 'downloadPdf'])->name('documents.pdf');
-        Route::post('documents/{id}/send-email', [DocumentController::class, 'sendEmail'])->name('documents.send-email');
+        // Invoice Cancel
+        Route::middleware('can:invoice.cancel')->group(function () {
+            Route::post('invoices/{id}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
+            Route::post('receipts/{id}/cancel', [ReceiptController::class, 'cancel'])->name('receipts.cancel');
+            Route::post('credit-notes/{id}/cancel', [CreditNoteController::class, 'cancel'])->name('credit-notes.cancel');
+            Route::post('debit-notes/{id}/cancel', [DebitNoteController::class, 'cancel'])->name('debit-notes.cancel');
+        });
     });
+
     // POS
     Route::prefix('pos')->name('pos.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Pos\PosController::class, 'index'])->name('index');
+        Route::middleware('can:sales.view')->group(function () {
+            Route::get('/shifts', [\App\Http\Controllers\Pos\PosShiftController::class, 'index'])->name('shifts.index');
+            Route::get('/shifts/{shift}', [\App\Http\Controllers\Pos\PosShiftController::class, 'show'])->name('shifts.show');
+            Route::get('/reports', [\App\Http\Controllers\Pos\PosReportController::class, 'index'])->name('reports.index');
+        });
 
-        Route::get('/shifts', [\App\Http\Controllers\Pos\PosShiftController::class, 'index'])->name('shifts.index');
-        Route::get('/shifts/open', [\App\Http\Controllers\Pos\PosShiftController::class, 'create'])->name('shifts.create');
-        Route::post('/shifts/open', [\App\Http\Controllers\Pos\PosShiftController::class, 'store'])->name('shifts.store');
-
-        Route::get('/shifts/close', [\App\Http\Controllers\Pos\PosShiftController::class, 'showClose'])->name('shifts.showClose');
-        Route::post('/shifts/{shift}/close', [\App\Http\Controllers\Pos\PosShiftController::class, 'close'])->name('shifts.close');
-
-        // Detalhe de turno
-        Route::get('/shifts/{shift}', [\App\Http\Controllers\Pos\PosShiftController::class, 'show'])->name('shifts.show');
-
-        // Relatórios
-        Route::get('/reports', [\App\Http\Controllers\Pos\PosReportController::class, 'index'])->name('reports.index');
-
-        Route::post('/sales', [\App\Http\Controllers\Pos\PosSaleController::class, 'store'])->name('sales.store');
+        Route::middleware('can:sales.create')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Pos\PosController::class, 'index'])->name('index');
+            Route::get('/shifts/open', [\App\Http\Controllers\Pos\PosShiftController::class, 'create'])->name('shifts.create');
+            Route::post('/shifts/open', [\App\Http\Controllers\Pos\PosShiftController::class, 'store'])->name('shifts.store');
+            Route::get('/shifts/close', [\App\Http\Controllers\Pos\PosShiftController::class, 'showClose'])->name('shifts.showClose');
+            Route::post('/shifts/{shift}/close', [\App\Http\Controllers\Pos\PosShiftController::class, 'close'])->name('shifts.close');
+            Route::post('/sales', [\App\Http\Controllers\Pos\PosSaleController::class, 'store'])->name('sales.store');
+        });
     });
 
 

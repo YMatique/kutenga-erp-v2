@@ -24,7 +24,21 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\CheckOnboarding::class,
             SetCompanyContext::class,
         ]);
+
+        $middleware->alias([
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->respond(function ($response, $exception, $request) {
+            if ($response->getStatusCode() === 403) {
+                return inertia('errors/error', [
+                    'status' => 403,
+                    'message' => $exception->getMessage() ?: 'Não tens permissão para aceder a esta página.'
+                ])->toResponse($request)->setStatusCode(403);
+            }
+            return $response;
+        });
     })->create();

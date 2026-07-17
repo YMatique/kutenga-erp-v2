@@ -114,32 +114,35 @@
             </tbody>
         </table>
     @elseif($category === 'pos')
-        <table>
-            <thead>
+            <h2>Resumo de POS</h2>
+            <table>
                 <tr>
                     <th>Indicador</th>
-                    <th class="text-right">Valor</th>
+                    <th>Valor</th>
                 </tr>
-            </thead>
-            <tbody>
                 <tr>
                     <td>Total Turnos</td>
-                    <td class="text-right">{{ $data['total_shifts'] }}</td>
+                    <td>{{ $data['total_shifts'] }}</td>
                 </tr>
                 <tr>
-                    <td>Total Esperado</td>
-                    <td class="text-right">{{ number_format($data['total_expected'], 2) }} MZN</td>
+                    <td>Total Vendas POS</td>
+                    <td>{{ number_format($data['total_sales'], 2, ',', '.') }} MT</td>
                 </tr>
                 <tr>
-                    <td>Total Reportado</td>
-                    <td class="text-right">{{ number_format($data['total_reported'], 2) }} MZN</td>
+                    <td>Fundo de Maneio Inicial</td>
+                    <td>{{ number_format($data['starting_cash'], 2, ',', '.') }} MT</td>
+                </tr>
+                <tr>
+                    <td>Caixa Final Reportado</td>
+                    <td>{{ number_format($data['ending_cash'], 2, ',', '.') }} MT</td>
                 </tr>
                 <tr>
                     <td>Variação / Quebras</td>
-                    <td class="text-right">{{ number_format($data['total_variances'], 2) }} MZN</td>
+                    <td style="color: {{ $data['variance'] < 0 ? 'red' : 'green' }}">
+                        {{ number_format($data['variance'], 2, ',', '.') }} MT
+                    </td>
                 </tr>
-            </tbody>
-        </table>
+            </table>
     @endif
 
 </body>
