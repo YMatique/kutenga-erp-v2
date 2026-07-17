@@ -17,9 +17,10 @@ class StockAdjustmentController extends Controller
     {
         $query = StockAdjustment::query()
             ->with('warehouse')
+            ->withCount('items')
             ->where('company_id', Auth::user()->company_id);
 
-        if ($request->filled('status')) {
+        if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
 

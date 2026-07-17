@@ -187,23 +187,6 @@ export default function Show({ adjustment }: ShowProps) {
                     <div className="lg:col-span-2">
                         <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs overflow-hidden h-full">
                             <div className="bg-slate-50 border-b border-slate-100 px-5 py-4">
-                                <div className="flex items-center gap-2 text-slate-800">
-                                    <FileText className="h-4 w-4 text-slate-500" />
-                                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">Detalhes e Justificação</h2>
-                                </div>
-                            </div>
-                            <div className="p-5 grid gap-4">
-                                <div className="grid gap-1">
-                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Motivo de Ajuste</span>
-                                    <p className="text-sm text-slate-800 font-medium bg-slate-50 p-3 rounded-[4px] border border-slate-100">
-                                        {adjustment.reason || 'Nenhum motivo especificado.'}
-                                    </p>
-                                </div>
-
-                                {adjustment.notes && (
-                                    <div className="grid gap-1">
-                                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Observações Operacionais</span>
-                                        <p className="text-sm text-slate-750 bg-slate-50 p-3 rounded-[4px] border border-slate-100 whitespace-pre-wrap">
                                             {adjustment.notes}
                                         </p>
                                     </div>

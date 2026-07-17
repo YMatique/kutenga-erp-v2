@@ -1,8 +1,8 @@
 import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import { 
-    Bell, Check, Clock, PackageOpen, Receipt, User, 
-    PlusCircle, ArrowDownCircle, Ban, CheckSquare, Inbox, ExternalLink 
+import {
+    Bell, Check, Clock, PackageOpen, Receipt, User,
+    PlusCircle, ArrowDownCircle, Ban, CheckSquare, Inbox, ExternalLink
 } from 'lucide-react';
 import { PageHeader, PrimaryButton, OutlineButton } from '@/components/ui/brand';
 import { toast } from 'sonner';
@@ -26,12 +26,12 @@ interface PaginatedNotifications {
 }
 
 interface Props {
-    notifications: PaginatedNotifications;
+    systemNotifications: PaginatedNotifications;
     filter: string;
 }
 
-export default function NotificationsIndex({ notifications, filter }: Props) {
-    
+export default function NotificationsIndex({ systemNotifications, filter }: Props) {
+
     const handleRead = (n: Notification) => {
         router.post(`/notifications/${n.id}/read`, {}, {
             preserveScroll: true,
@@ -83,7 +83,7 @@ export default function NotificationsIndex({ notifications, filter }: Props) {
         <>
             <Head title="Notificações do Sistema" />
 
-            <div className="container mx-auto py-8 max-w-5xl px-4">
+            <div className="w-full py-8 ">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                     <div>
@@ -93,10 +93,10 @@ export default function NotificationsIndex({ notifications, filter }: Props) {
                         </p>
                     </div>
 
-                    {notifications.data.some(n => !n.is_read) && (
-                        <PrimaryButton 
+                    {systemNotifications.data.some(n => !n.is_read) && (
+                        <PrimaryButton
                             id="btn-mark-all-read"
-                            onClick={handleMarkAllRead} 
+                            onClick={handleMarkAllRead}
                             className="bg-[#2DB8A0] hover:bg-[#239B86] h-10 px-4 text-xs font-semibold flex items-center gap-2 self-start sm:self-auto"
                         >
                             <CheckSquare size={16} />
@@ -109,36 +109,33 @@ export default function NotificationsIndex({ notifications, filter }: Props) {
                 <div className="flex items-center gap-2 mb-6 border-b border-border pb-3">
                     <Link
                         href="/notifications?filter=all"
-                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                            filter === 'all'
-                                ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400'
-                                : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
-                        }`}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${filter === 'all'
+                            ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400'
+                            : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
+                            }`}
                     >
                         Todas
                     </Link>
                     <Link
                         href="/notifications?filter=unread"
-                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                            filter === 'unread'
-                                ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400'
-                                : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
-                        }`}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${filter === 'unread'
+                            ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400'
+                            : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
+                            }`}
                     >
                         Não Lidas
-                        {notifications.data.filter(n => !n.is_read).length > 0 && (
+                        {systemNotifications.data.filter(n => !n.is_read).length > 0 && (
                             <span className="ml-1.5 bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
-                                {notifications.data.filter(n => !n.is_read).length}
+                                {systemNotifications.data.filter(n => !n.is_read).length}
                             </span>
                         )}
                     </Link>
                     <Link
                         href="/notifications?filter=read"
-                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                            filter === 'read'
-                                ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400'
-                                : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
-                        }`}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${filter === 'read'
+                            ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400'
+                            : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
+                            }`}
                     >
                         Lidas
                     </Link>
@@ -146,7 +143,7 @@ export default function NotificationsIndex({ notifications, filter }: Props) {
 
                 {/* Content Card */}
                 <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
-                    {notifications.data.length === 0 ? (
+                    {systemNotifications.data.length === 0 ? (
                         <div className="py-20 text-center text-muted-foreground flex flex-col items-center justify-center gap-4">
                             <div className="p-4 rounded-full bg-slate-50 dark:bg-slate-800/40 text-slate-400 dark:text-slate-500">
                                 <Inbox className="h-10 w-10" />
@@ -158,12 +155,11 @@ export default function NotificationsIndex({ notifications, filter }: Props) {
                         </div>
                     ) : (
                         <div className="divide-y divide-border">
-                            {notifications.data.map((n) => (
-                                <div 
+                            {systemNotifications.data.map((n) => (
+                                <div
                                     key={n.id}
-                                    className={`flex items-start justify-between p-5 transition-all relative hover:bg-slate-50/50 dark:hover:bg-slate-800/20 ${
-                                        !n.is_read ? 'bg-slate-50/20 dark:bg-slate-800/10 font-medium' : ''
-                                    }`}
+                                    className={`flex items-start justify-between p-5 transition-all relative hover:bg-slate-50/50 dark:hover:bg-slate-800/20 ${!n.is_read ? 'bg-slate-50/20 dark:bg-slate-800/10 font-medium' : ''
+                                        }`}
                                 >
                                     {/* Unread Accent Indicator */}
                                     {!n.is_read && (
@@ -189,11 +185,11 @@ export default function NotificationsIndex({ notifications, filter }: Props) {
                                             <p className="text-xs text-muted-foreground leading-relaxed mt-1.5 whitespace-pre-line">
                                                 {n.message}
                                             </p>
-                                            
+
                                             <div className="flex items-center gap-3 mt-3 text-[10px] text-muted-foreground">
                                                 <span>{new Date(n.created_at).toLocaleString('pt-PT')}</span>
                                                 {n.link && (
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleRead(n)}
                                                         className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-semibold transition-colors"
                                                     >
@@ -207,7 +203,7 @@ export default function NotificationsIndex({ notifications, filter }: Props) {
 
                                     {/* Right Action */}
                                     {!n.is_read && (
-                                        <OutlineButton 
+                                        <OutlineButton
                                             onClick={() => handleRead(n)}
                                             className="h-8 px-3 text-[11px] font-semibold border-indigo-200 dark:border-indigo-950 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/20"
                                         >
@@ -221,12 +217,12 @@ export default function NotificationsIndex({ notifications, filter }: Props) {
                 </div>
 
                 {/* Pagination */}
-                {notifications.last_page > 1 && (
+                {systemNotifications.last_page > 1 && (
                     <div className="flex items-center justify-center gap-1 mt-6">
-                        {notifications.links.map((link, idx) => {
+                        {systemNotifications.links.map((link, idx) => {
                             if (!link.url) {
                                 return (
-                                    <span 
+                                    <span
                                         key={idx}
                                         className="px-3 py-1.5 text-xs text-muted-foreground cursor-not-allowed border border-transparent"
                                         dangerouslySetInnerHTML={{ __html: link.label }}
@@ -237,11 +233,10 @@ export default function NotificationsIndex({ notifications, filter }: Props) {
                                 <Link
                                     key={idx}
                                     href={link.url}
-                                    className={`px-3 py-1.5 text-xs font-semibold rounded border transition-all ${
-                                        link.active 
-                                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/40 dark:border-indigo-900 dark:text-indigo-400' 
-                                            : 'border-border text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
-                                    }`}
+                                    className={`px-3 py-1.5 text-xs font-semibold rounded border transition-all ${link.active
+                                        ? 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/40 dark:border-indigo-900 dark:text-indigo-400'
+                                        : 'border-border text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
+                                        }`}
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                 />
                             );

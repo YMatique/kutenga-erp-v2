@@ -9,6 +9,7 @@ import {
     Warehouse,
     MapPin,
     BarChart,
+    Bell,
 } from 'lucide-react';
 import { CompanySwitcher } from '@/components/company-switcher';
 import { NavMain } from '@/components/nav-main';
@@ -96,6 +97,11 @@ const mainNavItems: NavItem[] = [
         title: 'Relatórios',
         href: '/reports',
         icon: BarChart,
+    },
+    {
+        title: 'Notificações',
+        href: '/notifications',
+        icon: Bell,
     },
     {
         title: 'Configurações',

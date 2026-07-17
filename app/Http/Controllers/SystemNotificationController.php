@@ -22,10 +22,10 @@ class SystemNotificationController extends Controller
             $query->where('is_read', true);
         }
 
-        $notifications = $query->paginate(15)->withQueryString();
+        $systemNotifications = $query->paginate(15)->withQueryString();
 
         return Inertia::render('notifications/Index', [
-            'notifications' => $notifications,
+            'systemNotifications' => $systemNotifications,
             'filter' => $filter,
         ]);
     }

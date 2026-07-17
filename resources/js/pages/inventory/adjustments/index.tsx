@@ -86,6 +86,14 @@ const statusConfig: Record<
     },
 }
 
+const reasonConfig: Record<string, string> = {
+    physical_count: 'Contagem Física',
+    damaged: 'Produto Danificado',
+    loss: 'Perda',
+    correction: 'Correção',
+    other: 'Outro',
+}
+
 function AdjStatusBadge({ status }: { status: Adjustment['status'] }) {
     const cfg = statusConfig[status] ?? statusConfig.draft
 
@@ -140,16 +148,20 @@ return
     }, [search])
 
     function applyFilters(overrides: { newSearch?: string; newStatus?: string } = {}) {
-        router.get('/inventory/adjustments', {
-            search: overrides.newSearch !== undefined ? overrides.newSearch : search,
-            status: overrides.newStatus !== undefined ? overrides.newStatus : status,
-        }, { preserveState: true, replace: true })
+        const query: Record<string, string> = {}
+        const s = overrides.newStatus !== undefined ? overrides.newStatus : status
+        const q = overrides.newSearch !== undefined ? overrides.newSearch : search
+
+        if (s && s !== 'all') query.status = s
+        if (q) query.search = q
+
+        router.get('/inventory/adjustments', query, { preserveState: true, replace: true })
     }
 
     const clearFilters = () => {
         setSearch('')
         setStatus('all')
-        router.get('/inventory/adjustments', { search: '', status: 'all' }, {
+        router.get('/inventory/adjustments', {}, {
             preserveState: true, replace: true,
         })
     }
@@ -319,7 +331,7 @@ return
                                                 className="text-slate-600 truncate text-xs"
                                                 title={a.reason}
                                             >
-                                                {a.reason}
+                                                {reasonConfig[a.reason] || a.reason}
                                             </p>
                                         </td>
 
