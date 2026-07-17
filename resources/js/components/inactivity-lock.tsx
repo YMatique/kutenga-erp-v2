@@ -1,9 +1,10 @@
-import { usePage, useForm } from '@inertiajs/react';
-import { Lock, Loader2, User } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { usePage, useForm, Link } from '@inertiajs/react';
+import { Lock, Loader2, User, LogOut } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { KutengaLogo } from '@/components/kutenga-logo';
 
 export function InactivityLock() {
     const { auth } = usePage<any>().props;
@@ -16,17 +17,17 @@ export function InactivityLock() {
 
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    // 1 minutes of inactivity limit
+    // 1 minute of inactivity limit (configurable via backend later)
     const INACTIVITY_LIMIT = 5 * 60 * 1000;
 
-    const resetTimer = () => {
+    const resetTimer = useCallback(() => {
         if (locked) {
-return;
-}
+            return;
+        }
 
         if (timeoutRef.current) {
-clearTimeout(timeoutRef.current);
-}
+            clearTimeout(timeoutRef.current);
+        }
 
         timeoutRef.current = setTimeout(() => {
             setLocked(true);
@@ -39,7 +40,7 @@ clearTimeout(timeoutRef.current);
                 },
             });
         }, INACTIVITY_LIMIT);
-    };
+    }, [locked]);
 
     useEffect(() => {
         if (sessionStorage.getItem('screen_locked') === 'true') {
@@ -56,8 +57,8 @@ clearTimeout(timeoutRef.current);
             events.forEach((event) => window.removeEventListener(event, resetTimer));
 
             if (timeoutRef.current) {
-clearTimeout(timeoutRef.current);
-}
+                clearTimeout(timeoutRef.current);
+            }
         };
     }, [locked]);
 
@@ -76,8 +77,8 @@ clearTimeout(timeoutRef.current);
 
     // Only render if there's a logged-in user
     if (!auth?.user) {
-return null;
-}
+        return null;
+    }
 
     const handleUnlock = (e: React.FormEvent) => {
         e.preventDefault();
@@ -96,32 +97,44 @@ return null;
     };
 
     if (!locked) {
-return null;
-}
+        return null;
+    }
 
     const formattedTime = time.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
     const formattedDate = time.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' });
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-zinc-950/95 backdrop-blur-xl animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-zinc-950/90 backdrop-blur-xl animate-in fade-in duration-500">
+            {/* Top Branding Section */}
+            <div className="absolute top-8 left-8 flex items-center space-x-3 opacity-80">
+                <KutengaLogo className="" />
+                <span className="text-white font-semibold text-lg tracking-tight">Kutenga</span>
+            </div>
+
             {/* Clock Section */}
-            <div className="absolute top-20 flex flex-col items-center text-white/90">
+            <div className="absolute top-24 flex flex-col items-center text-white/90">
                 <Lock className="h-6 w-6 mb-4 opacity-50" />
-                <h1 className="text-8xl font-light tracking-tighter mb-2">{formattedTime}</h1>
+                <h1 className="text-8xl font-light tracking-tighter mb-2 tabular-nums">{formattedTime}</h1>
                 <p className="text-xl font-medium opacity-70 capitalize">{formattedDate}</p>
             </div>
 
             {/* Unlock Section */}
-            <div className="mt-32 flex flex-col items-center w-full max-w-sm px-6">
-                <div className="h-24 w-24 rounded-full bg-zinc-800 border-4 border-zinc-900 shadow-xl overflow-hidden flex items-center justify-center mb-6">
-                    {auth.user.profile_photo_url ? (
-                        <img src={auth.user.profile_photo_url} alt={auth.user.name} className="h-full w-full object-cover" />
-                    ) : (
-                        <User className="h-10 w-10 text-zinc-400" />
-                    )}
+            <div className="mt-40 flex flex-col items-center w-full max-w-sm px-6">
+                <div className="relative group mb-6">
+                    <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#2DB8A0] to-emerald-500 opacity-20 group-hover:opacity-40 blur transition duration-500"></div>
+                    <div className="relative h-24 w-24 rounded-full bg-zinc-800 border-4 border-zinc-900 shadow-xl overflow-hidden flex items-center justify-center">
+                        {auth.user.profile_photo_url ? (
+                            <img src={auth.user.profile_photo_url} alt={auth.user.name} className="h-full w-full object-cover" />
+                        ) : (
+                            <User className="h-10 w-10 text-zinc-400" />
+                        )}
+                    </div>
                 </div>
 
                 <h2 className="text-2xl font-semibold text-white mb-1">{auth.user.name}</h2>
+                {auth.user.company && (
+                    <p className="text-[#2DB8A0] font-medium text-sm mb-2 text-center">{auth.user.company.name}</p>
+                )}
                 <p className="text-zinc-400 mb-8 text-center text-sm">
                     A sua sessão foi bloqueada devido à inatividade.
                 </p>
@@ -136,7 +149,7 @@ return null;
                             disabled={processing}
                             autoFocus
                             className={cn(
-                                "h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder:text-zinc-500 text-center text-lg",
+                                "h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder:text-zinc-500 text-center text-base focus:bg-zinc-900/80 transition-colors",
                                 errors.password && "border-red-500/50 focus-visible:ring-red-500"
                             )}
                         />
@@ -147,12 +160,24 @@ return null;
 
                     <Button
                         type="submit"
-                        className="w-full h-12 bg-[#2DB8A0] hover:bg-[#259b86] text-white text-base rounded-full shadow-lg shadow-[#2DB8A0]/20 transition-all hover:scale-[1.02]"
+                        className="w-full h-12 bg-[#2DB8A0] hover:bg-[#259b86] text-white text-base font-medium rounded-full shadow-lg shadow-[#2DB8A0]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                         disabled={processing || !data.password}
                     >
                         {processing ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Desbloquear Sessão'}
                     </Button>
                 </form>
+
+                <div className="mt-8">
+                    <Link
+                        href="/logout"
+                        method="post"
+                        as="button"
+                        className="flex items-center text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
+                    >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Não é {auth.user.name}? Sair
+                    </Link>
+                </div>
             </div>
         </div>
     );
