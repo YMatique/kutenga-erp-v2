@@ -15,9 +15,9 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // Autorização: deve ter pelo menos uma permissão de visualização ou ser dono (owner)
-        if (!$request->user()->hasRole('owner') && !$request->user()->hasAnyPermission(['sales.view', 'invoice.view', 'inventory.view', 'catalog.view'])) {
-            abort(403, 'Acesso Negado: Não tens permissão para ver o Dashboard.');
+        // Autorização: Apenas owner, Admin e Manager podem ver o Dashboard geral
+        if (!$request->user()->hasAnyRole(['owner', 'Admin', 'Manager'])) {
+            abort(403, 'Acesso Negado: Não tens permissão para ver o Dashboard principal.');
         }
 
         $companyId = $request->user()->company_id;

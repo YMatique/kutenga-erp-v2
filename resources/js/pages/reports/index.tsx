@@ -9,15 +9,15 @@ import { toast } from 'sonner';
 
 export default function ReportsIndex() {
     const [category, setCategory] = useState('sales');
-    
+
     // Default to current month
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 0);
-    
+
     const [startDate, setStartDate] = useState(startOfMonth.toISOString().split('T')[0]);
     const [endDate, setEndDate] = useState(endOfMonth.toISOString().split('T')[0]);
-    
+
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -28,11 +28,11 @@ export default function ReportsIndex() {
         try {
             const params = new URLSearchParams({ category, start_date: startDate, end_date: endDate });
             const response = await fetch(`${route('reports.data')}?${params.toString()}`);
-            
+
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            
+
             const result = await response.json();
             setData(result);
         } catch (error) {
@@ -50,12 +50,12 @@ export default function ReportsIndex() {
     const handleExport = (type: 'pdf' | 'excel') => {
         if (type === 'pdf') setIsExportingPdf(true);
         if (type === 'excel') setIsExportingExcel(true);
-        
+
         const params = new URLSearchParams({ category, start_date: startDate, end_date: endDate });
         const url = type === 'pdf' ? route('reports.export.pdf') : route('reports.export.excel');
-        
+
         window.location.href = `${url}?${params.toString()}`;
-        
+
         setTimeout(() => {
             setIsExportingPdf(false);
             setIsExportingExcel(false);
@@ -75,21 +75,21 @@ export default function ReportsIndex() {
                 actions={
                     <div className="flex flex-wrap items-center gap-2">
                         <div className="flex items-center gap-2 bg-card px-2 py-1 rounded-[4px] shadow-xs border border-border">
-                            <Input 
-                                type="date" 
-                                value={startDate} 
+                            <Input
+                                type="date"
+                                value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
                                 className="h-7 border-none shadow-none focus-visible:ring-0 w-32 text-xs"
                             />
                             <span className="text-muted-foreground text-xs font-medium">até</span>
-                            <Input 
-                                type="date" 
-                                value={endDate} 
+                            <Input
+                                type="date"
+                                value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
                                 className="h-7 border-none shadow-none focus-visible:ring-0 w-32 text-xs"
                             />
                         </div>
-                        <OutlineButton 
+                        <OutlineButton
                             onClick={() => handleExport('pdf')}
                             disabled={isExportingPdf || loading}
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -97,7 +97,7 @@ export default function ReportsIndex() {
                             {isExportingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
                             PDF
                         </OutlineButton>
-                        <OutlineButton 
+                        <OutlineButton
                             onClick={() => handleExport('excel')}
                             disabled={isExportingExcel || loading}
                             className="text-[#2DB8A0] hover:text-[#239B86] hover:bg-[#2DB8A0]/10"
@@ -110,7 +110,7 @@ export default function ReportsIndex() {
             />
 
             <Tabs value={category} onValueChange={setCategory} className="space-y-6">
-                <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full p-1 bg-card shadow-xs border border-border rounded-[4px]">
+                <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full p-1 pb-2 bg-card shadow-xs border border-border rounded-[4px]">
                     <TabsTrigger value="sales" className="rounded-[4px] data-[state=active]:bg-[#2DB8A0]/10 data-[state=active]:text-[#2DB8A0]">
                         <TrendingUp className="w-4 h-4 mr-2" /> Vendas
                     </TabsTrigger>
@@ -199,7 +199,7 @@ export default function ReportsIndex() {
                                                         x: 85 + (idx * spacing),
                                                         y: 140 - (item.value / maxChartValue) * 110
                                                     }));
-                                                    if(points.length === 1) {
+                                                    if (points.length === 1) {
                                                         return `M 85 140 L ${points[0].x} ${points[0].y} L 960 140 Z`;
                                                     }
                                                     let d = `M ${points[0].x} ${points[0].y}`;
@@ -223,7 +223,7 @@ export default function ReportsIndex() {
                                                         x: 85 + (idx * spacing),
                                                         y: 140 - (item.value / maxChartValue) * 110
                                                     }));
-                                                    if(points.length === 1) {
+                                                    if (points.length === 1) {
                                                         return `M ${points[0].x} ${points[0].y} L 960 ${points[0].y}`;
                                                     }
                                                     let d = `M ${points[0].x} ${points[0].y}`;

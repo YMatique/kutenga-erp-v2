@@ -76,7 +76,7 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     });
 
     // Reports
-    Route::prefix('reports')->name('reports.')->middleware('can:sales.view')->group(function () {
+    Route::prefix('reports')->name('reports.')->middleware('role:Admin|owner|Manager')->group(function () {
         Route::get('/', [\App\Http\Controllers\ReportController::class, 'index'])->name('index');
         Route::get('/data', [\App\Http\Controllers\ReportController::class, 'data'])->name('data');
         Route::get('/export/pdf', [\App\Http\Controllers\ReportController::class, 'exportPdf'])->name('export.pdf');

@@ -33,7 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->respond(function ($response, $exception, $request) {
-            if ($response->getStatusCode() === 403) {
+            if ($response->getStatusCode() === 403 && $request->isMethod('GET')) {
                 return inertia('errors/error', [
                     'status' => 403,
                     'message' => $exception->getMessage() ?: 'Não tens permissão para aceder a esta página.'
