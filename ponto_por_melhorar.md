@@ -86,7 +86,8 @@
 - Para logotipos, carimbos, etc, deve especificar tambem o tamanho da imagem para o usuário fazer upload de imagens que não quebrarão o layout
  
  ## Criar uma página de documentação do sistema
-
+- Manual de utilizador
+- Documentação na optica de desenvolvedor (readme.md)
 
  ## Padrão de Telas de Produtos, Faturação [feito]
  - Deve conter cards estatísticos no topo, com informações relevantes para a página em causa, por exemplo, na página de produtos, deve mostrar o número de produtos cadastrados, o número de produtos com estoque baixo, o número de produtos com estoque zerado, etc [feito]
@@ -131,3 +132,18 @@
 - Telas de faturação (cotação, faturas, notas, etc) devem ter cards estatísticos, filtros organizados. [feito]
 - A tela de categoria, o parente é opcional (A categoria pai não é obrigatória) [feito]
 - Em muitas páginas o toast notification aparece muitas vezes (por cima e baixo), deve ser padronizado, aparecer apenas no canto superior direito [feito]
+
+
+## POLIMENTOS
+- Verificar se as configuração são de facto carregadas ou não.
+- logs gerados pelo sistema não devem ser listados em nenhum user (mesmo o admin da empresa), mas pode haver um super-user para questões de configuração (este não deve pertencer a nenhuma empresa).
+- O lockscreen parece ter bugs, quando refresco, já não pede senha.
+- Verificar questões de emails (Se usa as configurações de SMPT próprio ou não, caso esteja configurado) e notificações (mapear as possiveis categorias). Nem todos usuários têm permissão de ver notificações.
+- Remover auditoria de dentro de configurações.
+- Por ser ainda uma MPV, não estamos a trabalhar com mult-empresa, pouco menos o filiais.
+- Rever vendas: o que vem de POS como mapear e diferenciar doque é gerado da parte de fatura-recibo;
+- Pagamento de Fatura, como ficará? Gerará um recibo ou etc.
+- Na parte de configurações, no dark-mode o sidebar interno que contem Perfil, Segurança, etc, o hover não está muito amigável.
+- O Admin pode ver todos as sessões, mas um user normal, ou o seller, só pode ver o que ele vendeu, seus turnos, etc.
+- Expandir as Permissões e Roles:
+- Ver assunto de fechamento de Inventário (não sei se isso existe, para certificar que no dia anterior ou semana, o inventário culminou com, coisa xyz)
