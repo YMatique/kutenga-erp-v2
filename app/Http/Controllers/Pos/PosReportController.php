@@ -15,11 +15,15 @@ class PosReportController extends Controller
         $user    = Auth::user();
         $company = $user->company_id;
 
+        $canViewAll = $user->hasAnyRole(['Admin', 'owner', 'Manager']);
+
         // KPIs do mês atual
         $thisMonth = [
             'sales_total' => (float) DB::table('documents')
                 ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
                 ->where('pos_shifts.company_id', $company)
+                ->where('documents.source_module', 'pos')
+                ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
                 ->whereMonth('documents.created_at', now()->month)
                 ->whereYear('documents.created_at', now()->year)
                 ->whereNull('documents.deleted_at')
@@ -28,6 +32,8 @@ class PosReportController extends Controller
             'transactions' => DB::table('documents')
                 ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
                 ->where('pos_shifts.company_id', $company)
+                ->where('documents.source_module', 'pos')
+                ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
                 ->whereMonth('documents.created_at', now()->month)
                 ->whereYear('documents.created_at', now()->year)
                 ->whereNull('documents.deleted_at')
@@ -36,12 +42,15 @@ class PosReportController extends Controller
             'tax_total' => (float) DB::table('documents')
                 ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
                 ->where('pos_shifts.company_id', $company)
+                ->where('documents.source_module', 'pos')
+                ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
                 ->whereMonth('documents.created_at', now()->month)
                 ->whereYear('documents.created_at', now()->year)
                 ->whereNull('documents.deleted_at')
                 ->sum('documents.tax_total'),
 
             'shifts_count' => PosShift::where('company_id', $company)
+                ->when(!$canViewAll, fn($q) => $q->where('user_id', $user->id))
                 ->whereMonth('opened_at', now()->month)
                 ->whereYear('opened_at', now()->year)
                 ->count(),
@@ -55,6 +64,8 @@ class PosReportController extends Controller
         $dailySales = DB::table('documents')
             ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
             ->where('pos_shifts.company_id', $company)
+            ->where('documents.source_module', 'pos')
+            ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
             ->where('documents.created_at', '>=', now()->subDays(29)->startOfDay())
             ->whereNull('documents.deleted_at')
             ->selectRaw('DATE(documents.created_at) as date, SUM(documents.grand_total) as total, COUNT(*) as count')
@@ -68,6 +79,8 @@ class PosReportController extends Controller
             ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
             ->join('users', 'pos_shifts.user_id', '=', 'users.id')
             ->where('pos_shifts.company_id', $company)
+            ->where('documents.source_module', 'pos')
+            ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
             ->whereMonth('documents.created_at', now()->month)
             ->whereYear('documents.created_at', now()->year)
             ->whereNull('documents.deleted_at')
@@ -82,6 +95,8 @@ class PosReportController extends Controller
             ->join('documents', 'document_items.document_id', '=', 'documents.id')
             ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
             ->where('pos_shifts.company_id', $company)
+            ->where('documents.source_module', 'pos')
+            ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
             ->whereMonth('documents.created_at', now()->month)
             ->whereYear('documents.created_at', now()->year)
             ->whereNull('documents.deleted_at')
@@ -94,6 +109,7 @@ class PosReportController extends Controller
 
         // Turnos recentes
         $recentShifts = PosShift::where('company_id', $company)
+            ->when(!$canViewAll, fn($q) => $q->where('user_id', $user->id))
             ->with(['user:id,name'])
             ->withSum('documents', 'grand_total')
             ->withCount('documents')
@@ -117,6 +133,7 @@ class PosReportController extends Controller
             'topProducts'  => $topProducts,
             'recentShifts' => $recentShifts,
             'period'       => ['month' => now()->month, 'year' => now()->year, 'label' => now()->translatedFormat('F Y')],
+            'canViewAll'   => $canViewAll,
         ]);
     }
 }

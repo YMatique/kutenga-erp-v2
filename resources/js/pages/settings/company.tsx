@@ -194,7 +194,7 @@ export default function CompanySettings({ company }: { company: any }) {
                                     </div>
                                     <div className="space-y-1">
                                         <Label className="text-base">Logotipo da Empresa</Label>
-                                        <p className="text-sm text-slate-500">Recomendado: Fundo transparente, formato PNG. Máximo 2MB.</p>
+                                        <p className="text-sm text-slate-500">Recomendado: Fundo transparente, formato PNG (Dimensões: 400x120 px ou quadrado 250x250 px). Máximo 2MB.</p>
                                         <InputError message={errors.logo} />
                                     </div>
                                 </div>
@@ -225,7 +225,7 @@ export default function CompanySettings({ company }: { company: any }) {
                                     </div>
                                     <div className="space-y-1">
                                         <Label className="text-base">Carimbo / Assinatura</Label>
-                                        <p className="text-sm text-slate-500">Usado para assinar faturas digitalmente. Fundo transparente, PNG. Máximo 2MB.</p>
+                                        <p className="text-sm text-slate-500">Usado para assinar faturas digitalmente. Fundo transparente, formato PNG (Dimensões recomendadas: 300x150 px). Máximo 2MB.</p>
                                         <InputError message={errors.stamp} />
                                     </div>
                                 </div>

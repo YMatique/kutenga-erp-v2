@@ -14,8 +14,15 @@ class CompanySettingsController extends Controller
 {
     public function edit(Request $request)
     {
-        $company = $request->user()->company;
-        
+        $company = $request->user()->company()->firstOrFail();
+        // Assegurar que campos JSON e booleanos são serializados corretamente
+        $company->makeVisible([
+            'smtp_host', 'smtp_port', 'smtp_username', 'smtp_encryption',
+            'notify_low_stock_email', 'notify_subscription_email',
+            'notify_document_emission_email', 'notify_payment_received_email',
+            'bank_accounts',
+        ]);
+
         return Inertia::render('settings/company', [
             'company' => $company
         ]);

@@ -81,9 +81,9 @@
 - deve conter uma página de relatório [feito]
 - baixar relatório [feito]
 
-## Quanto às Imagens
-- Na página de produtos, deve especificar o tamanho recomendável de imagem
-- Para logotipos, carimbos, etc, deve especificar tambem o tamanho da imagem para o usuário fazer upload de imagens que não quebrarão o layout
+## Quanto às Imagens [feito]
+- Na página de produtos, deve especificar o tamanho recomendável de imagem [feito]
+- Para logotipos, carimbos, etc, deve especificar tambem o tamanho da imagem para o usuário fazer upload de imagens que não quebrarão o layout [feito]
  
  ## Criar uma página de documentação do sistema [feito]
 - Manual de utilizador

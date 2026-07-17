@@ -224,21 +224,34 @@ class InvoiceController extends Controller
     public function receivePayment(Request $request)
     {
         $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'amount' => 'required|numeric|min:0.01',
+            'customer_id'    => 'required|exists:customers,id',
+            'amount'         => 'required|numeric|min:0.01',
             'payment_method' => 'required|string',
-            'reference' => 'nullable|string|max:100'
+            'reference'      => 'nullable|string|max:100',
         ]);
 
         try {
-            $this->billingService->registerPayment(
+            /*
+             * Fluxo de Pagamento de Fatura (Opção A — MVP):
+             * 1. Cria um registo de Payment com o valor e método de pagamento.
+             * 2. Cria PaymentAllocation(ões) ligando o pagamento às faturas pendentes do cliente.
+             * 3. Atualiza o payment_status da(s) fatura(s) afetada(s):
+             *    - 'paid'    se o total alocado cobre o valor total da fatura
+             *    - 'partial' se cobre apenas parcialmente
+             * Nota: Não é gerado nenhum documento fiscal (Recibo/FR) automaticamente.
+             * O recibo pode ser emitido manualmente pela rota de fatura-recibo se necessário.
+             */
+            $result = $this->billingService->registerPayment(
                 $validated['customer_id'],
                 $validated['amount'],
                 $validated['payment_method'],
                 $validated['reference']
             );
 
-            return redirect()->back()->with('success', 'Pagamento recebido com sucesso!');
+            return redirect()->back()->with(
+                'success',
+                'Pagamento de ' . number_format($validated['amount'], 2, ',', '.') . ' MT registado com sucesso!'
+            );
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }

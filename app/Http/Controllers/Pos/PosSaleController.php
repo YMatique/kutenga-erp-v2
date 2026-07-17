@@ -76,6 +76,7 @@ class PosSaleController extends Controller
             'issue_date' => now()->toDateString(),
             'due_date' => now()->toDateString(),
             'document_type' => 'FR',
+            'source_module' => 'pos',
             'items' => $validated['items'],
         ];
 

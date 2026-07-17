@@ -11,6 +11,7 @@ import {
     BarChart,
     Bell,
     BookOpen,
+    ClipboardList,
 } from 'lucide-react';
 import { CompanySwitcher } from '@/components/company-switcher';
 import { NavMain } from '@/components/nav-main';
@@ -53,6 +54,7 @@ const mainNavItems: NavItem[] = [
             { title: 'Ajustes de Stock', href: '/inventory/adjustments' },
             { title: 'Stock', href: '/inventory/stocks' },
             { title: 'Opening Balance', href: '/inventory/opening' },
+            { title: 'Fecho de Stock', href: '/inventory/closings' },
         ],
     },
     {
@@ -111,11 +113,15 @@ const mainNavItems: NavItem[] = [
         icon: BookOpen,
     },
     {
+        title: 'Auditoria',
+        href: '/activity',
+        icon: ClipboardList,
+    },
+    {
         title: 'Configurações',
         icon: Settings,
         items: [
             { title: 'Sistema', href: '/settings/company' },
-            { title: 'Auditoria', href: '/settings/audits' },
         ],
     },
 ];

@@ -77,7 +77,7 @@ class AuditLogController extends Controller
                 ];
             });
 
-        return Inertia::render('settings/audits', [
+        return Inertia::render('activity/index', [
             'activities' => $activities,
             'filters' => $request->only(['search', 'action', 'subject', 'date_start', 'date_end'])
         ]);

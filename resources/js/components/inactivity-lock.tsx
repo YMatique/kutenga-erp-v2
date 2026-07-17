@@ -30,8 +30,22 @@ clearTimeout(timeoutRef.current);
 
         timeoutRef.current = setTimeout(() => {
             setLocked(true);
+            sessionStorage.setItem('screen_locked', 'true');
+            fetch('/lock-screen', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.head.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                },
+            });
         }, INACTIVITY_LIMIT);
     };
+
+    useEffect(() => {
+        if (sessionStorage.getItem('screen_locked') === 'true') {
+            setLocked(true);
+        }
+    }, []);
 
     useEffect(() => {
         const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
@@ -73,6 +87,7 @@ return null;
             preserveScroll: true,
             onSuccess: () => {
                 setLocked(false);
+                sessionStorage.removeItem('screen_locked');
                 reset('password');
                 clearErrors();
                 resetTimer();

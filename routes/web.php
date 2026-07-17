@@ -19,6 +19,7 @@ use App\Http\Controllers\ProductStockController;
 use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\StockTransferController;
+use App\Http\Controllers\InventoryClosingController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Middleware\SetCompanyContext;
@@ -38,6 +39,7 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
 
     Route::post('context/switch', [ContextController::class, 'switch'])->name('context.switch');
     Route::post('unlock-screen', [\App\Http\Controllers\LockScreenController::class, 'unlock'])->name('unlock.screen');
+    Route::post('lock-screen', [\App\Http\Controllers\LockScreenController::class, 'lock'])->name('lock.screen');
 
     // Catalog View
     Route::middleware('can:catalog.view')->group(function () {
@@ -67,13 +69,15 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
         Route::get('profile', [ProfileController::class, 'edit'])->name('settings.profile.edit');
         Route::patch('profile', [ProfileController::class, 'update'])->name('settings.profile.update');
         Route::delete('profile', [ProfileController::class, 'destroy'])->name('settings.profile.destroy');
-
-
-
-        Route::get('audits', [\App\Http\Controllers\AuditLogController::class, 'index'])
-            ->name('settings.audits')
-            ->middleware('can:audits.view');
     });
+
+    // Auditoria (acesso principal)
+    Route::get('activity', [\App\Http\Controllers\AuditLogController::class, 'index'])
+        ->name('activity.index')
+        ->middleware('can:audits.view');
+
+    // Compatibilidade com rota antiga
+    Route::redirect('settings/audits', '/activity');
 
     // Reports
     Route::prefix('reports')->name('reports.')->middleware('role:Admin|owner|Manager')->group(function () {
@@ -97,6 +101,9 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
             Route::get('/transfers/{transfer}', [StockTransferController::class, 'show'])->name('inventory.transfers.show');
             Route::get('/adjustments', [StockAdjustmentController::class, 'index'])->name('inventory.adjustments.index');
             Route::get('/adjustments/{adjustment}', [StockAdjustmentController::class, 'show'])->name('inventory.adjustments.show');
+            // Inventory Closings
+            Route::get('/closings', [InventoryClosingController::class, 'index'])->name('inventory.closings.index');
+            Route::get('/closings/{closing}', [InventoryClosingController::class, 'show'])->name('inventory.closings.show');
         });
 
         // Inventory Adjust
@@ -107,6 +114,11 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
             Route::post('/adjustments', [StockAdjustmentController::class, 'store'])->name('inventory.adjustments.store');
             Route::post('/adjustments/{adjustment}/complete', [StockAdjustmentController::class, 'complete'])->name('inventory.adjustments.complete');
             Route::post('/adjustments/{adjustment}/cancel', [StockAdjustmentController::class, 'cancel'])->name('inventory.adjustments.cancel');
+            // Inventory Closings
+            Route::get('/closings/create', [InventoryClosingController::class, 'create'])->name('inventory.closings.create');
+            Route::post('/closings', [InventoryClosingController::class, 'store'])->name('inventory.closings.store');
+            Route::post('/closings/{closing}/items', [InventoryClosingController::class, 'updateItems'])->name('inventory.closings.update-items');
+            Route::post('/closings/{closing}/complete', [InventoryClosingController::class, 'complete'])->name('inventory.closings.complete');
         });
 
         // Inventory Transfer
@@ -206,6 +218,11 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     Route::inertia('/subscription/expired', 'errors/subscription-expired')->name('subscription.expired');
 
     // Configs
+
+    // System routes — apenas super-admin
+    Route::middleware([\App\Http\Middleware\IsSuperAdmin::class])->prefix('system')->name('system.')->group(function () {
+        Route::get('/audits', [\App\Http\Controllers\SystemAuditLogController::class, 'index'])->name('audits');
+    });
 });
 
 require __DIR__ . '/settings.php';

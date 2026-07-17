@@ -8,6 +8,12 @@ use Illuminate\Validation\ValidationException;
 
 class LockScreenController extends Controller
 {
+    public function lock(Request $request)
+    {
+        $request->session()->put('screen_locked', true);
+        return response()->json(['locked' => true]);
+    }
+
     public function unlock(Request $request)
     {
         $request->validate([
@@ -19,6 +25,8 @@ class LockScreenController extends Controller
                 'password' => ['A senha fornecida está incorreta.'],
             ]);
         }
+
+        $request->session()->forget('screen_locked');
 
         return back();
     }

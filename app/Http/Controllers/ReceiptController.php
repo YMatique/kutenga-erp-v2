@@ -105,6 +105,7 @@ class ReceiptController extends Controller
         ]);
 
         $validated['document_type'] = 'FR';
+        $validated['source_module'] = 'billing';
 
         $document = $this->billingService->createDraft($validated, $companyId);
 

@@ -16,39 +16,54 @@ class PosShiftController extends Controller
         $user    = Auth::user();
         $company = $user->company_id;
 
-        $shifts = PosShift::where('company_id', $company)
+        $canViewAll = $user->hasAnyRole(['Admin', 'owner', 'Manager']);
+
+        $shiftsQuery = PosShift::where('company_id', $company)
             ->with(['user:id,name', 'branch:id,name'])
             ->withCount('documents')
             ->withSum('documents', 'grand_total')
-            ->orderBy('opened_at', 'desc')
-            ->paginate(20)
-            ->through(function ($shift) {
-                return [
-                    'id'              => $shift->id,
-                    'status'          => $shift->status,
-                    'operator'        => $shift->user?->name ?? '—',
-                    'branch'          => $shift->branch?->name ?? '—',
-                    'opened_at'       => $shift->opened_at,
-                    'closed_at'       => $shift->closed_at,
-                    'starting_cash'   => (float) $shift->starting_cash,
-                    'ending_cash'     => $shift->ending_cash !== null ? (float) $shift->ending_cash : null,
-                    'documents_count' => $shift->documents_count,
-                    'sales_total'     => (float) ($shift->documents_sum_grand_total ?? 0),
-                ];
-            });
+            ->orderBy('opened_at', 'desc');
+
+        if (!$canViewAll) {
+            $shiftsQuery->where('user_id', $user->id);
+        }
+
+        $shifts = $shiftsQuery->paginate(20)->through(function ($shift) {
+            return [
+                'id'              => $shift->id,
+                'status'          => $shift->status,
+                'operator'        => $shift->user?->name ?? '—',
+                'branch'          => $shift->branch?->name ?? '—',
+                'opened_at'       => $shift->opened_at,
+                'closed_at'       => $shift->closed_at,
+                'starting_cash'   => (float) $shift->starting_cash,
+                'ending_cash'     => $shift->ending_cash !== null ? (float) $shift->ending_cash : null,
+                'documents_count' => $shift->documents_count,
+                'sales_total'     => (float) ($shift->documents_sum_grand_total ?? 0),
+            ];
+        });
 
         $stats = [
-            'total_shifts' => PosShift::where('company_id', $company)->count(),
-            'open_shifts'  => PosShift::where('company_id', $company)->where('status', 'open')->count(),
+            'total_shifts' => PosShift::where('company_id', $company)
+                ->when(!$canViewAll, fn($q) => $q->where('user_id', $user->id))
+                ->count(),
+            'open_shifts'  => PosShift::where('company_id', $company)
+                ->when(!$canViewAll, fn($q) => $q->where('user_id', $user->id))
+                ->where('status', 'open')
+                ->count(),
             'today_sales'  => (float) DB::table('documents')
                 ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
                 ->where('pos_shifts.company_id', $company)
+                ->where('documents.source_module', 'pos')
+                ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
                 ->whereDate('documents.created_at', today())
                 ->whereNull('documents.deleted_at')
                 ->sum('documents.grand_total'),
             'month_sales'  => (float) DB::table('documents')
                 ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
                 ->where('pos_shifts.company_id', $company)
+                ->where('documents.source_module', 'pos')
+                ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
                 ->whereMonth('documents.created_at', now()->month)
                 ->whereYear('documents.created_at', now()->year)
                 ->whereNull('documents.deleted_at')
@@ -64,6 +79,7 @@ class PosShiftController extends Controller
             'shifts'      => $shifts,
             'stats'       => $stats,
             'myOpenShift' => $myOpenShift,
+            'canViewAll'  => $canViewAll,
         ]);
     }
 
@@ -71,6 +87,10 @@ class PosShiftController extends Controller
     {
         $user = Auth::user();
         if ($shift->company_id !== $user->company_id) abort(403);
+
+        if (!$user->hasAnyRole(['Admin', 'owner', 'Manager']) && $shift->user_id !== $user->id) {
+            abort(403, 'Não autorizado.');
+        }
 
         $shift->load(['user:id,name', 'branch:id,name', 'documents.items']);
 

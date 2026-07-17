@@ -238,8 +238,13 @@ class DocumentController extends Controller
         ]);
 
         try {
-            // Enviar e-mail em segundo plano (enfileirado automaticamente devido ao ShouldQueue)
-            \Illuminate\Support\Facades\Mail::to($validated['email'])->send(new \App\Mail\DocumentMail($document));
+            // Enviar e-mail usando o SMTP da empresa se configurado
+            $document->loadMissing('company');
+            app(\App\Services\Mail\CompanyMailService::class)->sendViaCompany(
+                $document->company,
+                new \App\Mail\DocumentMail($document),
+                $validated['email']
+            );
 
             return redirect()->back()->with('success', 'Documento enfileirado para envio por e-mail com sucesso!');
         } catch (\Exception $e) {

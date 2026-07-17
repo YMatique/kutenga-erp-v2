@@ -536,7 +536,7 @@ fileInput.value = '';
                                         </div>
                                         <div className="flex flex-col gap-0.5">
                                             <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Carregar Foto</span>
-                                            <span className="text-[10px] text-muted-foreground">PNG, JPG ou WEBP até 2MB</span>
+                                            <span className="text-[10px] text-muted-foreground">PNG, JPG ou WEBP até 2MB (Recomendado: 500x500 px)</span>
                                         </div>
                                         <input 
                                             id="product-image-upload"
