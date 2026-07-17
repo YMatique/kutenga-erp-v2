@@ -18,7 +18,8 @@ class AuditLogController extends Controller
         $companyId = $request->user()->company_id;
 
         $query = Activity::with(['causer'])
-            ->where('company_id', $companyId);
+            ->where('company_id', $companyId)
+            ->whereNotNull('causer_id');
 
         // Filter by action
         if ($request->filled('action')) {

@@ -6,6 +6,7 @@ use App\Models\Product;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -22,7 +23,7 @@ class LowStockAlertMail extends Mailable implements ShouldQueue
      */
     public function __construct(Product $product, float $stock)
     {
-        $this->product = $product;
+        $this->product = $product->loadMissing('company');
         $this->stock = $stock;
     }
 
@@ -31,8 +32,15 @@ class LowStockAlertMail extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
+        $companyName = $this->product->company->name ?? config('app.name', 'Kutenga');
+        $subject = "{$companyName} - Alerta de Stock: {$this->product->name} atingiu o limite mínimo";
+
         return new Envelope(
-            subject: "Alerta de Stock: {$this->product->name} atingiu o limite mínimo",
+            from: new Address(
+                $this->product->company->email ?? config('mail.from.address'),
+                $companyName
+            ),
+            subject: $subject,
         );
     }
 

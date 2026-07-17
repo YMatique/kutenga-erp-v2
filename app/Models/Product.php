@@ -75,4 +75,9 @@ class Product extends Model
     {
         return $this->hasMany(StockMovement::class);
     }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
 }

@@ -12,7 +12,10 @@ class SystemAuditLogController extends Controller
     {
         // Apenas super-admin pode aceder — protegido pelo middleware IsSuperAdmin
         $query = Activity::with(['causer'])
-            ->whereNull('company_id');
+            ->where(function ($q) {
+                $q->whereNull('company_id')
+                  ->orWhereNull('causer_id');
+            });
 
         if ($request->filled('action')) {
             $query->where('description', $request->action);
