@@ -10,6 +10,7 @@ import {
     MapPin,
     BarChart,
     Bell,
+    BookOpen,
 } from 'lucide-react';
 import { CompanySwitcher } from '@/components/company-switcher';
 import { NavMain } from '@/components/nav-main';
@@ -103,6 +104,11 @@ const mainNavItems: NavItem[] = [
         title: 'Notificações',
         href: '/notifications',
         icon: Bell,
+    },
+    {
+        title: 'Manual',
+        href: '/docs',
+        icon: BookOpen,
     },
     {
         title: 'Configurações',

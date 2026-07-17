@@ -78,8 +78,8 @@
 - Todas as páginas deve aplicar o conceito de dark mode, os componentes, etc [feito]
 
 ## Relatórios
-- deve conter uma página de relatório 
-- baixar relatório
+- deve conter uma página de relatório [feito]
+- baixar relatório [feito]
 
 ## Quanto às Imagens
 - Na página de produtos, deve especificar o tamanho recomendável de imagem
@@ -118,16 +118,16 @@
 - Deverá haver uma página de listar as notificações do sistema [feito]
 
 ## APLICAR CONCEITOS DE DARK-MODE NO INDEX DA APLICAÇÃO
-- O dark mode precisar ser revisto na página index da aplicação (A landing page)
+- O dark mode precisar ser revisto na página index da aplicação (A landing page) [feito]
 
 ## MAPEAMENTO DE STATUS NA VIEW
-- adjustment: na tabela, na coluna MOTIVO, não pode aparecer o status da base de dados, mas sim o status já mapeado. o total de itens não aparece, o tipo também; e há um erro no filtro, quando clico em all, ele não carrega porque na base de dados não tem o estado all.
-- adjustment/show: o motivo ainda continua sendo mapeado de forma não apropriada
-- Um problema no stocks/show: há um produto que fiz ajuste de stock, mas na lista aparece: -19, enquanto aumentou a quantidade de estoque. E nas notas, deve estar muito bem claro, não apenas Ajuste #2; tanto quanto no warehouses/show na tabela de movimentações recentes. Não pode ser apenas Ajuste #2, Tranferência #3, etc.
-- Nas transferências: o mesmo problema de filtro com o de adjustment; também não mostra o total de itens 
-- A página de movimentos precisa ser customizada: deve haver filtros, cards e a tabela deve ser paginada.
+- adjustment: na tabela, na coluna MOTIVO, não pode aparecer o status da base de dados, mas sim o status já mapeado. o total de itens não aparece, o tipo também; e há um erro no filtro, quando clico em all, ele não carrega porque na base de dados não tem o estado all. [feito]
+- adjustment/show: o motivo ainda continua sendo mapeado de forma não apropriada [feito]
+- Um problema no stocks/show: há um produto que fiz ajuste de stock, mas na lista aparece: -19, enquanto aumentou a quantidade de estoque. E nas notas, deve estar muito bem claro, não apenas Ajuste #2; tanto quanto no warehouses/show na tabela de movimentações recentes. Não pode ser apenas Ajuste #2, Tranferência #3, etc. [feito]
+- Nas transferências: o mesmo problema de filtro com o de adjustment; também não mostra o total de itens [feito]
+- A página de movimentos precisa ser customizada: deve haver filtros, cards e a tabela deve ser paginada. [feito]
 - Os cards da tela billing/customers/show|edit|create; billing/quotes|invoice|receipts/edit|create'; billing/series não seguem o padrão das bordas; na mesma billing/series a página deve seguir o padrão das demais páginas, tabelas, etc. Incluir Séries no sidebar. [feito]
 - Rever o link payments: não está abrir
-- Telas de faturação (cotação, faturas, notas, etc) devem ter cards estatísticos, filtros organizados.
-- A tela de categoria, o parente é opcional (A categoria pai não é obrigatória)
+- Telas de faturação (cotação, faturas, notas, etc) devem ter cards estatísticos, filtros organizados. [feito]
+- A tela de categoria, o parente é opcional (A categoria pai não é obrigatória) [feito]
 - Em muitas páginas o toast notification aparece muitas vezes (por cima e baixo), deve ser padronizado, aparecer apenas no canto superior direito [feito]

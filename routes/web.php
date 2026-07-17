@@ -199,6 +199,9 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\SystemNotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/mark-all-read', [\App\Http\Controllers\SystemNotificationController::class, 'markAllAsRead'])->name('notifications.markAllRead');
 
+    // Docs / User Manual
+    Route::inertia('/docs', 'docs/index')->name('docs.index');
+
     // Configs
 });
 
