@@ -64,7 +64,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
                 {/* Content area */}
                 <div className="flex-1 min-w-0">
-                    <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs p-6 max-w-2xl">
+                    <div className="bg-white border border-slate-200 rounded-[4px] shadow-xs p-6 max-w-4xl">
                         {children}
                     </div>
                 </div>
