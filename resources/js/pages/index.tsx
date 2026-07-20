@@ -217,9 +217,7 @@ return true;
                 <header className="sticky top-0 z-50 backdrop-blur-md bg-white/85 dark:bg-[#0B0F19]/85 border-b border-slate-200/60 dark:border-slate-800/60 shadow-xs transition-all">
                     <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
                         <div className="flex items-center gap-2.5 font-bold text-xl text-[#1A2332] dark:text-white">
-                            <div className="w-9 h-9 rounded-[4px] bg-[#2DB8A0] flex items-center justify-center text-white font-extrabold text-lg shadow-sm shadow-[#2DB8A0]/20">
-                                K
-                            </div>
+                            <img src="/kutenga-logo.png" alt="Kutenga ERP" className="h-9 w-auto object-contain" />
                             <span className="tracking-tight">
                                 Kutenga<span className="text-[#2DB8A0]">ERP</span>
                             </span>
@@ -1196,9 +1194,7 @@ return true;
                     <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
                         <div className="space-y-4 col-span-2 md:col-span-1">
                             <div className="flex items-center gap-2 font-bold text-white text-lg">
-                                <div className="w-7 h-7 rounded-[4px] bg-[#2DB8A0] flex items-center justify-center text-white font-extrabold text-sm">
-                                    K
-                                </div>
+                                <img src="/kutenga-logo.png" alt="Kutenga ERP" className="h-7 w-auto object-contain" />
                                 <span>Kutenga ERP</span>
                             </div>
                             <p className="text-xs text-slate-500 leading-relaxed max-w-xs">
