@@ -39,6 +39,37 @@ Cada empresa opera em contexto completamente isolado — os dados, utilizadores,
 
 ---
 
+## 📸 Mockups da Interface
+
+Abaixo estão algumas capturas de ecrã que demonstram a interface moderna e responsiva do sistema.
+
+### 📊 Dashboard Principal
+<a href="public/mockups/Dashboard%20-%20Kutenga%20ERP.png">
+  <img src="public/mockups/Dashboard%20-%20Kutenga%20ERP.png" alt="Dashboard" width="100%" />
+</a>
+
+### 📦 Catálogo de Itens
+<a href="public/mockups/Cat%C3%A1logo%20de%20Itens%20-%20Kutenga%20ERP.png">
+  <img src="public/mockups/Cat%C3%A1logo%20de%20Itens%20-%20Kutenga%20ERP.png" alt="Catálogo" width="100%" />
+</a>
+
+### 🏢 Inventário e Stock
+<a href="public/mockups/Invent%C3%A1rio%20%E2%80%94%20Dashboard%20-%20Kutenga%20ERP.png">
+  <img src="public/mockups/Invent%C3%A1rio%20%E2%80%94%20Dashboard%20-%20Kutenga%20ERP.png" alt="Inventário" width="100%" />
+</a>
+
+### 🛒 Ponto de Venda (POS)
+<a href="public/mockups/POS%20%E2%80%A2%20Caixa%20-%20Kutenga%20ERP.png">
+  <img src="public/mockups/POS%20%E2%80%A2%20Caixa%20-%20Kutenga%20ERP.png" alt="Ponto de Venda" width="100%" />
+</a>
+
+### 🧾 Faturação
+<a href="public/mockups/Faturas-Recibo%20-%20Kutenga%20ERP.png">
+  <img src="public/mockups/Faturas-Recibo%20-%20Kutenga%20ERP.png" alt="Faturas-Recibo" width="100%" />
+</a>
+
+---
+
 ## 2. Stack Tecnológico
 
 ### Backend
