@@ -174,8 +174,23 @@ npm run dev
 ### Seeders & Dados de Exemplo
 
 ```bash
-php artisan db:seed
+php artisan db:seed                     # essenciais + dados de demonstração
+php artisan migrate:fresh --seed        # reset total já com dados demo
+
+# Só os dados de demonstração (idempotente, pode correr várias vezes)
+php artisan db:seed --class="Database\Seeders\Demo\DemoDataSeeder"
 ```
+
+O `DatabaseSeeder` cria papéis/permissões, o super-admin e os dados de demo (ignorados em produção):
+
+| Seeder | Conteúdo |
+|---|---|
+| `Demo\DemoCompanySeeder` | 2 empresas (plano *crescimento* e *inicial*), filiais e utilizadores |
+| `Demo\DemoCatalogSeeder` | unidades, categorias/subcategorias, marcas, 28 produtos e serviços |
+| `Demo\DemoInventorySeeder` | armazéns e stock inicial (inclui produtos com stock baixo e esgotado) |
+| `Demo\DemoBillingSeeder` | série documental do ano, "Consumidor Final" (POS) e clientes |
+
+Contas de demo (password `password`): `test@example.com` (owner), `admin@kutenga.demo`, `gerente@kutenga.demo`, `operador@kutenga.demo` (empresa *Kutenga ERP Demo*) e `dono@novaesperanca.demo` (empresa *Mercearia Nova Esperança*). Para gerar os alertas de stock: `php artisan app:check-low-stock`.
 
 ---
 

@@ -33,14 +33,14 @@ class RoleAndPermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            \Spatie\Permission\Models\Permission::create(['name' => $permission]);
+            \Spatie\Permission\Models\Permission::findOrCreate($permission, 'web');
         }
 
         // Create Roles and assign permissions
-        $admin = \Spatie\Permission\Models\Role::create(['name' => 'Admin']);
+        $admin = \Spatie\Permission\Models\Role::findOrCreate('Admin', 'web');
         $admin->givePermissionTo(\Spatie\Permission\Models\Permission::all());
 
-        $manager = \Spatie\Permission\Models\Role::create(['name' => 'Manager']);
+        $manager = \Spatie\Permission\Models\Role::findOrCreate('Manager', 'web');
         $manager->givePermissionTo([
             'sales.view',
             'sales.create',
@@ -50,7 +50,7 @@ class RoleAndPermissionSeeder extends Seeder
             'catalog.view',
         ]);
 
-        $operator = \Spatie\Permission\Models\Role::create(['name' => 'Operator']);
+        $operator = \Spatie\Permission\Models\Role::findOrCreate('Operator', 'web');
         $operator->givePermissionTo([
             'sales.create',
             'sales.view',
