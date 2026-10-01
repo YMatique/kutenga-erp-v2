@@ -31,6 +31,7 @@ class DemoDataSeeder extends Seeder
                 DemoCatalogSeeder::class,
                 DemoInventorySeeder::class,
                 DemoBillingSeeder::class,
+                DemoPosSeeder::class,
             ]);
         });
 

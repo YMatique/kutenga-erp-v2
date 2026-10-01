@@ -189,8 +189,11 @@ O `DatabaseSeeder` cria papéis/permissões, o super-admin e os dados de demo (i
 | `Demo\DemoCatalogSeeder` | unidades, categorias/subcategorias, marcas, 28 produtos e serviços |
 | `Demo\DemoInventorySeeder` | armazéns e stock inicial (inclui produtos com stock baixo e esgotado) |
 | `Demo\DemoBillingSeeder` | série documental do ano, "Consumidor Final" (POS) e clientes |
+| `Demo\DemoPosSeeder` | 2 caixas da empresa *Kutenga ERP Demo* (Maputo 80 mm e Beira 58 mm), com armazém e filial; a série do POS nasce na 1.ª venda |
 
 Contas de demo (password `password`): `test@example.com` (owner), `admin@kutenga.demo`, `gerente@kutenga.demo`, `operador@kutenga.demo` (empresa *Kutenga ERP Demo*) e `dono@novaesperanca.demo` (empresa *Mercearia Nova Esperança*). Para gerar os alertas de stock: `php artisan app:check-low-stock`.
+
+As empresas demo têm `external_id` fixo (`00000000-0000-4000-8000-000000000001` e `…0002`), para testar a API de subscrições (`docs/api-subscricoes.md`) com `php artisan subscription:simulate`. A empresa em plano *inicial* tem 1 utilizador e sem POS, tal como o plano permite.
 
 ---
 

@@ -22,6 +22,18 @@ class DemoCompanySeeder extends Seeder
 
     public const PASSWORD = 'password';
 
+    /**
+     * Identificadores externos fixos: permitem testar a API de subscrições
+     * (docs/api-subscricoes.md) sempre com os mesmos UUID depois de um reset.
+     */
+    public const EXTERNAL_ID_KUTENGA = '00000000-0000-4000-8000-000000000001';
+    public const EXTERNAL_ID_NOVA_ESPERANCA = '00000000-0000-4000-8000-000000000002';
+
+    private const EXTERNAL_IDS = [
+        self::NUIT_KUTENGA => self::EXTERNAL_ID_KUTENGA,
+        self::NUIT_NOVA_ESPERANCA => self::EXTERNAL_ID_NOVA_ESPERANCA,
+    ];
+
     public static function companies(): array
     {
         return [
@@ -64,9 +76,9 @@ class DemoCompanySeeder extends Seeder
                 'branches' => [
                     ['code' => 'MATRIZ', 'name' => 'Loja Principal', 'address' => 'Rua da Resistência, 88, Matola', 'phone' => '+258 82 000 0100'],
                 ],
+                // O plano "inicial" permite apenas 1 utilizador.
                 'users' => [
                     ['name' => 'Dona Esperança', 'email' => 'dono@novaesperanca.demo', 'role' => 'owner', 'branch' => 'MATRIZ'],
-                    ['name' => 'Joaquim Caixa', 'email' => 'caixa@novaesperanca.demo', 'role' => 'Operator', 'branch' => 'MATRIZ'],
                 ],
             ],
         ];
@@ -95,6 +107,9 @@ class DemoCompanySeeder extends Seeder
                     'default_due_days' => 30,
                 ]
             );
+
+            // O seeder corre sem eventos do modelo, por isso o UUID não é gerado automaticamente
+            $company->forceFill(['external_id' => self::EXTERNAL_IDS[$company->nuit]])->saveQuietly();
 
             $branches = [];
             foreach ($data['branches'] as $branch) {
