@@ -235,6 +235,8 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     // System routes — apenas super-admin
     Route::middleware([\App\Http\Middleware\IsSuperAdmin::class])->prefix('system')->name('system.')->group(function () {
         Route::get('/audits', [\App\Http\Controllers\SystemAuditLogController::class, 'index'])->name('audits');
+        Route::get('/plans', [\App\Http\Controllers\SystemPlanController::class, 'index'])->name('plans');
+        Route::put('/plans/{plan}', [\App\Http\Controllers\SystemPlanController::class, 'update'])->name('plans.update');
     });
 });
 

@@ -44,6 +44,7 @@ class Company extends Model
         'subscription_plan',
         'subscription_status',
         'subscription_ends_at',
+        'limits_override',
     ];
 
     protected $casts = [
@@ -55,6 +56,7 @@ class Company extends Model
         'notify_document_emission_email' => 'boolean',
         'notify_payment_received_email' => 'boolean',
         'subscription_ends_at' => 'datetime',
+        'limits_override' => 'array',
     ];
 
     public function getCurrentMonthDocumentsCount(): int
@@ -74,48 +76,137 @@ class Company extends Model
         return \App\Models\Inventory\Warehouse::where('company_id', $this->id)->count();
     }
 
+    public function getCashRegistersCount(): int
+    {
+        return \App\Models\Pos\CashRegister::where('company_id', $this->id)->count();
+    }
+
+    public function getUsersCount(): int
+    {
+        return User::where('company_id', $this->id)->count();
+    }
+
+    /** Uso atual de cada limite numérico (mesmas chaves de Plan::LIMIT_KEYS). */
+    public function usage(string $key): int
+    {
+        return match ($key) {
+            'documents_month' => $this->getCurrentMonthDocumentsCount(),
+            'products' => $this->getProductsCount(),
+            'warehouses' => $this->getWarehousesCount(),
+            'cash_registers' => $this->getCashRegistersCount(),
+            'users' => $this->getUsersCount(),
+            default => 0,
+        };
+    }
+
+    // ── Plano e limites (a fonte de verdade é a tabela `plans`) ───────────────
+
+    public function plan(): ?Plan
+    {
+        $code = $this->subscription_plan ?? 'inicial';
+
+        return $this->resolvedPlan ??= Plan::where('code', $code)->first();
+    }
+
+    /** Limites efetivos: os do plano com as exceções da empresa por cima. */
+    public function limits(): array
+    {
+        $limits = [];
+
+        foreach (array_keys(Plan::LIMIT_KEYS) as $key) {
+            // Chave em falta no plano = 0 (negado): um limite novo nunca fica aberto por esquecimento
+            $limits[$key] = 0;
+        }
+
+        $limits = array_merge($limits, $this->plan()?->limits ?? [], $this->limits_override ?? []);
+
+        return $limits;
+    }
+
+    /** Limite numérico (null = ilimitado). */
+    public function limit(string $key): ?int
+    {
+        $limits = $this->limits();
+
+        // `??` não serve: null significa ilimitado e chave em falta significa 0
+        if (!array_key_exists($key, $limits)) {
+            return 0;
+        }
+
+        return $limits[$key] === null ? null : (int) $limits[$key];
+    }
+
+    /** O plano permite criar mais um recurso deste tipo? */
+    public function withinLimit(string $key): bool
+    {
+        $limit = $this->limit($key);
+
+        return $limit === null || $this->usage($key) < $limit;
+    }
+
+    public function can(string $feature): bool
+    {
+        return (bool) ($this->plan()?->features[$feature] ?? false);
+    }
+
+    /**
+     * Estado efetivo da subscrição:
+     *  active    — dentro do prazo (ou plano sem fim);
+     *  grace     — prazo terminado há menos de N dias: só leitura;
+     *  expired   — prazo e tolerância terminados;
+     *  suspended — suspensa ou cancelada pela aplicação de gestão: bloqueio imediato.
+     */
+    public function subscriptionState(): string
+    {
+        if (in_array($this->subscription_status, ['suspended', 'cancelled'], true)) {
+            return 'suspended';
+        }
+
+        if ($this->subscription_status === 'expired') {
+            return 'expired';
+        }
+
+        if (!$this->subscription_ends_at || now()->lte($this->subscription_ends_at)) {
+            return 'active';
+        }
+
+        return now()->lte($this->graceEndsAt()) ? 'grace' : 'expired';
+    }
+
+    public function graceEndsAt(): ?\Carbon\CarbonInterface
+    {
+        return $this->subscription_ends_at?->copy()->addDays((int) config('subscription.grace_days', 7));
+    }
+
+    /** Bloqueio total (sem acesso além de subscrição e logout). */
     public function isSubscriptionExpired(): bool
     {
-        if ($this->subscription_status === 'expired') {
-            return true;
-        }
-
-        if ($this->subscription_ends_at && now()->gt($this->subscription_ends_at)) {
-            return true;
-        }
-
-        return false;
+        return in_array($this->subscriptionState(), ['expired', 'suspended'], true);
     }
 
+    /** Em tolerância: pode consultar, mas não criar nem emitir. */
+    public function isSubscriptionReadOnly(): bool
+    {
+        return $this->subscriptionState() === 'grace';
+    }
+
+    /** Compatibilidade com o código existente (chaves antigas incluídas). */
     public function getSubscriptionLimits(): array
     {
-        $plan = $this->subscription_plan ?? 'inicial';
-
-        switch ($plan) {
-            case 'crescimento':
-                return [
-                    'documents_month' => null, // ilimitado
-                    'products' => null, // ilimitado
-                    'warehouses' => 5,
-                    'pos_enabled' => true,
-                ];
-            case 'empresarial':
-                return [
-                    'documents_month' => null, // ilimitado
-                    'products' => null, // ilimitado
-                    'warehouses' => null, // ilimitado
-                    'pos_enabled' => true,
-                ];
-            case 'inicial':
-            default:
-                return [
-                    'documents_month' => 50,
-                    'products' => 100,
-                    'warehouses' => 1,
-                    'pos_enabled' => false,
-                ];
-        }
+        return $this->limits() + ['pos_enabled' => $this->can('pos')];
     }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Company $company) {
+            $company->external_id ??= (string) \Illuminate\Support\Str::uuid();
+        });
+
+        // O plano em cache deixa de valer quando a empresa muda de plano
+        static::saved(fn (Company $company) => $company->resolvedPlan = null);
+    }
+
+    protected ?Plan $resolvedPlan = null;
 
     public function branches(): HasMany
     {

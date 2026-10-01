@@ -8,6 +8,32 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckSubscription
 {
+    /** Rotas que continuam acessíveis com a subscrição bloqueada ou em tolerância. */
+    private const ALWAYS_ALLOWED = [
+        'settings/subscription*',
+        'logout',
+        'onboarding*',
+        'subscription/expired*',
+        'lock-screen',
+        'unlock-screen',
+        'notifications/*',
+        'context/switch',
+    ];
+
+    /** POST que criam recursos sujeitos a limite do plano: caminho => [limite, descrição]. */
+    private const CREATION_LIMITS = [
+        'products' => ['products', 'artigos'],
+        'inventory/warehouses' => ['warehouses', 'armazéns'],
+        'pos/registers' => ['cash_registers', 'caixas'],
+        'settings/users' => ['users', 'utilizadores'],
+        'billing/invoices' => ['documents_month', 'documentos por mês'],
+        'billing/quotes' => ['documents_month', 'documentos por mês'],
+        'billing/receipts' => ['documents_month', 'documentos por mês'],
+        'billing/credit-notes' => ['documents_month', 'documentos por mês'],
+        'billing/debit-notes' => ['documents_month', 'documentos por mês'],
+        'pos/sales' => ['documents_month', 'documentos por mês'],
+    ];
+
     /**
      * Handle an incoming request.
      *
@@ -15,58 +41,60 @@ class CheckSubscription
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check()) {
-            $user = auth()->user();
-            $company = $user->company;
+        $user = auth()->user();
+        $company = $user?->company;
 
-            if ($company) {
-                // 1. Verificar se a subscrição expirou
-                if ($company->isSubscriptionExpired()) {
-                    // Permitir apenas logout, onboarding e rotas de subscrição
-                    if (!$request->is('settings/subscription*') &&
-                        !$request->is('logout') &&
-                        !$request->is('onboarding*') &&
-                        !$request->is('subscription/expired*')) {
-                        
-                        if ($user->hasRole('Admin') || $user->hasRole('owner')) {
-                            return redirect()->route('settings.subscription.edit')
-                                ->with('error', 'A subscrição da sua empresa expirou. Por favor, renove ou atualize o seu plano para continuar.');
-                        } else {
-                            return redirect()->route('subscription.expired');
-                        }
-                    }
-                }
+        if (!$company) {
+            return $next($request);
+        }
 
-                // 2. Verificar acesso ao POS
-                if ($request->is('pos*')) {
-                    $limits = $company->getSubscriptionLimits();
-                    if (empty($limits['pos_enabled'])) {
-                        return redirect()->route('dashboard')
-                            ->with('error', 'O Ponto de Venda (POS) não está incluído no seu plano atual (Plano Inicial). Por favor, faça o upgrade.');
-                    }
-                }
+        $allowed = $request->is(self::ALWAYS_ALLOWED);
 
-                // 3. Verificar limites em operações de criação (POST)
-                if ($request->isMethod('POST')) {
-                    $limits = $company->getSubscriptionLimits();
+        // 1. Bloqueio total (expirada ou suspensa)
+        if ($company->isSubscriptionExpired() && !$allowed) {
+            $suspended = $company->subscriptionState() === 'suspended';
+            $message = $suspended
+                ? 'A subscrição da sua empresa foi suspensa. Contacte o suporte para regularizar.'
+                : 'A subscrição da sua empresa expirou. Por favor, renove ou atualize o seu plano para continuar.';
 
-                    // Limite de Artigos/Produtos
-                    if ($request->is('products') && $limits['products'] !== null) {
-                        if ($company->getProductsCount() >= $limits['products']) {
-                            return redirect()->back()->withErrors([
-                                'subscription' => 'Limite do plano atingido! O seu plano atual permite apenas ' . $limits['products'] . ' artigos.'
-                            ])->with('error', 'Limite do plano atingido! Não é possível criar mais artigos.');
-                        }
-                    }
+            if ($request->expectsJson()) {
+                return response()->json(['error' => $message], 403);
+            }
 
-                    // Limite de Armazéns
-                    if ($request->is('inventory/warehouses') && $limits['warehouses'] !== null) {
-                        if ($company->getWarehousesCount() >= $limits['warehouses']) {
-                            return redirect()->back()->withErrors([
-                                'subscription' => 'Limite do plano atingido! O seu plano atual permite apenas ' . $limits['warehouses'] . ' armazéns.'
-                            ])->with('error', 'Limite do plano atingido! Não é possível criar mais armazéns.');
-                        }
-                    }
+            if ($user->hasRole('Admin') || $user->hasRole('owner')) {
+                return redirect()->route('settings.subscription.edit')->with('error', $message);
+            }
+
+            return redirect()->route('subscription.expired');
+        }
+
+        // 2. Tolerância: só leitura (consultar sim, criar/emitir/alterar não)
+        if ($company->isSubscriptionReadOnly() && !$allowed && !$request->isMethodSafe()) {
+            $message = 'A subscrição terminou. Até ' . $company->graceEndsAt()->format('d/m/Y')
+                . ' só pode consultar dados; renove o plano para voltar a criar ou emitir documentos.';
+
+            return $request->expectsJson()
+                ? response()->json(['error' => $message], 403)
+                : redirect()->back()->with('error', $message);
+        }
+
+        // 3. Acesso ao POS depende do plano
+        if ($request->is('pos*') && !$company->can('pos')) {
+            return $request->expectsJson()
+                ? response()->json(['error' => 'O Ponto de Venda (POS) não está incluído no seu plano atual.'], 403)
+                : redirect()->route('dashboard')
+                    ->with('error', 'O Ponto de Venda (POS) não está incluído no seu plano atual. Por favor, faça o upgrade.');
+        }
+
+        // 4. Limites do plano na criação de recursos
+        if ($request->isMethod('POST')) {
+            foreach (self::CREATION_LIMITS as $path => [$limitKey, $label]) {
+                if ($request->is($path) && !$company->withinLimit($limitKey)) {
+                    $message = 'Limite do plano atingido! O seu plano atual permite apenas ' . $company->limit($limitKey) . ' ' . $label . '.';
+
+                    return $request->expectsJson()
+                        ? response()->json(['error' => $message], 403)
+                        : redirect()->back()->withErrors(['subscription' => $message])->with('error', $message);
                 }
             }
         }

@@ -1,16 +1,15 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { CreditCard, Check, AlertTriangle, Play, Sparkles, Building, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { CreditCard, Check, Sparkles, Building, CheckCircle2, ShieldAlert } from 'lucide-react';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 
 export default function SubscriptionSettings() {
-    const { subscription } = usePage<any>().props;
-    const { post, processing } = useForm({
+    const { subscription, auth, plans = [], limitLabels = {}, featureLabels = {} } = usePage<any>().props;
+    const isSuperAdmin = !!auth?.user?.is_super_admin;
+    const { transform, post, processing } = useForm({
         plan: '',
-        simulate_expiration: false,
     });
 
     if (!subscription) {
@@ -22,21 +21,12 @@ export default function SubscriptionSettings() {
     }
 
     const currentPlan = subscription.plan;
-    const isExpired = subscription.status === 'expired';
+    const isExpired = ['expired', 'suspended'].includes(subscription.state);
     const endsAt = subscription.ends_at;
 
     const handlePlanChange = (planName: string) => {
-        post('/settings/subscription/upgrade', {
-            data: { plan: planName, simulate_expiration: false },
-            preserveScroll: true,
-        });
-    };
-
-    const handleSimulateExpiration = () => {
-        post('/settings/subscription/upgrade', {
-            data: { plan: currentPlan, simulate_expiration: true },
-            preserveScroll: true,
-        });
+        transform(() => ({ plan: planName }));
+        post('/settings/subscription/upgrade', { preserveScroll: true });
     };
 
     const formatDate = (dateStr: string) => {
@@ -101,19 +91,23 @@ export default function SubscriptionSettings() {
                             <div>
                                 <div className="flex items-center gap-2">
                                     <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100">
-                                        Plano {currentPlan === 'inicial' ? 'Inicial (Grátis)' : currentPlan === 'crescimento' ? 'Crescimento' : 'Empresarial'}
+                                        Plano {plans.find((p: any) => p.code === currentPlan)?.name ?? currentPlan}
                                     </h3>
                                     <Badge className={
                                         isExpired 
                                             ? 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400' 
                                             : 'bg-emerald-100 text-[#2DB8A0] border-[#2DB8A0]/20 dark:bg-emerald-900/30 dark:text-emerald-400'
                                     }>
-                                        {isExpired ? 'Expirada' : 'Ativa'}
+                                        {subscription.state === 'grace' ? 'Em tolerância' : subscription.state === 'suspended' ? 'Suspensa' : isExpired ? 'Expirada' : 'Ativa'}
                                     </Badge>
                                 </div>
                                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                    {isExpired 
-                                        ? 'A subscrição expirou e as permissões de edição foram suspensas.' 
+                                    {subscription.state === 'grace'
+                                        ? `Prazo terminado: só consulta até ${formatDate(subscription.grace_ends_at)}. Renove o plano para voltar a criar documentos.`
+                                        : subscription.state === 'suspended'
+                                        ? 'A subscrição foi suspensa. Contacte o suporte para regularizar.'
+                                        : isExpired
+                                        ? 'A subscrição expirou e as permissões de edição foram suspensas.'
                                         : endsAt 
                                             ? `Válido até ${formatDate(endsAt)}.` 
                                             : 'Plano gratuito permanente.'
@@ -122,19 +116,6 @@ export default function SubscriptionSettings() {
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap gap-3">
-                            <Button 
-                                type="button" 
-                                variant="outline" 
-                                size="sm"
-                                onClick={handleSimulateExpiration}
-                                disabled={processing}
-                                className="border-rose-200 hover:bg-rose-50 text-rose-600 dark:border-rose-950/30 dark:hover:bg-rose-950/10 dark:text-rose-400 font-medium"
-                            >
-                                <AlertTriangle className="mr-1.5 h-4 w-4" />
-                                Simular Expiração
-                            </Button>
-                        </div>
                     </div>
                 </Card>
 
@@ -145,9 +126,11 @@ export default function SubscriptionSettings() {
                         Consumo de Recursos (Mês Atual)
                     </h3>
                     <div className="grid md:grid-cols-3 gap-6">
-                        {renderProgressBar('Faturas / Documentos', subscription.usage.documents_month, subscription.limits.documents_month)}
-                        {renderProgressBar('Artigos / Serviços', subscription.usage.products, subscription.limits.products)}
-                        {renderProgressBar('Armazéns / Lojas', subscription.usage.warehouses, subscription.limits.warehouses)}
+                        {Object.entries(limitLabels).map(([key, label]) => (
+                            <div key={key}>
+                                {renderProgressBar(label as string, subscription.usage[key] ?? 0, subscription.limits[key] ?? 0)}
+                            </div>
+                        ))}
                     </div>
                 </div>
 
@@ -156,169 +139,78 @@ export default function SubscriptionSettings() {
                     <div className="text-center max-w-xl mx-auto mb-8">
                         <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Atualize ou Altere o seu Plano</h3>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                            Selecione o plano ideal para a sua empresa abaixo para simular instantaneamente a transição.
+                            {isSuperAdmin
+                                ? 'Como administrador da plataforma, pode alterar o plano desta empresa.'
+                                : 'Para alterar o plano, contacte o suporte da Kutenga.'}
                         </p>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-6">
-                        {/* Plan 1: Inicial */}
-                        <Card className={`p-6 bg-white dark:bg-slate-900 flex flex-col justify-between border ${
-                            currentPlan === 'inicial' 
-                                ? 'border-[#2DB8A0] ring-1 ring-[#2DB8A0]' 
-                                : 'border-slate-200 dark:border-slate-800'
-                        }`}>
-                            <div>
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <h4 className="font-bold text-slate-800 dark:text-slate-100 text-lg">Inicial</h4>
-                                        <p className="text-slate-400 text-xs mt-0.5">Para novos negócios</p>
-                                    </div>
-                                    {currentPlan === 'inicial' && (
-                                        <Badge className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">Ativo</Badge>
-                                    )}
-                                </div>
-                                <div className="my-5">
-                                    <span className="text-2xl font-extrabold text-slate-900 dark:text-white">Grátis</span>
-                                    <span className="text-slate-400 text-xs"> / sempre</span>
-                                </div>
-                                <ul className="space-y-3 text-slate-600 dark:text-slate-400 text-xs border-t border-slate-100 dark:border-slate-800 pt-4">
-                                    <li className="flex items-center gap-2">
-                                        <Check className="w-3.5 h-3.5 text-[#2DB8A0] flex-shrink-0" />
-                                        <span>Até 50 faturas eletrónicas / mês</span>
-                                    </li>
-                                    <li className="flex items-center gap-2">
-                                        <Check className="w-3.5 h-3.5 text-[#2DB8A0] flex-shrink-0" />
-                                        <span>Catálogo com 100 artigos</span>
-                                    </li>
-                                    <li className="flex items-center gap-2">
-                                        <Check className="w-3.5 h-3.5 text-[#2DB8A0] flex-shrink-0" />
-                                        <span>1 Armazém / Loja</span>
-                                    </li>
-                                    <li className="flex items-center gap-2 opacity-50">
-                                        <span className="w-3.5 text-center font-bold text-rose-500 flex-shrink-0">×</span>
-                                        <span>POS (Ponto de Venda) indisponível</span>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div className="mt-6">
-                                <Button 
-                                    onClick={() => handlePlanChange('inicial')}
-                                    disabled={processing || currentPlan === 'inicial'}
-                                    variant={currentPlan === 'inicial' ? 'outline' : 'default'}
-                                    className="w-full text-xs font-semibold h-9 rounded bg-[#2db8a0] hover:bg-[#229B86]"
-                                >
-                                    {currentPlan === 'inicial' ? 'Plano Atual' : 'Mudar para Inicial'}
-                                </Button>
-                            </div>
-                        </Card>
+                        {plans.map((plan: any) => {
+                            const isCurrent = currentPlan === plan.code;
 
-                        {/* Plan 2: Crescimento */}
-                        <Card className={`p-6 bg-white dark:bg-slate-900 relative flex flex-col justify-between border ${
-                            currentPlan === 'crescimento' 
-                                ? 'border-[#2DB8A0] ring-1 ring-[#2DB8A0]' 
-                                : 'border-[#2DB8A0]/40'
-                        }`}>
-                            <div className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 bg-[#2DB8A0] text-white text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider">
-                                Popular
-                            </div>
-                            <div>
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <h4 className="font-bold text-slate-800 dark:text-slate-100 text-lg">Crescimento</h4>
-                                        <p className="text-slate-400 text-xs mt-0.5">Para PMEs em crescimento</p>
-                                    </div>
-                                    {currentPlan === 'crescimento' && (
-                                        <Badge className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">Ativo</Badge>
-                                    )}
-                                </div>
-                                <div className="my-5">
-                                    <span className="text-2xl font-extrabold text-slate-900 dark:text-white">3,500 MZN</span>
-                                    <span className="text-slate-400 text-xs"> / mês</span>
-                                </div>
-                                <ul className="space-y-3 text-slate-600 dark:text-slate-400 text-xs border-t border-slate-100 dark:border-slate-800 pt-4">
-                                    <li className="flex items-center gap-2 font-semibold">
-                                        <Check className="w-3.5 h-3.5 text-[#2DB8A0] flex-shrink-0" />
-                                        <span>Faturação eletrónica ILIMITADA</span>
-                                    </li>
-                                    <li className="flex items-center gap-2">
-                                        <Check className="w-3.5 h-3.5 text-[#2DB8A0] flex-shrink-0" />
-                                        <span>Artigos e categorias ilimitadas</span>
-                                    </li>
-                                    <li className="flex items-center gap-2 font-semibold">
-                                        <Check className="w-3.5 h-3.5 text-[#2DB8A0] flex-shrink-0" />
-                                        <span>Stock Multi-Armazém (até 5)</span>
-                                    </li>
-                                    <li className="flex items-center gap-2">
-                                        <Check className="w-3.5 h-3.5 text-[#2DB8A0] flex-shrink-0" />
-                                        <span>Ponto de Venda (POS) incluído</span>
-                                    </li>
-                                    <li className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-                                        <Check className="w-3.5 h-3.5 text-[#2DB8A0] flex-shrink-0" />
-                                        <span>Suporte priorizado 24/7</span>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div className="mt-6">
-                                <Button 
-                                    onClick={() => handlePlanChange('crescimento')}
-                                    disabled={processing || currentPlan === 'crescimento'}
-                                    variant={currentPlan === 'crescimento' ? 'outline' : 'default'}
-                                    className="w-full text-xs font-semibold h-9 rounded bg-[#2db8a0] hover:bg-[#229B86]"
+                            return (
+                                <Card
+                                    key={plan.code}
+                                    className={`p-6 bg-white dark:bg-slate-900 flex flex-col justify-between border ${
+                                        isCurrent ? 'border-[#2DB8A0] ring-1 ring-[#2DB8A0]' : 'border-slate-200 dark:border-slate-800'
+                                    }`}
                                 >
-                                    {currentPlan === 'crescimento' ? 'Plano Atual' : 'Mudar para Crescimento'}
-                                </Button>
-                            </div>
-                        </Card>
+                                    <div>
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h4 className="font-bold text-slate-800 dark:text-slate-100 text-lg">{plan.name}</h4>
+                                                <p className="text-slate-400 text-xs mt-0.5">{plan.description}</p>
+                                            </div>
+                                            {isCurrent && (
+                                                <Badge className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">Ativo</Badge>
+                                            )}
+                                        </div>
+                                        <div className="my-5">
+                                            <span className="text-2xl font-extrabold text-slate-900 dark:text-white">{plan.price_label}</span>
+                                        </div>
+                                        <ul className="space-y-3 text-slate-600 dark:text-slate-400 text-xs border-t border-slate-100 dark:border-slate-800 pt-4">
+                                            {Object.entries(limitLabels).map(([key, label]) => {
+                                                const value = plan.limits?.[key];
 
-                        {/* Plan 3: Empresarial */}
-                        <Card className={`p-6 bg-white dark:bg-slate-900 flex flex-col justify-between border ${
-                            currentPlan === 'empresarial' 
-                                ? 'border-[#2DB8A0] ring-1 ring-[#2DB8A0]' 
-                                : 'border-slate-200 dark:border-slate-800'
-                        }`}>
-                            <div>
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <h4 className="font-bold text-slate-800 dark:text-slate-100 text-lg">Empresarial</h4>
-                                        <p className="text-slate-400 text-xs mt-0.5">Para grandes empresas</p>
+                                                return (
+                                                    <li key={key} className="flex items-center gap-2">
+                                                        <Check className="w-3.5 h-3.5 text-[#2DB8A0] flex-shrink-0" />
+                                                        <span>
+                                                            {label as string}: <strong>{value === null || value === undefined ? 'Ilimitado' : value}</strong>
+                                                        </span>
+                                                    </li>
+                                                );
+                                            })}
+                                            {Object.entries(featureLabels).map(([key, label]) => {
+                                                const on = !!plan.features?.[key];
+
+                                                return (
+                                                    <li key={key} className={`flex items-center gap-2 ${on ? '' : 'opacity-50'}`}>
+                                                        {on ? (
+                                                            <Check className="w-3.5 h-3.5 text-[#2DB8A0] flex-shrink-0" />
+                                                        ) : (
+                                                            <span className="w-3.5 text-center font-bold text-rose-500 flex-shrink-0">×</span>
+                                                        )}
+                                                        <span>{label as string}{on ? '' : ' indisponível'}</span>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
                                     </div>
-                                    {currentPlan === 'empresarial' && (
-                                        <Badge className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">Ativo</Badge>
-                                    )}
-                                </div>
-                                <div className="my-5">
-                                    <span className="text-2xl font-extrabold text-slate-900 dark:text-white">Sob Consulta</span>
-                                </div>
-                                <ul className="space-y-3 text-slate-600 dark:text-slate-400 text-xs border-t border-slate-100 dark:border-slate-800 pt-4">
-                                    <li className="flex items-center gap-2">
-                                        <Check className="w-3.5 h-3.5 text-[#2DB8A0] flex-shrink-0" />
-                                        <span>Tudo do Plano Crescimento</span>
-                                    </li>
-                                    <li className="flex items-center gap-2">
-                                        <Check className="w-3.5 h-3.5 text-[#2DB8A0] flex-shrink-0" />
-                                        <span>Armazéns e filiais ilimitadas</span>
-                                    </li>
-                                    <li className="flex items-center gap-2 font-semibold">
-                                        <Check className="w-3.5 h-3.5 text-[#2DB8A0] flex-shrink-0" />
-                                        <span>Acesso a API do Kutenga ERP</span>
-                                    </li>
-                                    <li className="flex items-center gap-2">
-                                        <Check className="w-3.5 h-3.5 text-[#2DB8A0] flex-shrink-0" />
-                                        <span>Gestor de conta dedicado</span>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div className="mt-6">
-                                <Button 
-                                    onClick={() => handlePlanChange('empresarial')}
-                                    disabled={processing || currentPlan === 'empresarial'}
-                                    variant={currentPlan === 'empresarial' ? 'outline' : 'default'}
-                                    className="w-full text-xs font-semibold h-9 rounded bg-[#2db8a0] hover:bg-[#229B86]"
-                                >
-                                    {currentPlan === 'empresarial' ? 'Plano Atual' : 'Mudar para Empresarial'}
-                                </Button>
-                            </div>
-                        </Card>
+                                    <div className="mt-6">
+                                        <Button
+                                            onClick={() => handlePlanChange(plan.code)}
+                                            disabled={processing || !isSuperAdmin || isCurrent}
+                                            variant={isCurrent ? 'outline' : 'default'}
+                                            className="w-full text-xs font-semibold h-9 rounded bg-[#2db8a0] hover:bg-[#229B86]"
+                                        >
+                                            {isCurrent ? 'Plano Atual' : `Mudar para ${plan.name}`}
+                                        </Button>
+                                    </div>
+                                </Card>
+                            );
+                        })}
                     </div>
                 </div>
             </div>

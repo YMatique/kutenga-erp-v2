@@ -50,11 +50,11 @@ class HandleInertiaRequests extends Middleware
                     'plan' => $company->subscription_plan ?? 'inicial',
                     'status' => $company->subscription_status ?? 'active',
                     'ends_at' => $company->subscription_ends_at ? $company->subscription_ends_at->toIso8601String() : null,
-                    'usage' => [
-                        'documents_month' => $company->getCurrentMonthDocumentsCount(),
-                        'products' => $company->getProductsCount(),
-                        'warehouses' => $company->getWarehousesCount(),
-                    ],
+                    'state' => $company->subscriptionState(),
+                    'grace_ends_at' => $company->graceEndsAt()?->toIso8601String(),
+                    'usage' => collect(array_keys(\App\Models\Plan::LIMIT_KEYS))
+                        ->mapWithKeys(fn ($key) => [$key => $company->usage($key)])
+                        ->all(),
                     'limits' => $company->getSubscriptionLimits(),
                 ];
             },
