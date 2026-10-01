@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Catalog\Branch;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -9,7 +10,11 @@ use Symfony\Component\HttpFoundation\Response;
 class SetCompanyContext
 {
     /**
-     * Handle an incoming request.
+     * A empresa do contexto é SEMPRE a do utilizador autenticado. Nunca vem do pedido
+     * nem de valores guardados na sessão: caso contrário um utilizador poderia
+     * aceder aos dados de outra empresa (os scopes de empresa leem este valor).
+     *
+     * A filial pode ser mudada pelo utilizador, mas só entre filiais da sua empresa.
      *
      * @param  Closure(Request): (Response)  $next
      */
@@ -18,21 +23,26 @@ class SetCompanyContext
         if (auth()->check()) {
             $user = auth()->user();
 
-            // Prioridade: Request Header > Session > User Default
-            $companyId = $request->header('X-Company-Id') 
-                ?? session('current_company_id') 
-                ?? $user->company_id;
+            if ($user->company_id) {
+                session(['current_company_id' => (int) $user->company_id]);
 
-            $branchId = $request->header('X-Branch-Id') 
-                ?? session('current_branch_id') 
-                ?? $user->branch_id;
+                $branchId = session('current_branch_id');
 
-            if ($companyId) {
-                session(['current_company_id' => (int) $companyId]);
-            }
+                $valid = $branchId && Branch::withoutGlobalScopes()
+                    ->where('company_id', $user->company_id)
+                    ->whereKey($branchId)
+                    ->exists();
 
-            if ($branchId) {
-                session(['current_branch_id' => (int) $branchId]);
+                if ($valid) {
+                    session(['current_branch_id' => (int) $branchId]);
+                } elseif ($user->branch_id) {
+                    session(['current_branch_id' => (int) $user->branch_id]);
+                } else {
+                    session()->forget('current_branch_id');
+                }
+            } else {
+                // Super admin da plataforma: sem empresa
+                session()->forget(['current_company_id', 'current_branch_id']);
             }
         }
 

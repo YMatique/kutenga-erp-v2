@@ -87,7 +87,6 @@ const mainNavItems: NavItem[] = [
         title: 'Unidades',
         icon: MapPin,
         items: [
-            { title: 'Empresas', href: '/companies' },
             { title: 'Filiais', href: '/branches' },
         ],
     },

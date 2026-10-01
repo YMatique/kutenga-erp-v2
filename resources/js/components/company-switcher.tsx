@@ -5,7 +5,6 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuLabel,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
@@ -24,7 +23,7 @@ export function CompanySwitcher() {
     const switchBranch = (branchId: number) => {
         router.post(
             '/context/switch',
-            { company_id: activeCompany.id, branch_id: branchId },
+            { branch_id: branchId },
             { preserveState: false },
         );
     };
@@ -91,10 +90,6 @@ return null;
                                 )}
                             </DropdownMenuItem>
                         ))}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="gap-2 p-2 cursor-pointer font-medium text-[#2DB8A0]">
-                            Gerenciar Empresas
-                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </SidebarMenuItem>
