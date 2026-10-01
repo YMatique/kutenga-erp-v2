@@ -92,7 +92,7 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     Route::prefix('/inventory')->group(function () {
         // Inventory View
         Route::middleware('can:inventory.view')->group(function () {
-            Route::resource('warehouses', WarehouseController::class)->only(['index', 'show']);
+            Route::resource('warehouses', WarehouseController::class); //->only(['index', 'show']);
             Route::get('movements', [StockMovementController::class, 'index'])->name('inventory.movements.index');
             Route::get('/', [InventoryDashboardController::class, 'index'])->name('inventory.dashboard');
             Route::get('/opening', [InventoryOpeningController::class, 'index'])->name('inventory.opening.index');
