@@ -72,7 +72,7 @@ class DocumentController extends Controller
             ->where('status', 'active')
             ->get(['id', 'name', 'sku', 'barcode', 'price', 'tax_rate', 'tax_is_exempt', 'tax_exemption_reason']);
 
-        $series = DocumentSeries::where('company_id', $companyId)->where('is_active', true)->get();
+        $series = DocumentSeries::where('company_id', $companyId)->where('scope', 'billing')->where('is_active', true)->get();
         $warehouses = Warehouse::where('company_id', $companyId)->where('is_active', true)->get();
 
         return Inertia::render('billing/documents/create', [
@@ -199,16 +199,21 @@ class DocumentController extends Controller
         $companyId = $request->user()->company_id;
 
         $document = Document::where('company_id', $companyId)
-            ->with(['items', 'series', 'customer', 'company'])
+            ->with(['items', 'series', 'customer', 'company', 'posShift.user', 'posShift.cashRegister', 'paymentAllocations.payment'])
             ->findOrFail($id);
 
-        // Se for Fatura-Recibo (FR), usar formato de impressora térmica (80mm = ~226pt)
-        if ($document->document_type === 'FR' && $request->get('format') !== 'a4') {
+        // Vendas do POS saem em formato térmico; faturas-recibo da faturação normal em A4 (?format=thermal força o talão)
+        $thermal = $request->get('format') === 'thermal'
+            || ($document->source_module === 'pos' && $document->document_type === 'FR' && $request->get('format') !== 'a4');
+
+        if ($thermal) {
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.thermal', compact('document'));
             $itemCount = count($document->items);
             // Altura dinâmica estimada para caber todo o conteúdo do rolo térmico sem quebrar página
             $height = 250 + ($itemCount * 35) + ($document->notes ? 50 : 0);
-            $pdf->setPaper([0, 0, 226, $height], 'portrait');
+            // 80mm ≈ 226pt, 58mm ≈ 164pt
+            $widthPt = app(\App\Services\Printing\PosPrintService::class)->paperWidth($document->company, $document->posShift?->cashRegister) === 58 ? 164 : 226;
+            $pdf->setPaper([0, 0, $widthPt, $height], 'portrait');
         } else {
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.document', compact('document'));
             // Configurar folha A4 e margens padrão

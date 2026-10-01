@@ -8,6 +8,22 @@
         'GR' => 'Guia de Remessa',
         'RC' => 'Recibo',
     ];
+
+    $widthMm = app(\App\Services\Printing\PosPrintService::class)
+        ->paperWidth($document->company, $document->posShift?->cashRegister);
+
+    // Pagamento (vendas POS): método, valor entregue e troco
+    $payment = $document->paymentAllocations->first()?->payment;
+    $methodLabels = ['cash' => 'Dinheiro', 'card' => 'TPA / Cartão', 'transfer' => 'Transferência'];
+
+    // IVA agrupado por taxa (total da linha menos a base tributável)
+    $taxByRate = $document->items
+        ->groupBy(fn ($i) => number_format((float) $i->tax_rate, 0))
+        ->map(fn ($rows) => $rows->sum(
+            fn ($i) => (float) $i->total - ((float) $i->quantity * (float) $i->unit_price * (1 - (float) $i->discount_percent / 100))
+        ));
+
+    $shift = $document->posShift;
 @endphp
 
 <!DOCTYPE html>
@@ -22,7 +38,7 @@
 
     <style>
         @page {
-            size: 80mm auto;
+            size: {{ $widthMm }}mm auto;
             margin: 0;
         }
 
@@ -32,7 +48,7 @@
 
         body {
 
-            width: 80mm;
+            width: {{ $widthMm }}mm;
 
             margin: 0;
 
@@ -298,7 +314,7 @@
 
         <div class="document-title">
 
-            {{ $typeLabels[$document->document_type] ?? 'Fatura-Recibo' }}
+            {{ \App\Services\Printing\PosPrintService::documentTitle($document) }}
 
         </div>
 
@@ -568,24 +584,17 @@
 
 
 
-        <tr>
-
-
-            <td>
-                IVA
-            </td>
-
-
-            <td class="right">
-
-                {{ number_format($document->tax_total, 2, ',', '.') }}
-
-                MT
-
-            </td>
-
-
-        </tr>
+        @foreach($taxByRate as $rate => $amount)
+            <tr>
+                <td>
+                    IVA ({{ $rate }}%)
+                </td>
+                <td class="right">
+                    {{ number_format($amount, 2, ',', '.') }}
+                    MT
+                </td>
+            </tr>
+        @endforeach
 
 
 
@@ -617,15 +626,37 @@
 
 
 
+    @if($payment)
+        <table class="summary">
+            <tr>
+                <td>Pagamento</td>
+                <td class="right">{{ $methodLabels[$payment->payment_method] ?? $payment->payment_method }}</td>
+            </tr>
+            @if($payment->amount_tendered !== null && $payment->payment_method === 'cash')
+                <tr>
+                    <td>Entregue</td>
+                    <td class="right">{{ number_format($payment->amount_tendered, 2, ',', '.') }} MT</td>
+                </tr>
+                <tr>
+                    <td>Troco</td>
+                    <td class="right">{{ number_format($payment->change_given ?? 0, 2, ',', '.') }} MT</td>
+                </tr>
+            @endif
+        </table>
+    @endif
+
+    @if($shift)
+        <div class="meta center">
+            Operador: {{ $shift->user?->name }}
+            @if($shift->cashRegister)
+                | {{ $shift->cashRegister->name }}
+            @endif
+        </div>
+    @endif
+
     @if($document->notes)
-
-
         <div class="separator"></div>
-
-
         <div class="customer">
-
-
             <strong>Obs:</strong>
 
             {{ $document->notes }}
@@ -678,12 +709,19 @@
         <br>
 
 
-        Obrigado pela preferência!
+        {{ $document->company?->receipt_footer ?: 'Obrigado pela preferência!' }}
 
 
     </div>
 
 
+    @if(!empty($autoprint))
+        <script>
+            window.addEventListener('load', function () {
+                setTimeout(function () { window.print(); }, 300);
+            });
+        </script>
+    @endif
 </body>
 
 

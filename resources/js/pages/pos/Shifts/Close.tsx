@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 
-export default function CloseShift({ shift, salesTotal, totalDocs, expectedCash }: any) {
+export default function CloseShift({ shift, salesTotal, paymentTotals, totalDocs, expectedCash }: any) {
     const { data, setData, post, processing, errors } = useForm({
         ending_cash: expectedCash.toFixed(2),
         notes: '',
@@ -42,7 +42,7 @@ export default function CloseShift({ shift, salesTotal, totalDocs, expectedCash 
             <div className="space-y-6">
                 <PageHeader
                     title={`Fechar Turno #${shift.id}`}
-                    subtitle={`Aberto em ${fmtTime(shift.opened_at)}`}
+                    subtitle={`${shift.cash_register?.name ? shift.cash_register.name + ' · ' : ''}Aberto em ${fmtTime(shift.opened_at)}`}
                 />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -74,12 +74,18 @@ export default function CloseShift({ shift, salesTotal, totalDocs, expectedCash 
                                 <span className="font-semibold text-emerald-600">+{fmt(salesTotal)} MT</span>
                             </div>
 
+                            <div className="px-5 py-3 text-xs text-slate-500 space-y-1">
+                                <div className="flex justify-between"><span>Dinheiro</span><span>{fmt(paymentTotals.cash)} MT</span></div>
+                                <div className="flex justify-between"><span>Cartão / TPA</span><span>{fmt(paymentTotals.card)} MT</span></div>
+                                <div className="flex justify-between"><span>Transferência</span><span>{fmt(paymentTotals.transfer)} MT</span></div>
+                            </div>
+
                             <div className="flex items-center justify-between px-5 py-5 bg-slate-50 rounded-b-[4px]">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-[#E8A020]/10 rounded-[4px]">
                                         <ShoppingBag className="w-4 h-4 text-[#E8A020]" />
                                     </div>
-                                    <span className="font-semibold text-slate-800">Total Esperado em Caixa</span>
+                                    <span className="font-semibold text-slate-800">Dinheiro Esperado em Caixa</span>
                                 </div>
                                 <span className="text-xl font-bold text-slate-900">{fmt(expectedCash)} MT</span>
                             </div>

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class DocumentSeries extends Model
 {
     protected $table = 'document_series';
-    protected $fillable = ['company_id', 'code', 'name', 'year', 'next_number', 'is_active', 'created_by', 'updated_by'];
+    protected $fillable = ['company_id', 'code', 'name', 'scope', 'year', 'next_number', 'is_active', 'created_by', 'updated_by'];
 
     public function documents(): HasMany
     {

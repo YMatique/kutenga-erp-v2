@@ -29,6 +29,8 @@ class Company extends Model
         'invoice_prefix',
         'quote_prefix',
         'receipt_prefix',
+        'thermal_paper_width',
+        'receipt_footer',
         'bank_accounts',
         'smtp_host',
         'smtp_port',

@@ -67,7 +67,7 @@ class QuoteController extends Controller
 
         $customers = Customer::where('company_id', $companyId)->where('is_active', true)->get();
         $products = Product::where('company_id', $companyId)->where('status', 'active')->get();
-        $series = DocumentSeries::where('company_id', $companyId)->where('is_active', true)->get();
+        $series = DocumentSeries::where('company_id', $companyId)->where('scope', 'billing')->where('is_active', true)->get();
 
         return Inertia::render('billing/quotes/create', [
             'customers' => $customers,
@@ -139,7 +139,7 @@ class QuoteController extends Controller
 
         $customers = Customer::where('company_id', $companyId)->where('is_active', true)->get();
         $products = Product::where('company_id', $companyId)->where('status', 'active')->get();
-        $series = DocumentSeries::where('company_id', $companyId)->where('is_active', true)->get();
+        $series = DocumentSeries::where('company_id', $companyId)->where('scope', 'billing')->where('is_active', true)->get();
 
         return Inertia::render('billing/quotes/edit', [
             'document' => $quote,

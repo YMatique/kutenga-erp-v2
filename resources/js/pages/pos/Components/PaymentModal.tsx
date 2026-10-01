@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { printJob } from '@/lib/pos-printing';
 
 interface PaymentModalProps {
     isOpen: boolean;
@@ -31,218 +32,6 @@ function NumKey({ label, onClick, span }: { label: string; onClick: () => void; 
             {label}
         </button>
     );
-}
-
-// ── Gerador do recibo térmico ──────────────────────────────────────────────────
-function buildReceiptHtml(doc: any, change: number, paymentMethod: Method): string {
-    const c = doc.company ?? {};
-    const items = doc.items ?? [];
-    const fmt2 = (n: number) => Number(n).toFixed(2);
-
-    const methodLabel: Record<Method, string> = {
-        cash: 'Dinheiro',
-        card: 'TPA / Cartão',
-        transfer: 'Transferência Bancária',
-    };
-
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('pt-MZ', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const timeStr = now.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const docRef = `${doc.series?.prefix ?? 'FR'}/${String(doc.sequence_number ?? '').padStart(6, '0')}`;
-
-    // Linha de separador
-    const line  = (char = '-', len = 42) => char.repeat(len);
-    const dline = (len = 42) => '='.repeat(len);
-
-    // Formatar linha de item: "Nome prod   Qtd x Preço   Total"
-    const itemRows = items.map((i: any) => {
-        const name     = (i.product_name ?? '').substring(0, 28);
-        const qty      = i.quantity;
-        const unitP    = Number(i.unit_price ?? 0);
-        const disc     = Number(i.discount_percent ?? 0);
-        const lineNet  = unitP * qty * (1 - disc / 100);
-        const lineTax  = lineNet * (Number(i.tax_rate ?? 0) / 100);
-        const lineGross = lineNet + lineTax;
-
-        return `
-<div class="item">
-  <div class="item-name">${name}</div>
-  <div class="item-detail">
-    <span>${qty} x ${fmt2(unitP)} MT</span>
-    ${disc > 0 ? `<span class="disc">-${disc}%</span>` : ''}
-    <span class="item-total">${fmt2(lineGross)} MT</span>
-  </div>
-</div>`;
-    }).join('');
-
-    // Endereço da empresa em linha única
-    const addr = [c.address, c.phone ? `Tel: ${c.phone}` : '', c.email].filter(Boolean).join(' | ');
-
-    return `<!DOCTYPE html>
-<html lang="pt">
-<head>
-  <meta charset="UTF-8">
-  <title>${docRef}</title>
-  <style>
-    /* Largura padrão 80mm com margem mínima */
-    @page { size: 80mm auto; margin: 4mm 2mm; }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 11px;
-      width: 76mm;
-      color: #000;
-      background: #fff;
-    }
-
-    /* ── Cabeçalho ── */
-    .header { text-align: center; padding: 4px 0 6px; }
-    .company-name {
-      font-size: 15px;
-      font-weight: bold;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-    .company-meta { font-size: 10px; color: #333; margin-top: 2px; line-height: 1.5; }
-
-    /* ── Separadores ── */
-    .sep  { border-top: 1px dashed #555; margin: 5px 0; }
-    .sep2 { border-top: 2px solid #000; margin: 5px 0; }
-
-    /* ── Info do documento ── */
-    .doc-info { text-align: center; padding: 3px 0; }
-    .doc-type  { font-size: 12px; font-weight: bold; letter-spacing: 1px; }
-    .doc-ref   { font-size: 14px; font-weight: bold; }
-    .doc-date  { font-size: 10px; color: #444; margin-top: 2px; }
-
-    /* ── Items ── */
-    .items { padding: 2px 0; }
-    .item  { margin: 3px 0; }
-    .item-name   { font-weight: bold; font-size: 11px; word-break: break-word; }
-    .item-detail {
-      display: flex;
-      justify-content: space-between;
-      font-size: 10px;
-      color: #333;
-      padding-left: 4px;
-    }
-    .disc       { color: #888; }
-    .item-total { font-weight: bold; color: #000; }
-
-    /* ── Totais ── */
-    .totals { padding: 2px 0; }
-    .tot-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      padding: 1.5px 0;
-    }
-    .tot-row.grand {
-      font-size: 15px;
-      font-weight: bold;
-      padding: 4px 0 2px;
-    }
-    .tot-row.change {
-      font-size: 12px;
-      font-weight: bold;
-      color: #006600;
-    }
-
-    /* ── Rodapé ── */
-    .footer {
-      text-align: center;
-      font-size: 10px;
-      color: #444;
-      padding: 6px 0 2px;
-      line-height: 1.6;
-    }
-    .footer .brand { font-weight: bold; font-size: 9px; color: #888; margin-top: 4px; }
-
-    @media print {
-      body { width: 100%; }
-      @page { margin: 2mm; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- CABEÇALHO DA EMPRESA -->
-  <div class="header">
-    <div class="company-name">${c.name ?? 'Empresa'}</div>
-    ${c.nuit ? `<div class="company-meta">NUIT: ${c.nuit}</div>` : ''}
-    ${addr ? `<div class="company-meta">${addr}</div>` : ''}
-  </div>
-
-  <div class="sep2"></div>
-
-  <!-- INFO DO DOCUMENTO -->
-  <div class="doc-info">
-    <div class="doc-type">FATURA-RECIBO</div>
-    <div class="doc-ref">${docRef}</div>
-    <div class="doc-date">${dateStr}  ${timeStr}</div>
-  </div>
-
-  <div class="sep"></div>
-
-  <!-- CLIENTE -->
-  <div style="font-size:10px; color:#444; padding:1px 0 3px;">
-    Cliente: ${doc.customer_name ?? 'Consumidor Final'}
-    ${doc.customer_nuit && doc.customer_nuit !== '999999999' ? `&nbsp;| NUIT: ${doc.customer_nuit}` : ''}
-  </div>
-
-  <div class="sep"></div>
-
-  <!-- ARTIGOS -->
-  <div class="items">${itemRows}</div>
-
-  <div class="sep2"></div>
-
-  <!-- TOTAIS -->
-  <div class="totals">
-    <div class="tot-row">
-      <span>Subtotal</span>
-      <span>${fmt2(Number(doc.subtotal))} MT</span>
-    </div>
-    <div class="tot-row">
-      <span>IVA (${items.length > 0 ? Number(items[0].tax_rate ?? 0).toFixed(0) : '0'}%)</span>
-      <span>${fmt2(Number(doc.tax_total))} MT</span>
-    </div>
-    <div class="sep"></div>
-    <div class="tot-row grand">
-      <span>TOTAL</span>
-      <span>${fmt2(Number(doc.grand_total))} MT</span>
-    </div>
-    <div class="sep"></div>
-    <div class="tot-row" style="font-size:10px; color:#555;">
-      <span>Método</span>
-      <span>${methodLabel[paymentMethod]}</span>
-    </div>
-    ${change > 0.005 ? `
-    <div class="tot-row change">
-      <span>TROCO</span>
-      <span>${fmt2(change)} MT</span>
-    </div>` : ''}
-  </div>
-
-  <div class="sep2"></div>
-
-  <!-- RODAPÉ -->
-  <div class="footer">
-    <div>Obrigado pela sua preferência!</div>
-    <div>Documento processado electronicamente</div>
-    <div>Conserve este documento para efeitos fiscais</div>
-    <div class="brand">Powered by Kutenga ERP</div>
-  </div>
-
-  <script>
-    window.addEventListener('load', () => {
-      setTimeout(() => { window.print(); }, 300);
-    });
-  </script>
-</body>
-</html>`;
 }
 
 // ── Componente principal ───────────────────────────────────────────────────────
@@ -334,6 +123,11 @@ throw new Error(data.error || 'Erro ao processar venda.');
 
             setData(data.document);
             setStep('success');
+
+            if (data.auto_print) {
+                void printJob('receipt', data.document.id);
+            }
+
             toast.success('Venda concluída com sucesso!');
         } catch (e: any) {
             toast.error(e.message || 'Erro ao processar venda.');
@@ -342,24 +136,11 @@ throw new Error(data.error || 'Erro ao processar venda.');
         }
     };
 
-    // Imprimir recibo térmico
+    // Imprimir recibo: o driver (browser, QZ Tray, rede) é o configurado na caixa
     const handlePrint = () => {
-        if (!successData) {
-return;
-}
-
-        const html = buildReceiptHtml(successData, change, method);
-        const win = window.open('', '_blank', 'width=360,height=600,scrollbars=no,toolbar=no,menubar=no');
-
-        if (!win) {
-            toast.error('Bloqueador de popups activo. Autorize popups para este site.');
-
-            return;
+        if (successData) {
+            void printJob('receipt', successData.id);
         }
-
-        win.document.open();
-        win.document.write(html);
-        win.document.close();
     };
 
     const canClose = !processing && step !== 'success';
@@ -377,7 +158,7 @@ return;
                         <div>
                             <p className="text-xl font-bold text-slate-900">Venda Concluída!</p>
                             <p className="text-sm font-mono text-slate-500 mt-1 font-semibold">
-                                {successData.series?.prefix ?? 'FR'}/{String(successData.sequence_number ?? '').padStart(6, '0')}
+                                {successData.document_number}
                             </p>
                             <p className="text-xs text-slate-400 mt-0.5">
                                 {new Date().toLocaleString('pt-MZ')}

@@ -201,6 +201,16 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
         });
 
         Route::middleware('can:sales.view')->group(function () {
+            Route::get('/registers', [\App\Http\Controllers\Pos\CashRegisterController::class, 'index'])->name('registers.index');
+            Route::post('/registers', [\App\Http\Controllers\Pos\CashRegisterController::class, 'store'])->name('registers.store');
+            Route::put('/registers/{register}', [\App\Http\Controllers\Pos\CashRegisterController::class, 'update'])->name('registers.update');
+            Route::delete('/registers/{register}', [\App\Http\Controllers\Pos\CashRegisterController::class, 'destroy'])->name('registers.destroy');
+            Route::get('/print/job', [\App\Http\Controllers\Pos\PosReceiptController::class, 'job'])->name('print.job');
+            Route::get('/registers/{register}/print/test', [\App\Http\Controllers\Pos\PosReceiptController::class, 'test'])->name('registers.print.test');
+            Route::get('/receipts/{id}', [\App\Http\Controllers\Pos\PosReceiptController::class, 'receipt'])->name('receipts.show');
+            Route::get('/print/day', [\App\Http\Controllers\Pos\PosReceiptController::class, 'daySales'])->name('print.day');
+            Route::get('/shifts/{shift}/print/summary', [\App\Http\Controllers\Pos\PosReceiptController::class, 'shiftSummary'])->name('shifts.print.summary');
+            Route::get('/shifts/{shift}/print/sales', [\App\Http\Controllers\Pos\PosReceiptController::class, 'shiftSales'])->name('shifts.print.sales');
             Route::get('/shifts', [\App\Http\Controllers\Pos\PosShiftController::class, 'index'])->name('shifts.index');
             Route::get('/reports', [\App\Http\Controllers\Pos\PosReportController::class, 'index'])->name('reports.index');
             // Wildcard route MUST be last to avoid hijacking /pos/shifts/open or /pos/shifts/close

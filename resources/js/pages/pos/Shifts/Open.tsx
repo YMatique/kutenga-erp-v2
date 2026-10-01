@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 
-export default function OpenShift() {
+export default function OpenShift({ registers = [] }: { registers?: { id: number; name: string; branch: string | null; busy_by: string | null }[] }) {
     const { data, setData, post, processing, errors } = useForm({
         starting_cash: '0.00',
+        cash_register_id: registers.find(r => !r.busy_by)?.id?.toString() ?? '',
     });
 
     const submit = (e: React.FormEvent) => {
@@ -32,6 +33,28 @@ export default function OpenShift() {
                     </div>
 
                     <form onSubmit={submit} className="space-y-5">
+                        {registers.length > 1 && (
+                            <div className="space-y-2">
+                                <Label htmlFor="cash_register_id">Caixa</Label>
+                                <select
+                                    id="cash_register_id"
+                                    className="w-full h-11 rounded-[4px] border border-slate-200 bg-white px-3 text-sm"
+                                    value={data.cash_register_id}
+                                    onChange={(e) => setData('cash_register_id', e.target.value)}
+                                    required
+                                >
+                                    {registers.map(r => (
+                                        <option key={r.id} value={r.id} disabled={!!r.busy_by}>
+                                            {r.name}{r.branch ? ` — ${r.branch}` : ''}{r.busy_by ? ` (em uso por ${r.busy_by})` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                        {errors.cash_register_id && (
+                            <p className="text-sm text-red-600">{errors.cash_register_id}</p>
+                        )}
+
                         <div className="space-y-2">
                             <Label htmlFor="starting_cash">Fundo de Maneio</Label>
                             <div className="relative">

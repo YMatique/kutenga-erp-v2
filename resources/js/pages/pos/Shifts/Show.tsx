@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Receipt, Package, Calculator, TrendingUp, Clock } from 'lucide-react';
+import { ArrowLeft, Receipt, Package, Calculator, TrendingUp, Clock, Printer } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { KpiCard, TableCard, PageHeader } from '@/components/ui/brand';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
+import { printJob } from '@/lib/pos-printing';
 
 export default function ShiftShow({ shift, documents, summary }: any) {
     const fmt = (n: number) =>
@@ -28,9 +29,7 @@ export default function ShiftShow({ shift, documents, summary }: any) {
         return `${h}h ${m}m`;
     };
 
-    const diff = summary.ending_cash !== null
-        ? summary.ending_cash - (summary.starting_cash + summary.sales_total)
-        : null;
+    const diff = summary.cash_difference ?? null;
 
     return (
         <>
@@ -40,7 +39,7 @@ export default function ShiftShow({ shift, documents, summary }: any) {
                 {/* Header */}
                 <PageHeader
                     title={`Turno #${String(shift.id).padStart(4, '0')}`}
-                    subtitle={`${shift.operator} · ${shift.branch} · ${fmtDate(shift.opened_at)} → ${fmtDate(shift.closed_at)}`}
+                    subtitle={`${shift.operator} · ${shift.register} · ${shift.branch} · ${fmtDate(shift.opened_at)} → ${fmtDate(shift.closed_at)}`}
                     actions={
                         <div className="flex items-center gap-2">
                             {shift.status === 'open' ? (
@@ -51,6 +50,12 @@ export default function ShiftShow({ shift, documents, summary }: any) {
                             ) : (
                                 <Badge variant="secondary" className="rounded-[4px]">Fechado</Badge>
                             )}
+                            <Button variant="outline" size="sm" className="gap-1 rounded-[4px]" onClick={() => printJob('shift-summary', shift.id)}>
+                                <Printer className="w-4 h-4" /> Resumo
+                            </Button>
+                            <Button variant="outline" size="sm" className="gap-1 rounded-[4px]" onClick={() => printJob('shift-sales', shift.id)}>
+                                <Printer className="w-4 h-4" /> Vendas
+                            </Button>
                             <Link href="/pos/shifts">
                                 <Button variant="outline" size="sm" className="gap-1 rounded-[4px]">
                                     <ArrowLeft className="w-4 h-4" /> Voltar

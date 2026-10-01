@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Pos;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Pos\CashRegister;
 use App\Models\Pos\PosShift;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,9 +20,9 @@ class PosShiftController extends Controller
         $canViewAll = $user->hasAnyRole(['Admin', 'owner', 'Manager']);
 
         $shiftsQuery = PosShift::where('company_id', $company)
-            ->with(['user:id,name', 'branch:id,name'])
-            ->withCount('documents')
-            ->withSum('documents', 'grand_total')
+            ->with(['user:id,name', 'branch:id,name', 'cashRegister:id,name'])
+            ->withCount(['documents' => fn ($q) => $q->where('status', '!=', 'cancelled')])
+            ->withSum(['documents' => fn ($q) => $q->where('status', '!=', 'cancelled')], 'grand_total')
             ->orderBy('opened_at', 'desc');
 
         if (!$canViewAll) {
@@ -34,10 +35,12 @@ class PosShiftController extends Controller
                 'status'          => $shift->status,
                 'operator'        => $shift->user?->name ?? '—',
                 'branch'          => $shift->branch?->name ?? '—',
+                'register'        => $shift->cashRegister?->name ?? '—',
                 'opened_at'       => $shift->opened_at,
                 'closed_at'       => $shift->closed_at,
                 'starting_cash'   => (float) $shift->starting_cash,
                 'ending_cash'     => $shift->ending_cash !== null ? (float) $shift->ending_cash : null,
+                'cash_difference' => $shift->cash_difference !== null ? (float) $shift->cash_difference : null,
                 'documents_count' => $shift->documents_count,
                 'sales_total'     => (float) ($shift->documents_sum_grand_total ?? 0),
             ];
@@ -55,6 +58,7 @@ class PosShiftController extends Controller
                 ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
                 ->where('pos_shifts.company_id', $company)
                 ->where('documents.source_module', 'pos')
+                ->where('documents.status', '!=', 'cancelled')
                 ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
                 ->whereDate('documents.created_at', today())
                 ->whereNull('documents.deleted_at')
@@ -63,6 +67,7 @@ class PosShiftController extends Controller
                 ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
                 ->where('pos_shifts.company_id', $company)
                 ->where('documents.source_module', 'pos')
+                ->where('documents.status', '!=', 'cancelled')
                 ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
                 ->whereMonth('documents.created_at', now()->month)
                 ->whereYear('documents.created_at', now()->year)
@@ -92,7 +97,7 @@ class PosShiftController extends Controller
             abort(403, 'Não autorizado.');
         }
 
-        $shift->load(['user:id,name', 'branch:id,name', 'documents.items']);
+        $shift->load(['user:id,name', 'branch:id,name', 'cashRegister:id,name', 'documents.items']);
 
         $documents = $shift->documents->map(function ($doc) {
             return [
@@ -107,13 +112,17 @@ class PosShiftController extends Controller
             ];
         });
 
+        // Documentos cancelados continuam listados mas não contam nos totais
+        $valid = $documents->where('status', '!=', 'cancelled');
+
         $summary = [
-            'total_docs'   => $documents->count(),
-            'sales_total'  => $documents->sum('grand_total'),
-            'tax_total'    => $documents->sum('tax_total'),
-            'subtotal'     => $documents->sum('subtotal'),
+            'total_docs'   => $valid->count(),
+            'sales_total'  => $valid->sum('grand_total'),
+            'tax_total'    => $valid->sum('tax_total'),
+            'subtotal'     => $valid->sum('subtotal'),
             'starting_cash' => (float) $shift->starting_cash,
             'ending_cash'   => $shift->ending_cash !== null ? (float) $shift->ending_cash : null,
+            'cash_difference' => $shift->cash_difference !== null ? (float) $shift->cash_difference : null,
         ];
 
         return Inertia::render('pos/Shifts/Show', [
@@ -122,6 +131,7 @@ class PosShiftController extends Controller
                 'status'     => $shift->status,
                 'operator'   => $shift->user?->name ?? '—',
                 'branch'     => $shift->branch?->name ?? '—',
+                'register'   => $shift->cashRegister?->name ?? '—',
                 'opened_at'  => $shift->opened_at,
                 'closed_at'  => $shift->closed_at,
                 'notes'      => $shift->notes,
@@ -145,13 +155,32 @@ class PosShiftController extends Controller
             return redirect()->route('pos.index');
         }
 
-        return Inertia::render('pos/Shifts/Open');
+        CashRegister::ensureDefault($user->company_id, $user->branch_id);
+
+        $registers = CashRegister::where('company_id', $user->company_id)
+            ->where('is_active', true)
+            ->with('branch:id,name')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($register) {
+                $open = $register->shifts()->where('status', 'open')->with('user:id,name')->first();
+
+                return [
+                    'id'      => $register->id,
+                    'name'    => $register->name,
+                    'branch'  => $register->branch?->name,
+                    'busy_by' => $open?->user?->name,
+                ];
+            });
+
+        return Inertia::render('pos/Shifts/Open', ['registers' => $registers]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'starting_cash' => 'required|numeric|min:0',
+            'starting_cash'    => 'required|numeric|min:0',
+            'cash_register_id' => 'nullable|integer',
         ]);
 
         $user = Auth::user();
@@ -165,14 +194,41 @@ class PosShiftController extends Controller
             return redirect()->route('pos.index')->with('error', 'Já possui um turno aberto.');
         }
 
-        PosShift::create([
-            'company_id'   => $user->company_id,
-            'branch_id'    => $user->branch_id ?? 1,
-            'user_id'      => $user->id,
-            'status'       => 'open',
-            'opened_at'    => now(),
-            'starting_cash' => $request->starting_cash,
-        ]);
+        CashRegister::ensureDefault($user->company_id, $user->branch_id);
+
+        $registers = CashRegister::where('company_id', $user->company_id)->where('is_active', true);
+
+        // Com uma única caixa ativa não é preciso escolher
+        $register = $request->filled('cash_register_id')
+            ? (clone $registers)->find($request->cash_register_id)
+            : ((clone $registers)->count() === 1 ? (clone $registers)->first() : null);
+
+        if (!$register) {
+            return back()->withErrors(['cash_register_id' => 'Selecione uma caixa válida.']);
+        }
+
+        try {
+            DB::transaction(function () use ($request, $user, $register) {
+                // Bloqueia a caixa para evitar dois turnos abertos em simultâneo
+                CashRegister::lockForUpdate()->findOrFail($register->id);
+
+                if (PosShift::where('cash_register_id', $register->id)->where('status', 'open')->exists()) {
+                    throw new \DomainException('Esta caixa já tem um turno aberto por outro operador.');
+                }
+
+                PosShift::create([
+                    'company_id'       => $user->company_id,
+                    'branch_id'        => $register->branch_id,
+                    'cash_register_id' => $register->id,
+                    'user_id'          => $user->id,
+                    'status'           => 'open',
+                    'opened_at'        => now(),
+                    'starting_cash'    => $request->starting_cash,
+                ]);
+            });
+        } catch (\DomainException $e) {
+            return back()->withErrors(['cash_register_id' => $e->getMessage()]);
+        }
 
         return redirect()->route('pos.index')->with('success', 'Turno aberto com sucesso.');
     }
@@ -184,18 +240,21 @@ class PosShiftController extends Controller
         $openShift = PosShift::where('user_id', $user->id)
             ->where('company_id', $user->company_id)
             ->where('status', 'open')
-            ->with(['documents.items'])
+            ->with(['cashRegister:id,name'])
             ->firstOrFail();
 
-        $salesTotal    = (float) $openShift->documents()->sum('grand_total');
-        $totalDocs     = $openShift->documents()->count();
-        $expectedCash  = (float) $openShift->starting_cash + $salesTotal;
+        $totals       = $openShift->paymentTotals();
+        $salesTotal   = array_sum($totals);
+        $totalDocs    = $openShift->documents()->where('status', '!=', 'cancelled')->count();
+        // Só o dinheiro físico entra na caixa: cartão e transferência não
+        $expectedCash = (float) $openShift->starting_cash + $totals['cash'];
 
         return Inertia::render('pos/Shifts/Close', [
-            'shift'        => $openShift,
-            'salesTotal'   => $salesTotal,
-            'totalDocs'    => $totalDocs,
-            'expectedCash' => $expectedCash,
+            'shift'         => $openShift,
+            'salesTotal'    => $salesTotal,
+            'paymentTotals' => $totals,
+            'totalDocs'     => $totalDocs,
+            'expectedCash'  => $expectedCash,
         ]);
     }
 
@@ -210,11 +269,17 @@ class PosShiftController extends Controller
             abort(403, 'Não autorizado ou turno já fechado.');
         }
 
+        $totals       = $shift->paymentTotals();
+        $expectedCash = round((float) $shift->starting_cash + $totals['cash'], 2);
+
         $shift->update([
-            'status'      => 'closed',
-            'closed_at'   => now(),
-            'ending_cash' => $request->ending_cash,
-            'notes'       => $request->notes,
+            'status'          => 'closed',
+            'closed_at'       => now(),
+            'ending_cash'     => $request->ending_cash,
+            'expected_cash'   => $expectedCash,
+            'cash_difference' => round((float) $request->ending_cash - $expectedCash, 2),
+            'payment_totals'  => $totals,
+            'notes'           => $request->notes,
         ]);
 
         return redirect()->route('pos.shifts.index')->with('success', 'Turno fechado com sucesso!');

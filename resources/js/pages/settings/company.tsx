@@ -27,6 +27,8 @@ export default function CompanySettings({ company }: { company: any }) {
         invoice_prefix: company.invoice_prefix || 'FT',
         quote_prefix: company.quote_prefix || 'CT',
         receipt_prefix: company.receipt_prefix || 'FR',
+        thermal_paper_width: company.thermal_paper_width || 80,
+        receipt_footer: company.receipt_footer || '',
         bank_accounts: company.bank_accounts || [],
         smtp_host: company.smtp_host || '',
         smtp_port: company.smtp_port || '',
@@ -316,6 +318,41 @@ export default function CompanySettings({ company }: { company: any }) {
                                         placeholder="FR"
                                     />
                                     <InputError message={errors.receipt_prefix} />
+                                </div>
+                            </div>
+
+                            <div className="w-full h-px bg-slate-200 my-6" />
+
+                            <Heading
+                                variant="small"
+                                title="Recibo Térmico (POS)"
+                                description="Formato do talão impresso nas vendas do Ponto de Venda."
+                            />
+
+                            <div className="grid gap-4 sm:grid-cols-3">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="thermal_paper_width">Largura do papel</Label>
+                                    <select
+                                        id="thermal_paper_width"
+                                        className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+                                        value={data.thermal_paper_width}
+                                        onChange={(e) => setData('thermal_paper_width', Number(e.target.value))}
+                                    >
+                                        <option value={80}>80 mm</option>
+                                        <option value={58}>58 mm</option>
+                                    </select>
+                                    <InputError message={errors.thermal_paper_width} />
+                                </div>
+                                <div className="grid gap-2 sm:col-span-2">
+                                    <Label htmlFor="receipt_footer">Mensagem de rodapé</Label>
+                                    <Input
+                                        id="receipt_footer"
+                                        value={data.receipt_footer}
+                                        onChange={(e) => setData('receipt_footer', e.target.value)}
+                                        placeholder="Ex: Obrigado pela preferência!"
+                                        maxLength={255}
+                                    />
+                                    <InputError message={errors.receipt_footer} />
                                 </div>
                             </div>
 

@@ -38,6 +38,7 @@ class BillingService
             $seriesId = $payload['series_id'] ?? null;
             if (!$seriesId) {
                 $series = DocumentSeries::where('company_id', $companyId)
+                    ->where('scope', 'billing')
                     ->where('year', date('Y'))
                     ->where('is_active', true)
                     ->first();
@@ -63,6 +64,7 @@ class BillingService
                 'customer_address' => $payload['customer_address'] ?? 'Maputo, Moçambique',
                 
                 'document_type' => $payload['document_type'] ?? 'FR',
+                'source_module' => $payload['source_module'] ?? 'billing',
                 'status' => 'draft',
                 'issue_date' => $payload['issue_date'] ?? date('Y-m-d'),
                 'due_date' => $payload['due_date'] ?? date('Y-m-d'),
@@ -329,6 +331,7 @@ class BillingService
 
             // --- Geração do Recibo (RC) Automático ---
             $series = DocumentSeries::where('company_id', $customer->company_id)
+                ->where('scope', 'billing')
                 ->where('year', date('Y'))
                 ->where('is_active', true)
                 ->first();

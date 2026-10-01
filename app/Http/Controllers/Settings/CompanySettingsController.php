@@ -20,7 +20,7 @@ class CompanySettingsController extends Controller
             'smtp_host', 'smtp_port', 'smtp_username', 'smtp_encryption',
             'notify_low_stock_email', 'notify_subscription_email',
             'notify_document_emission_email', 'notify_payment_received_email',
-            'bank_accounts',
+            'bank_accounts', 'thermal_paper_width', 'receipt_footer',
         ]);
 
         return Inertia::render('settings/company', [
@@ -44,6 +44,8 @@ class CompanySettingsController extends Controller
             'invoice_prefix' => 'nullable|string|max:10',
             'quote_prefix' => 'nullable|string|max:10',
             'receipt_prefix' => 'nullable|string|max:10',
+            'thermal_paper_width' => 'nullable|integer|in:58,80',
+            'receipt_footer' => 'nullable|string|max:255',
             'bank_accounts' => 'nullable|array',
             'bank_accounts.*.bank_name' => 'required_with:bank_accounts|string|max:255',
             'bank_accounts.*.account_number' => 'required_with:bank_accounts|string|max:255',

@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
     ShoppingBag, Users, TrendingUp, AlertCircle,
-    Plus, CheckCircle2, BarChart2, ChevronRight
+    Plus, CheckCircle2, BarChart2, ChevronRight, Printer
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { KpiCard, TableCard, PageHeader } from '@/components/ui/brand';
@@ -10,6 +10,7 @@ import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
+import { printJob } from '@/lib/pos-printing';
 
 export default function History({ shifts, stats, myOpenShift }: any) {
     const fmt = (n: number) =>
@@ -44,6 +45,9 @@ return <span className="text-emerald-600 font-medium">Em curso</span>;
                     subtitle="Controlo de todas as sessões de caixa do POS."
                     actions={
                         <>
+                            <Button variant="outline" size="sm" className="gap-1.5 rounded-[4px]" onClick={() => printJob('day')}>
+                                <Printer className="w-4 h-4" /> Vendas do Dia
+                            </Button>
                             <Link href="/pos/reports">
                                 <Button variant="outline" size="sm" className="gap-1.5 rounded-[4px]">
                                     <BarChart2 className="w-4 h-4" /> Relatórios
@@ -125,6 +129,7 @@ return <span className="text-emerald-600 font-medium">Em curso</span>;
                         <TableHeader>
                             <TableRow className="bg-slate-50 border-b border-slate-100 hover:bg-slate-50">
                                 <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">Turno</TableHead>
+                                <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">Caixa</TableHead>
                                 <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">Operador</TableHead>
                                 <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">Abertura</TableHead>
                                 <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold">Fecho</TableHead>
@@ -139,21 +144,20 @@ return <span className="text-emerald-600 font-medium">Em curso</span>;
                         <TableBody>
                             {shifts.data.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={10} className="px-5 py-16 text-center text-slate-400">
+                                    <TableCell colSpan={11} className="px-5 py-16 text-center text-slate-400">
                                         Nenhum turno registado ainda.
                                     </TableCell>
                                 </TableRow>
                             )}
                             {shifts.data.map((shift: any) => {
-                                const diff = shift.ending_cash !== null
-                                    ? shift.ending_cash - (shift.starting_cash + shift.sales_total)
-                                    : null;
+                                const diff = shift.cash_difference ?? null;
 
                                 return (
                                     <TableRow key={shift.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100 group">
                                         <TableCell className="font-mono font-semibold text-slate-700">
                                             #{String(shift.id).padStart(4, '0')}
                                         </TableCell>
+                                        <TableCell className="text-slate-600">{shift.register}</TableCell>
                                         <TableCell className="font-medium text-slate-800">{shift.operator}</TableCell>
                                         <TableCell className="text-slate-500">{fmtDate(shift.opened_at)}</TableCell>
                                         <TableCell className="text-slate-500">{fmtDate(shift.closed_at)}</TableCell>
