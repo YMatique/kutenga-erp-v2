@@ -97,6 +97,8 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
             Route::get('/', [InventoryDashboardController::class, 'index'])->name('inventory.dashboard');
             Route::get('/opening', [InventoryOpeningController::class, 'index'])->name('inventory.opening.index');
             Route::get('/stocks', [ProductStockController::class, 'index']);
+            Route::get('/stocks/export', [ProductStockController::class, 'export'])->name('inventory.stocks.export');
+            Route::get('/export', [InventoryDashboardController::class, 'export'])->name('inventory.export');
             Route::get('/stocks/{product}', [ProductStockController::class, 'show']);
             Route::get('/transfers', [StockTransferController::class, 'index'])->name('inventory.transfers.index');
             Route::get('/transfers/{transfer}', [StockTransferController::class, 'show'])->name('inventory.transfers.show')->where('transfer', '[0-9]+');

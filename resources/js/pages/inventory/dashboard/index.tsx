@@ -52,10 +52,12 @@ export default function InventoryDashboard() {
                     subtitle="Visão geral e controle de estoque"
                     actions={
                         <>
-                            <OutlineButton>
-                                <Download className="h-3.5 w-3.5" />
-                                Exportar Relatório
-                            </OutlineButton>
+                            <a href="/inventory/export?format=xlsx">
+                                <OutlineButton>
+                                    <Download className="h-3.5 w-3.5" />
+                                    Exportar Relatório
+                                </OutlineButton>
+                            </a>
                             <Link href="/products/create">
                                 <PrimaryButton>
                                     <Plus className="h-3.5 w-3.5" />

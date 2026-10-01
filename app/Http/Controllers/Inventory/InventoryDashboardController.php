@@ -12,6 +12,15 @@ use Inertia\Inertia;
 
 class InventoryDashboardController extends Controller
 {
+    /** Relatório de inventário (CSV/XLSX): um produto por linha, com uma coluna por armazém. */
+    public function export(Request $request, \App\Services\Inventory\StockExporter $exporter)
+    {
+        $companyId = auth()->user()->company_id;
+        $warehouses = Warehouse::where('company_id', $companyId)->orderBy('name')->get(['id', 'name']);
+
+        return $exporter->summary($request, $companyId, $warehouses);
+    }
+
     //  public function index(StockService $stockService)
     // {
     //     $companyId = auth()->user()->company_id;
