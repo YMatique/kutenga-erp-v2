@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Pos\CashRegister;
@@ -155,8 +156,8 @@ class PosShiftController extends Controller
             return redirect()->route('pos.index');
         }
 
-        CashRegister::ensureDefault($user->company_id, $user->branch_id);
-
+        // GET sem efeitos: se a empresa ainda não tem caixas, a "Caixa Principal" é criada
+        // ao abrir o turno (store), e a página mostra apenas o fundo de maneio.
         $registers = CashRegister::where('company_id', $user->company_id)
             ->where('is_active', true)
             ->with('branch:id,name')
@@ -228,6 +229,9 @@ class PosShiftController extends Controller
             });
         } catch (\DomainException $e) {
             return back()->withErrors(['cash_register_id' => $e->getMessage()]);
+        } catch (UniqueConstraintViolationException) {
+            // Dois pedidos em simultâneo: o índice único da base de dados deixou passar só um
+            return back()->withErrors(['cash_register_id' => 'Esta caixa (ou este operador) já tem um turno aberto.']);
         }
 
         return redirect()->route('pos.index')->with('success', 'Turno aberto com sucesso.');

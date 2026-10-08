@@ -1,5 +1,5 @@
 import { Banknote, CreditCard, Landmark, Printer, CheckCircle2, Delete, ArrowLeft, ShoppingBag } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -22,6 +22,16 @@ const METHODS = [
     { id: 'transfer' as Method, label: 'Transferência', icon: Landmark,   color: 'text-purple-600',  bg: 'bg-purple-50 border-purple-200' },
 ];
 
+// Identificador único de cada tentativa de venda. `crypto.randomUUID` só existe em contextos
+// seguros (HTTPS/localhost); numa rede local em http usa-se um valor aleatório equivalente.
+function newSaleToken(): string {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+
+    return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+}
+
 function NumKey({ label, onClick, span }: { label: string; onClick: () => void; span?: boolean }) {
     return (
         <button
@@ -41,6 +51,9 @@ export default function PaymentModal({ isOpen, onClose, total, cart, onSuccess }
     const [display, setDisplay]  = useState('0');
     const [processing, setProc]  = useState(false);
     const [successData, setData] = useState<any>(null);
+    // A mesma chave acompanha todas as tentativas desta venda: se o pedido for repetido
+    // (duplo clique, falha de rede) o servidor devolve a venda já feita em vez de criar outra.
+    const saleToken = useRef<string>(newSaleToken());
 
     // Reset ao abrir
     useEffect(() => {
@@ -49,6 +62,7 @@ export default function PaymentModal({ isOpen, onClose, total, cart, onSuccess }
             setDisplay(total.toFixed(2));
             setData(null);
             setProc(false);
+            saleToken.current = newSaleToken();
         }
     }, [isOpen, total]);
 
@@ -88,6 +102,10 @@ return prev;
 
     // Processar venda
     const handlePay = async () => {
+        if (processing) {
+            return;
+        }
+
         setProc(true);
 
         try {
@@ -109,6 +127,7 @@ return prev;
                     'X-XSRF-TOKEN': decodeURIComponent(token),
                 },
                 body: JSON.stringify({
+                    client_token:   saleToken.current,
                     items,
                     payment_method: method,
                     amount_paid:    numericValue,

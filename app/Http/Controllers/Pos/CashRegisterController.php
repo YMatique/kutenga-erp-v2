@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Catalog\Branch;
 use App\Models\Inventory\Warehouse;
 use App\Models\Pos\CashRegister;
+use App\Support\PrinterHost;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -64,8 +65,8 @@ class CashRegisterController extends Controller
             'is_active'    => 'boolean',
             'printer_driver' => ['required', Rule::in(CashRegister::PRINTER_DRIVERS)],
             'printer_name' => 'nullable|required_if:printer_driver,qz|string|max:255',
-            'printer_host' => 'nullable|required_if:printer_driver,network|string|max:255',
-            'printer_port' => 'nullable|integer|min:1|max:65535',
+            'printer_host' => ['nullable', 'required_if:printer_driver,network', 'string', 'max:255', new PrinterHost],
+            'printer_port' => ['nullable', 'integer', Rule::in(config('pos.printer_ports'))],
             'paper_width'  => 'nullable|integer|in:58,80',
             'open_drawer'  => 'boolean',
             'auto_print'   => 'boolean',

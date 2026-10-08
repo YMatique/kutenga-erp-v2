@@ -33,6 +33,18 @@ class PosShift extends Model
         'notes',
     ];
 
+    protected static function booted(): void
+    {
+        // Só um turno aberto por caixa e por operador: o bloqueio vive em colunas com índice único,
+        // preenchidas enquanto o turno está aberto e limpas ao fechar.
+        static::saving(function (PosShift $shift) {
+            $open = $shift->status === 'open';
+
+            $shift->open_register_id = $open ? $shift->cash_register_id : null;
+            $shift->open_user_id = $open ? $shift->user_id : null;
+        });
+    }
+
     protected $casts = [
         'opened_at' => 'datetime',
         'closed_at' => 'datetime',

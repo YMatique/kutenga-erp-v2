@@ -143,7 +143,7 @@ class PosReceiptController extends Controller
         } catch (Throwable $e) {
             report($e);
 
-            return response()->json(['driver' => 'network', 'error' => $e->getMessage(), 'fallback_url' => $htmlUrl], 502);
+            return response()->json(['driver' => 'network', 'error' => 'Não foi possível imprimir na impressora de rede. Verifique a configuração da caixa.', 'fallback_url' => $htmlUrl], 502);
         }
 
         return response()->json(['driver' => 'network', 'printed' => true]);

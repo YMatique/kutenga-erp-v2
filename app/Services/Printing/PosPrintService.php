@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\Pos\CashRegister;
 use App\Models\Pos\PosShift;
 use App\Models\User;
+use App\Support\PrinterHost;
 use Illuminate\Support\Collection;
 use RuntimeException;
 
@@ -308,15 +309,24 @@ class PosPrintService
             throw new RuntimeException('A caixa não tem o endereço da impressora configurado.');
         }
 
+        // Liga ao IP já validado (não ao nome) e só às portas de impressão permitidas
+        $port = (int) ($register->printer_port ?: 9100);
+
+        if (!in_array($port, config('pos.printer_ports'), true)) {
+            throw new RuntimeException('A porta da impressora não é permitida.');
+        }
+
+        $ip = PrinterHost::safeIp($register->printer_host);
+
         $socket = @stream_socket_client(
-            'tcp://' . $register->printer_host . ':' . ($register->printer_port ?: 9100),
+            'tcp://' . (str_contains($ip, ':') ? "[$ip]" : $ip) . ':' . $port,
             $errno,
             $error,
             3
         );
 
         if (!$socket) {
-            throw new RuntimeException("Não foi possível ligar à impressora ({$register->printer_host}): {$error}");
+            throw new RuntimeException("Não foi possível ligar à impressora ({$register->printer_host}).");
         }
 
         stream_set_timeout($socket, 5);
