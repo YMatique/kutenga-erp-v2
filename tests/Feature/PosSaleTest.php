@@ -265,7 +265,8 @@ class PosSaleTest extends TestCase
 
     public function test_cash_register_limit_of_the_plan_is_enforced(): void
     {
-        $this->user->assignRole(\Spatie\Permission\Models\Role::findOrCreate('Admin', 'web'));
+        Permission::findOrCreate('pos.manage', 'web');
+        $this->user->givePermissionTo('pos.manage');
 
         // Plano Crescimento: máximo 2 caixas (já existe 1)
         $payload = ['name' => 'Nova', 'branch_id' => $this->branch->id, 'printer_driver' => 'browser'];

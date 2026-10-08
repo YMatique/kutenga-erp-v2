@@ -30,6 +30,9 @@ class RoleAndPermissionSeeder extends Seeder
             'catalog.edit',
             'catalog.view',
             'audits.view',
+            'reports.view',
+            'pos.manage',
+            'series.manage',
         ];
 
         foreach ($permissions as $permission) {
@@ -48,6 +51,8 @@ class RoleAndPermissionSeeder extends Seeder
             'inventory.view',
             'invoice.view',
             'catalog.view',
+            'reports.view',
+            'pos.manage',
         ]);
 
         $operator = \Spatie\Permission\Models\Role::findOrCreate('Operator', 'web');

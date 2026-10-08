@@ -18,7 +18,7 @@ class PosShiftController extends Controller
         $user    = Auth::user();
         $company = $user->company_id;
 
-        $canViewAll = $user->hasAnyRole(['Admin', 'owner', 'Manager']);
+        $canViewAll = $user->can('pos.manage');
 
         $shiftsQuery = PosShift::where('company_id', $company)
             ->with(['user:id,name', 'branch:id,name', 'cashRegister:id,name'])
@@ -94,7 +94,7 @@ class PosShiftController extends Controller
         $user = Auth::user();
         if ($shift->company_id !== $user->company_id) abort(403);
 
-        if (!$user->hasAnyRole(['Admin', 'owner', 'Manager']) && $shift->user_id !== $user->id) {
+        if (!$user->can('pos.manage') && $shift->user_id !== $user->id) {
             abort(403, 'Não autorizado.');
         }
 

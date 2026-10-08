@@ -13,11 +13,38 @@ use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
+    /** Primeira área acessível ao utilizador, por ordem de relevância para quem não vê o dashboard. */
+    private function landingPageFor($user): string
+    {
+        $areas = [
+            'sales.create' => '/pos',
+            'invoice.view' => '/billing/invoices',
+            'sales.view' => '/billing/quotes',
+            'inventory.view' => '/inventory',
+            'catalog.view' => '/products',
+        ];
+
+        foreach ($areas as $permission => $url) {
+            // O POS depende do plano: mandar para lá quem não o tem faria um ciclo com o dashboard
+            if ($url === '/pos' && !$user->company?->can('pos')) {
+                continue;
+            }
+
+            if ($user->can($permission)) {
+                return $url;
+            }
+        }
+
+        return '/settings/profile';
+    }
+
     public function index(Request $request)
     {
-        // Autorização: Apenas owner, Admin e Manager podem ver o Dashboard geral
-        if (!$request->user()->hasAnyRole(['owner', 'Admin', 'Manager'])) {
-            abort(403, 'Acesso Negado: Não tens permissão para ver o Dashboard principal.');
+        // O Dashboard geral mostra indicadores da empresa inteira (permissão reports.view).
+        // É a página inicial de toda a gente, por isso quem não a tem não leva um 403: segue
+        // para a primeira área a que tem acesso.
+        if (!$request->user()->can('reports.view')) {
+            return redirect($this->landingPageFor($request->user()));
         }
 
         $companyId = $request->user()->company_id;

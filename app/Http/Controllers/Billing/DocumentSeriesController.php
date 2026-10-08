@@ -67,6 +67,14 @@ class DocumentSeriesController extends Controller
             'is_active' => 'required|boolean',
         ]);
 
+        // Com documentos emitidos, o código e o ano fazem parte da numeração fiscal e não mudam
+        if ($series->documents()->withTrashed()->exists()
+            && ($validated['code'] !== $series->code || (int) $validated['year'] !== (int) $series->year)) {
+            return redirect()->back()->withErrors([
+                'error' => 'Esta série já emitiu documentos: o código e o ano não podem ser alterados.',
+            ]);
+        }
+
         $series->update($validated);
 
         return redirect()->route('billing.series.index')
@@ -79,7 +87,7 @@ class DocumentSeriesController extends Controller
         $series = DocumentSeries::where('company_id', $companyId)->findOrFail($id);
 
         // Verificar se já existem documentos associados
-        if ($series->documents()->count() > 0) {
+        if ($series->documents()->withTrashed()->exists()) {
             return redirect()->back()->withErrors([
                 'error' => 'Não é possível eliminar esta série pois já existem documentos emitidos com ela.'
             ]);

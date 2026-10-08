@@ -17,7 +17,7 @@ class CashRegisterController extends Controller
     private function authorizeManage(): int
     {
         $user = Auth::user();
-        abort_unless($user->hasAnyRole(['Admin', 'owner', 'Manager']), 403, 'Não autorizado.');
+        abort_unless($user->can('pos.manage'), 403, 'Não autorizado.');
 
         return $user->company_id;
     }

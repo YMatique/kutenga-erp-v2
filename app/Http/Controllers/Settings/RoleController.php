@@ -10,6 +10,20 @@ use Spatie\Permission\Models\Permission;
 
 class RoleController extends Controller
 {
+    /**
+     * Ninguém dá a um papel permissões que não tem: quem gere papéis não pode, através deles,
+     * ficar com (ou entregar a outros) mais acesso do que o seu. O owner tem acesso total.
+     *
+     * @param  array<int, string>  $requested
+     * @return array<int, string>|null  null = pedido válido; caso contrário, as permissões recusadas
+     */
+    private function ungrantable(Request $request, array $requested): ?array
+    {
+        $denied = array_values(array_filter($requested, fn (string $name) => ! $request->user()->can($name)));
+
+        return $denied ?: null;
+    }
+
     public function index(Request $request)
     {
         $companyId = $request->user()->company_id;
@@ -38,6 +52,10 @@ class RoleController extends Controller
             'permissions' => 'array',
             'permissions.*' => 'exists:permissions,name'
         ]);
+
+        if ($denied = $this->ungrantable($request, $validated['permissions'] ?? [])) {
+            return back()->withErrors(['permissions' => 'Não pode atribuir permissões que não tem: ' . implode(', ', $denied) . '.']);
+        }
 
         if (Role::where('name', $validated['name'])
             ->where(function($q) use ($companyId) {
@@ -77,13 +95,20 @@ class RoleController extends Controller
             return back()->withErrors(['name' => 'Já existe um papel com este nome.']);
         }
 
+        $requested = $validated['permissions'] ?? [];
+
+        if ($denied = $this->ungrantable($request, $requested)) {
+            return back()->withErrors(['permissions' => 'Não pode atribuir permissões que não tem: ' . implode(', ', $denied) . '.']);
+        }
+
         $role->update(['name' => $validated['name']]);
 
-        if (isset($validated['permissions'])) {
-            $role->syncPermissions($validated['permissions']);
-        } else {
-            $role->syncPermissions([]);
-        }
+        // As permissões do papel que quem edita não possui não podem ser retiradas por ele
+        $kept = $role->permissions->pluck('name')
+            ->filter(fn (string $name) => ! $request->user()->can($name))
+            ->all();
+
+        $role->syncPermissions(array_values(array_unique(array_merge($requested, $kept))));
 
         return back()->with('success', 'Papel atualizado com sucesso.');
     }

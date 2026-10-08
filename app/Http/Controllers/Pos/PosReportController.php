@@ -15,7 +15,7 @@ class PosReportController extends Controller
         $user    = Auth::user();
         $company = $user->company_id;
 
-        $canViewAll = $user->hasAnyRole(['Admin', 'owner', 'Manager']);
+        $canViewAll = $user->can('pos.manage');
 
         // KPIs do mês atual
         $thisMonth = [

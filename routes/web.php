@@ -93,7 +93,7 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     Route::redirect('settings/audits', '/activity');
 
     // Reports
-    Route::prefix('reports')->name('reports.')->middleware('role:Admin|owner|Manager')->group(function () {
+    Route::prefix('reports')->name('reports.')->middleware('can:reports.view')->group(function () {
         Route::get('/', [\App\Http\Controllers\ReportController::class, 'index'])->name('index');
         Route::get('/data', [\App\Http\Controllers\ReportController::class, 'data'])->name('data');
         Route::get('/export/pdf', [\App\Http\Controllers\ReportController::class, 'exportPdf'])->name('export.pdf');
@@ -173,14 +173,18 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
             Route::resource('payment-receipts', PaymentReceiptController::class)->except(['index', 'show']);
             Route::resource('credit-notes', CreditNoteController::class)->except(['index', 'show']);
             Route::resource('debit-notes', DebitNoteController::class)->except(['index', 'show']);
-            Route::resource('series', DocumentSeriesController::class)->except(['index']);
-
             Route::post('invoices/{id}/confirm', [InvoiceController::class, 'confirm'])->name('invoices.confirm');
             Route::post('invoices/receive-payment', [InvoiceController::class, 'receivePayment'])->name('invoices.receive-payment');
             Route::post('receipts/{id}/confirm', [ReceiptController::class, 'confirm'])->name('receipts.confirm');
             Route::post('credit-notes/{id}/confirm', [CreditNoteController::class, 'confirm'])->name('credit-notes.confirm');
             Route::post('debit-notes/{id}/confirm', [DebitNoteController::class, 'confirm'])->name('debit-notes.confirm');
             Route::post('documents/{id}/send-email', [DocumentController::class, 'sendEmail'])->name('documents.send-email');
+        });
+
+        // Séries documentais: definem a numeração fiscal, por isso têm permissão própria
+        // (quem emite faturas não pode, só por isso, criar, alterar ou apagar séries)
+        Route::middleware('can:series.manage')->group(function () {
+            Route::resource('series', DocumentSeriesController::class)->except(['index']);
         });
 
         // Invoice View (Documents index/show, pdf)

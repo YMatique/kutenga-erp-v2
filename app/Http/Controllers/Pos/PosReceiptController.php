@@ -27,7 +27,7 @@ class PosReceiptController extends Controller
 
     private function canViewAll(): bool
     {
-        return Auth::user()->hasAnyRole(['Admin', 'owner', 'Manager']);
+        return Auth::user()->can('pos.manage');
     }
 
     // ── HTML (driver "browser") ─────────────────────────────────────────────
