@@ -12,6 +12,7 @@ use App\Services\Inventory\StockService;
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -26,10 +27,7 @@ class ProductController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
-            });
+            $query->search($search);
         }
 
         $products = $query->latest()->paginate(15)->withQueryString();
@@ -86,7 +84,7 @@ class ProductController extends Controller
             'unit_id' => 'nullable|exists:units,id',
             'brand_id' => 'nullable|exists:brands,id',
             'sku' => 'nullable|string|max:50',
-            'barcode' => 'nullable|string|max:50',
+            'barcode' => ['nullable', 'string', 'max:50', Rule::unique('products', 'barcode')->where('company_id', Auth::user()->company_id)],
             'description' => 'nullable|string',
             'type' => 'required|in:product,service',
             'track_stock' => 'required|boolean',
@@ -166,7 +164,7 @@ class ProductController extends Controller
             'unit_id' => 'nullable|exists:units,id',
             'brand_id' => 'nullable|exists:brands,id',
             'sku' => 'nullable|string|max:50',
-            'barcode' => 'nullable|string|max:50',
+            'barcode' => ['nullable', 'string', 'max:50', Rule::unique('products', 'barcode')->where('company_id', Auth::user()->company_id)->ignore($product->id)],
             'description' => 'nullable|string',
             'type' => 'required|in:product,service',
             'track_stock' => 'required|boolean',

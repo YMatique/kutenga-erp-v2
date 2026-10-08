@@ -16,6 +16,7 @@ use App\Http\Controllers\Billing\DebitNoteController;
 use App\Http\Controllers\Inventory\InventoryDashboardController;
 use App\Http\Controllers\Inventory\InventoryOpeningController;
 use App\Http\Controllers\Catalog\ProductController;
+use App\Http\Controllers\Catalog\ProductLookupController;
 use App\Http\Controllers\Inventory\ProductStockController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Inventory\StockMovementController;
@@ -41,6 +42,10 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     Route::post('context/switch', [ContextController::class, 'switch'])->name('context.switch');
     Route::post('unlock-screen', [\App\Http\Controllers\LockScreenController::class, 'unlock'])->name('unlock.screen');
     Route::post('lock-screen', [\App\Http\Controllers\LockScreenController::class, 'lock'])->name('lock.screen');
+
+    // Leitura de código de barras/SKU (catálogo, POS e inventário); a permissão é validada no controller
+    Route::get('products/lookup', ProductLookupController::class)->name('products.lookup');
+
 
     // Catalog Edit
     Route::middleware('can:catalog.edit')->group(function () {

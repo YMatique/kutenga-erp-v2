@@ -9,6 +9,7 @@ use App\Models\Company;
 
 use App\Traits\BelongsToCompany;
 // use App\Traits\HasAudit;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -56,6 +57,24 @@ class Product extends Model
         'tax_is_exempt' => 'boolean',
         'track_stock' => 'boolean',
     ];
+
+    /** Guarda o código sem espaços; vazio fica NULL para não colidir no índice único. */
+    public function setBarcodeAttribute(?string $value): void
+    {
+        $value = $value === null ? null : trim($value);
+
+        $this->attributes['barcode'] = $value === '' ? null : $value;
+    }
+
+    /** Pesquisa por nome, SKU ou código de barras. */
+    public function scopeSearch(Builder $query, string $term): Builder
+    {
+        return $query->where(function (Builder $q) use ($term) {
+            $q->where('name', 'like', "%{$term}%")
+                ->orWhere('sku', 'like', "%{$term}%")
+                ->orWhere('barcode', 'like', "%{$term}%");
+        });
+    }
 
     public function category(): BelongsTo
     {

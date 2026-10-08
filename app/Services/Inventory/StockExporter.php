@@ -34,7 +34,7 @@ class StockExporter
         if ($request->filled('search')) {
             $term = $request->search;
             $query->whereHas('product', fn ($q) => $q->where(
-                fn ($q) => $q->where('name', 'like', "%{$term}%")->orWhere('sku', 'like', "%{$term}%")
+                fn ($q) => $q->where('name', 'like', "%{$term}%")->orWhere('sku', 'like', "%{$term}%")->orWhere('barcode', 'like', "%{$term}%")
             ));
         }
 

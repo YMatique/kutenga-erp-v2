@@ -21,7 +21,8 @@ class StockMovementController extends Controller
         if ($request->filled('search')) {
             $query->whereHas('product', function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('sku', 'like', "%{$request->search}%");
+                  ->orWhere('sku', 'like', "%{$request->search}%")
+                  ->orWhere('barcode', 'like', "%{$request->search}%");
             });
         }
 
