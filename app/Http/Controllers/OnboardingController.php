@@ -86,15 +86,9 @@ class OnboardingController extends Controller
                 $user->company_id = $company->id;
                 $user->save();
 
-                // Atribuir a permissão máxima ao criador (owner)
-                if (\Spatie\Permission\Models\Role::where('name', 'owner')->where('company_id', $company->id)->doesntExist()) {
-                    \Spatie\Permission\Models\Role::create([
-                        'name' => 'owner',
-                        'company_id' => $company->id,
-                        'guard_name' => 'web'
-                    ]);
-                }
-                $user->assignRole('owner');
+                // Atribuir a permissão máxima ao criador: 'owner' é um papel do sistema, partilhado
+                // por todas as empresas (a empresa vem de users.company_id, não do papel)
+                $user->assignRole(\App\Models\Role::findOrCreate('owner', 'web'));
 
                 // Enviar email de boas-vindas apenas na criação original
                 \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\WelcomeToKutenga($user, $company));

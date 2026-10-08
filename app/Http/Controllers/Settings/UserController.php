@@ -3,14 +3,46 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
-use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    /** Papéis que a empresa pode atribuir: os do sistema e os criados por ela. */
+    private function roleRule(int $companyId): array
+    {
+        return [
+            'required',
+            'string',
+            Rule::exists('roles', 'name')->where(
+                fn ($q) => $q->whereNull('company_id')->orWhere('company_id', $companyId)
+            ),
+        ];
+    }
+
+    /** Resolve o papel pela instância (nomes iguais podem existir em empresas diferentes). */
+    private function resolveRole(string $name, int $companyId): Role
+    {
+        return Role::where('guard_name', 'web')
+            ->where('name', $name)
+            ->where(fn ($q) => $q->whereNull('company_id')->orWhere('company_id', $companyId))
+            ->orderByRaw('company_id is null') // o da empresa tem prioridade sobre o do sistema
+            ->firstOrFail();
+    }
+
+    /** O papel 'owner' dá acesso total: só quem já é owner o pode atribuir ou alterar. */
+    private function guardOwner(Request $request, Role $role, ?User $target = null): void
+    {
+        $actorIsOwner = $request->user()->hasRole('owner');
+
+        abort_if($role->name === 'owner' && ! $actorIsOwner, 403, 'Apenas o proprietário pode atribuir o papel de proprietário.');
+        abort_if($target && $target->hasRole('owner') && ! $actorIsOwner, 403, 'Apenas o proprietário pode alterar outro proprietário.');
+    }
+
     public function index(Request $request)
     {
         $companyId = $request->user()->company_id;
@@ -38,8 +70,11 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'required|string|exists:roles,name',
+            'role' => $this->roleRule($companyId),
         ]);
+
+        $role = $this->resolveRole($validated['role'], $companyId);
+        $this->guardOwner($request, $role);
 
         $user = User::create([
             'name' => $validated['name'],
@@ -48,7 +83,7 @@ class UserController extends Controller
             'company_id' => $companyId,
         ]);
 
-        $user->assignRole($validated['role']);
+        $user->assignRole($role);
 
         // Create system notification
         \App\Models\SystemNotification::create([
@@ -78,8 +113,11 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8',
-            'role' => 'required|string|exists:roles,name',
+            'role' => $this->roleRule($user->company_id),
         ]);
+
+        $role = $this->resolveRole($validated['role'], $user->company_id);
+        $this->guardOwner($request, $role, $user);
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
@@ -90,7 +128,7 @@ class UserController extends Controller
         
         $user->save();
 
-        $user->syncRoles([$validated['role']]);
+        $user->syncRoles([$role]);
 
         return back()->with('success', 'Utilizador atualizado com sucesso.');
     }
@@ -99,6 +137,7 @@ class UserController extends Controller
     {
         abort_if($user->company_id !== $request->user()->company_id, 403);
         abort_if($user->id === $request->user()->id, 400, 'Não podes apagar o teu próprio utilizador.');
+        abort_if($user->hasRole('owner') && ! $request->user()->hasRole('owner'), 403, 'Apenas o proprietário pode remover outro proprietário.');
 
         $user->delete();
 
