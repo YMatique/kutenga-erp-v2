@@ -12,12 +12,15 @@ use App\Models\Catalog\Product;
 use App\Models\Inventory\Warehouse;
 use App\Services\Inventory\StockService;
 use App\Models\Inventory\StockMovement;
-use Exception;
+use App\Exceptions\BusinessRuleException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class BillingService
 {
+    /** Tipos de documento cujos itens não são repreçados a partir do catálogo. */
+    private const FREE_PRICING_TYPES = ['NC', 'ND', 'RC'];
+
      protected StockService $stockService;
 
     /**
@@ -44,7 +47,7 @@ class BillingService
                     ->first();
                 
                 if (!$series) {
-                    throw new Exception("Nenhuma série documental ativa configurada para o ano atual.");
+                    throw new BusinessRuleException("Nenhuma série documental ativa configurada para o ano atual.");
                 }
                 $seriesId = $series->id;
             }
@@ -92,13 +95,30 @@ class BillingService
     public function addItem(Document $document, array $itemData): DocumentItem
     {
         if ($document->status !== 'draft') {
-            throw new Exception("Imutabilidade: Não é permitido modificar itens de um documento já emitido.");
+            throw new BusinessRuleException("Imutabilidade: Não é permitido modificar itens de um documento já emitido.");
         }
 
         $qty = floatval($itemData['quantity']);
         $price = floatval($itemData['unit_price']);
         $discountPercent = floatval($itemData['discount_percent'] ?? 0.00);
         $taxRate = floatval($itemData['tax_rate'] ?? 16.00); // IVA padrão de 16%
+
+        // Itens de catálogo: nome, preço e IVA vêm sempre do produto, nunca do pedido.
+        // (Um cliente HTTP forjado poderia vender a 0,01 ou sem IVA.) Itens livres, sem produto,
+        // mantêm os valores enviados; notas de crédito/débito e recibos refletem o documento original.
+        if (! empty($itemData['product_id']) && ! in_array($document->document_type, self::FREE_PRICING_TYPES, true)) {
+            $product = Product::where('company_id', $document->company_id)->find($itemData['product_id']);
+
+            if (! $product) {
+                throw new BusinessRuleException('Produto inválido ou de outra empresa.');
+            }
+
+            $itemData['product_name'] = $product->name;
+            $itemData['product_sku'] = $product->sku;
+            $itemData['product_barcode'] = $product->barcode;
+            $price = (float) $product->price;
+            $taxRate = $product->tax_is_exempt ? 0.0 : (float) ($product->tax_rate ?? 16.00);
+        }
 
         $base = $qty * $price;
         $discountAmount = $base * ($discountPercent / 100);
@@ -163,13 +183,13 @@ class BillingService
             $document = Document::lockForUpdate()->findOrFail($documentId);
 
             if ($document->status !== 'draft') {
-                throw new Exception("Este documento já se encontra emitido ou cancelado.");
+                throw new BusinessRuleException("Este documento já se encontra emitido ou cancelado.");
             }
 
             $company = $document->company;
             if ($company) {
                 if ($company->isSubscriptionExpired()) {
-                    throw new Exception("A subscrição da sua empresa expirou. Por favor, regularize a sua conta para poder emitir documentos comerciais.");
+                    throw new BusinessRuleException("A subscrição da sua empresa expirou. Por favor, regularize a sua conta para poder emitir documentos comerciais.");
                 }
 
                 $limits = $company->getSubscriptionLimits();
@@ -183,20 +203,20 @@ class BillingService
             // Validar regras de retificação para NC e ND
             if (in_array($document->document_type, ['NC', 'ND'])) {
                 if (empty($document->referenced_document_id)) {
-                    throw new Exception("Documento de Referência obrigatório para " . ($document->document_type === 'NC' ? 'Nota de Crédito' : 'Nota de Débito') . ".");
+                    throw new BusinessRuleException("Documento de Referência obrigatório para " . ($document->document_type === 'NC' ? 'Nota de Crédito' : 'Nota de Débito') . ".");
                 }
 
                 $referencedDoc = Document::findOrFail($document->referenced_document_id);
                 if ($referencedDoc->company_id !== $document->company_id) {
-                    throw new Exception("O documento retificado deve pertencer à mesma empresa.");
+                    throw new BusinessRuleException("O documento retificado deve pertencer à mesma empresa.");
                 }
 
                 if (!in_array($referencedDoc->document_type, ['FT', 'FR'])) {
-                    throw new Exception("Apenas Faturas (FT) ou Faturas-Recibo (FR) podem ser retificadas.");
+                    throw new BusinessRuleException("Apenas Faturas (FT) ou Faturas-Recibo (FR) podem ser retificadas.");
                 }
 
                 if (in_array($referencedDoc->status, ['draft', 'cancelled'])) {
-                    throw new Exception("O documento retificado deve estar emitido (Confirmado ou Pago).");
+                    throw new BusinessRuleException("O documento retificado deve estar emitido (Confirmado ou Pago).");
                 }
 
                 // Para Nota de Crédito (NC), validar valor máximo acumulado
@@ -210,7 +230,7 @@ class BillingService
                     $remainingToCredit = $referencedDoc->grand_total - $alreadyCredited;
                     
                     if (round((float) $document->grand_total, 2) > round((float) $remainingToCredit, 2)) {
-                        throw new Exception("O valor total da Nota de Crédito (" . number_format($document->grand_total, 2, ',', '.') . " MZN) excede o valor restante da fatura retificada (" . number_format($remainingToCredit, 2, ',', '.') . " MZN).");
+                        throw new BusinessRuleException("O valor total da Nota de Crédito (" . number_format($document->grand_total, 2, ',', '.') . " MZN) excede o valor restante da fatura retificada (" . number_format($remainingToCredit, 2, ',', '.') . " MZN).");
                     }
                 }
             }
@@ -247,7 +267,7 @@ class BillingService
                 $document->processStock($this->stockService, $warehouse);
             } else {
                 if ($document->has_physical_products && in_array($document->document_type, ['FT', 'FR', 'NC', 'GR'])) {
-                    throw new Exception("Um armazém de saída/entrada é obrigatório para confirmar este documento, pois contém itens físicos.");
+                    throw new BusinessRuleException("Um armazém de saída/entrada é obrigatório para confirmar este documento, pois contém itens físicos.");
                 }
             }
 
@@ -407,7 +427,7 @@ class BillingService
             $document = Document::lockForUpdate()->findOrFail($documentId);
 
             if ($document->status === 'cancelled') {
-                throw new Exception("Este documento já se encontra cancelado.");
+                throw new BusinessRuleException("Este documento já se encontra cancelado.");
             }
 
             // Se for rascunho, apenas cancelamos o estado
@@ -427,7 +447,7 @@ class BillingService
             $warehouse = $warehouseId ? Warehouse::find($warehouseId) : Warehouse::where('company_id', $document->company_id)->where('is_active', true)->first();
 
             if (!$warehouse && in_array($document->document_type, ['FT', 'FR', 'NC', 'GR'])) {
-                throw new Exception("Não foi possível determinar o armazém para reverter os movimentos de stock.");
+                throw new BusinessRuleException("Não foi possível determinar o armazém para reverter os movimentos de stock.");
             }
 
             // Reverte a movimentação física de stock
@@ -466,7 +486,7 @@ class BillingService
             $document = Document::lockForUpdate()->findOrFail($documentId);
 
             if ($document->status !== 'draft') {
-                throw new Exception("Apenas rascunhos podem ser editados.");
+                throw new BusinessRuleException("Apenas rascunhos podem ser editados.");
             }
 
             $document->update([
