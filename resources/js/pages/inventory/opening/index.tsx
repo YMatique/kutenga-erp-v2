@@ -1,14 +1,21 @@
 import { router } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
 import { Package2 } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { CameraScanButton } from '@/components/camera-scanner';
 import { PageHeader } from '@/components/ui/brand';
 import { Label } from '@/components/ui/label';
+import { useBarcodeScanner } from '@/hooks/use-barcode-scanner';
 import AppLayout from '@/layouts/app-layout';
+import { matchesCode } from '@/lib/product-lookup';
+import { beepError, beepSuccess } from '@/lib/scan-feedback';
 
 interface Product {
     id: number;
     name: string;
+    sku?: string | null;
+    barcode?: string | null;
 }
 
 interface Warehouse {
@@ -38,6 +45,27 @@ export default function Index({
     });
 
     const [loading, setLoading] = useState(false);
+    const quantityRef = useRef<HTMLInputElement>(null);
+
+    // Ler um código seleciona o produto e passa para a quantidade
+    const handleScan = (code: string) => {
+        const product = products.find((p) => matchesCode(p, code));
+
+        if (!product) {
+            beepError();
+            toast.error(`Código ${code} não encontrado entre os produtos com controlo de stock.`);
+
+            return;
+        }
+
+        setForm((f) => ({ ...f, product_id: String(product.id) }));
+        beepSuccess();
+        toast.success(product.name, { duration: 1200 });
+        quantityRef.current?.focus();
+        quantityRef.current?.select();
+    };
+
+    useBarcodeScanner({ onScan: handleScan });
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -77,7 +105,10 @@ export default function Index({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             {/* Produto */}
                             <div className="space-y-1.5">
-                                <Label className="text-sm font-medium text-slate-700">Produto *</Label>
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-sm font-medium text-slate-700">Produto *</Label>
+                                    <CameraScanButton onScan={handleScan} size="sm" className="h-7 gap-1 px-2 text-xs" />
+                                </div>
                                 <select
                                     value={form.product_id}
                                     onChange={(e) => setForm({ ...form, product_id: e.target.value })}
@@ -111,6 +142,7 @@ export default function Index({
                             <div className="space-y-1.5">
                                 <Label className="text-sm font-medium text-slate-700">Quantidade *</Label>
                                 <input
+                                    ref={quantityRef}
                                     type="number"
                                     min="0"
                                     step="0.01"

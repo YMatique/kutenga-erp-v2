@@ -179,7 +179,7 @@ class InventoryClosingController extends Controller
         $closing->load([
             'warehouse:id,name',
             'creator:id,name',
-            'items.product:id,name,sku',
+            'items.product:id,name,sku,barcode',
             'items.product.unit:id,short_name',
             'items.warehouse:id,name',
         ]);
@@ -191,6 +191,7 @@ class InventoryClosingController extends Controller
                 'product_id'        => $item->product_id,
                 'product_name'      => $item->product?->name ?? '—',
                 'product_sku'       => $item->product?->sku ?? '—',
+                'product_barcode'   => $item->product?->barcode,
                 'unit'              => $item->product?->unit?->short_name ?? '—',
                 'warehouse_name'    => $item->warehouse?->name ?? '—',
                 'quantity_expected' => (float) $item->quantity_expected,

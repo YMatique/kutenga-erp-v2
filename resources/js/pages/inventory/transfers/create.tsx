@@ -1,13 +1,18 @@
 import { useForm, usePage } from '@inertiajs/react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
+import { CameraScanButton } from '@/components/camera-scanner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useBarcodeScanner } from '@/hooks/use-barcode-scanner'
 import AppLayout from '@/layouts/app-layout';
+import { matchesCode } from '@/lib/product-lookup'
+import { beepError, beepSuccess } from '@/lib/scan-feedback'
 
 export default function CreateTransfer() {
 
@@ -42,6 +47,33 @@ return
         setProductId('')
         setQuantity(1)
     }
+
+    // Cada leitura adiciona 1 unidade do produto à transferência
+    const handleScan = (code: string) => {
+        const product = products.find((p: any) => matchesCode(p, code))
+
+        if (!product) {
+            beepError()
+            toast.error(`Código ${code} não encontrado entre os produtos com stock.`)
+
+            return
+        }
+
+        const existing = data.items.findIndex((i: any) => i.product_id === product.id)
+
+        if (existing >= 0) {
+            const items = [...data.items] as any[]
+            items[existing] = { ...items[existing], quantity: items[existing].quantity + 1 }
+            setData('items', items as any)
+        } else {
+            setData('items', [...data.items, { product_id: product.id, name: product.name, quantity: 1 }] as any)
+        }
+
+        beepSuccess()
+        toast.success(product.name, { duration: 1200 })
+    }
+
+    useBarcodeScanner({ onScan: handleScan })
 
     function removeItem(index: number) {
         const updated = [...data.items]
@@ -155,6 +187,8 @@ return
                             <Button type="button" onClick={addItem}>
                                 Adicionar
                             </Button>
+
+                            <CameraScanButton continuous onScan={handleScan} size="default" />
 
                         </div>
 

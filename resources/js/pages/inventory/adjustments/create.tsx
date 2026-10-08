@@ -1,6 +1,8 @@
 import { Head, useForm } from '@inertiajs/react'
 import { Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 
+import { CameraScanButton } from '@/components/camera-scanner'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -14,7 +16,10 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 
+import { useBarcodeScanner } from '@/hooks/use-barcode-scanner'
 import AppLayout from '@/layouts/app-layout';
+import { matchesCode } from '@/lib/product-lookup'
+import { beepError, beepSuccess } from '@/lib/scan-feedback'
 
 export default function Create({
     warehouses,
@@ -38,6 +43,34 @@ export default function Create({
             },
         ])
     }
+
+    // Cada leitura soma 1 à contagem do produto (cria a linha se ainda não existir)
+    const handleScan = (code: string) => {
+        const product = products.find((p: any) => matchesCode(p, code))
+
+        if (!product) {
+            beepError()
+            toast.error(`Código ${code} não encontrado entre os produtos com controlo de stock.`)
+
+            return
+        }
+
+        const id = String(product.id)
+        const index = data.items.findIndex((i: any) => i.product_id === id)
+
+        if (index >= 0) {
+            const items = [...data.items] as any[]
+            items[index] = { ...items[index], new_quantity: (Number(items[index].new_quantity) || 0) + 1 }
+            setData('items', items as any)
+        } else {
+            setData('items', [...data.items, { product_id: id, old_quantity: 0, new_quantity: 1 }] as any)
+        }
+
+        beepSuccess()
+        toast.success(product.name, { duration: 1200 })
+    }
+
+    useBarcodeScanner({ onScan: handleScan })
 
     const removeItem = (index: number) => {
         setData(
@@ -193,14 +226,17 @@ export default function Create({
                                 Produtos
                             </h2>
 
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={addItem}
-                            >
-                                <Plus className="h-4 w-4 mr-2" />
-                                Adicionar
-                            </Button>
+                            <div className="flex gap-2">
+                                <CameraScanButton continuous onScan={handleScan} size="default" />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={addItem}
+                                >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Adicionar
+                                </Button>
+                            </div>
 
                         </div>
 

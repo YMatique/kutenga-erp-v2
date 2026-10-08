@@ -6,6 +6,7 @@ import {
     TableCard,
     KpiCard,
 } from '@/components/ui/brand'
+import { useBarcodeScanner } from '@/hooks/use-barcode-scanner';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils'
 
@@ -82,6 +83,8 @@ export default function MovementsIndex() {
     const { movements, filters, warehouses, kpis } = usePage<any>().props
 
     const [search, setSearch] = useState(filters?.search || '')
+    // Ler um código de barras preenche a pesquisa
+    useBarcodeScanner({ onScan: setSearch })
     const [type, setType] = useState(filters?.type || 'all')
     const [warehouseId, setWarehouseId] = useState(filters?.warehouse_id || 'all')
 

@@ -12,9 +12,10 @@ import {
     PackageCheck,
 } from 'lucide-react';
 import { useState } from 'react';
-import KutengaLayout from '@/layouts/kutenga-layout';
-import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { CameraScanButton } from '@/components/camera-scanner';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
     Table,
@@ -24,6 +25,10 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useBarcodeScanner } from '@/hooks/use-barcode-scanner';
+import KutengaLayout from '@/layouts/kutenga-layout';
+import { matchesCode } from '@/lib/product-lookup';
+import { beepError, beepSuccess } from '@/lib/scan-feedback';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 
@@ -37,6 +42,7 @@ type Item = {
     id: number;
     product_name: string;
     product_sku: string;
+    product_barcode: string | null;
     unit: string;
     warehouse_name: string;
     quantity_expected: number;
@@ -57,6 +63,28 @@ export default function InventoryClosingsShow({ closing, items, summary }: any) 
     });
 
     const [saving, setSaving] = useState(false);
+    const [lastScanned, setLastScanned] = useState<number | null>(null);
+
+    const isCompleted = closing.status === 'completed';
+
+    // Cada leitura soma 1 à quantidade contada do produto e destaca a linha
+    const handleScan = (code: string) => {
+        const item = items.find((i: Item) => matchesCode({ barcode: i.product_barcode, sku: i.product_sku }, code));
+
+        if (!item) {
+            beepError();
+            toast.error(`Código ${code} não pertence a este fecho.`);
+
+            return;
+        }
+
+        setCounts((prev) => ({ ...prev, [item.id]: String((parseFloat(prev[item.id]) || 0) + 1) }));
+        setLastScanned(item.id);
+        beepSuccess();
+        document.getElementById(`closing-item-${item.id}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    };
+
+    useBarcodeScanner({ enabled: !isCompleted, onScan: handleScan });
 
     const handleSave = () => {
         setSaving(true);
@@ -73,8 +101,6 @@ export default function InventoryClosingsShow({ closing, items, summary }: any) 
         if (!confirm('Concluir este fechamento? Esta ação é irreversível e bloqueará a edição.')) return;
         router.post(`/inventory/closings/${closing.id}/complete`);
     };
-
-    const isCompleted = closing.status === 'completed';
 
     const varianceIcon = (cls: string) => {
         if (cls === 'positive') return <ChevronUp className="h-3.5 w-3.5 text-emerald-500" />;
@@ -144,6 +170,7 @@ export default function InventoryClosingsShow({ closing, items, summary }: any) 
                         <h2 className="font-medium text-sm text-foreground">Contagem por Produto</h2>
                         {!isCompleted && (
                             <div className="flex gap-2">
+                                <CameraScanButton continuous onScan={handleScan} size="sm" className="gap-2" />
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -198,7 +225,11 @@ export default function InventoryClosingsShow({ closing, items, summary }: any) 
                                         const varClass = variance > 0 ? 'positive' : variance < 0 ? 'negative' : 'zero';
 
                                         return (
-                                            <TableRow key={item.id} className="hover:bg-muted/20">
+                                            <TableRow
+                                                key={item.id}
+                                                id={`closing-item-${item.id}`}
+                                                className={cn('hover:bg-muted/20', lastScanned === item.id && 'bg-emerald-500/10')}
+                                            >
                                                 <TableCell className="font-medium text-sm">{item.product_name}</TableCell>
                                                 <TableCell className="text-xs text-muted-foreground">{item.product_sku}</TableCell>
                                                 <TableCell className="text-sm">{item.warehouse_name}</TableCell>

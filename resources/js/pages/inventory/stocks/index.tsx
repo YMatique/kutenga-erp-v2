@@ -8,6 +8,7 @@ import {
     OutlineButton,
     PrimaryButton,
 } from '@/components/ui/brand'
+import { useBarcodeScanner } from '@/hooks/use-barcode-scanner';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils'
 
@@ -79,6 +80,8 @@ export default function Index() {
     const { stocks, warehouses, filters } = usePage<Props & Record<string, unknown>>().props
 
     const [search, setSearch] = useState(filters?.search ?? '')
+    // Ler um código de barras preenche a pesquisa
+    useBarcodeScanner({ onScan: setSearch })
     const [status, setStatus] = useState(filters?.status ?? 'all')
     const [warehouseId, setWarehouseId] = useState(filters?.warehouse_id ?? 'all')
 

@@ -59,6 +59,7 @@ class StockAdjustmentController extends Controller
                     'id',
                     'name',
                     'sku',
+                    'barcode',
                 ]),
         ]);
     }
