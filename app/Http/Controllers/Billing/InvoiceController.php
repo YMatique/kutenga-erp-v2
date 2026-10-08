@@ -2,20 +2,16 @@
 
 namespace App\Http\Controllers\Billing;
 
-use App\Support\Tenant;
-
+use App\Http\Controllers\Controller;
+use App\Models\Billing\Customer;
+use App\Models\Billing\DocumentSeries;
+use App\Models\Billing\Invoice;
 use App\Models\Billing\Payment;
 use App\Models\Billing\PaymentAllocation;
-
-
-use App\Http\Controllers\Controller;
-
-use App\Models\Billing\Customer;
-use App\Models\Billing\Invoice;
-use App\Models\Billing\DocumentSeries;
 use App\Models\Catalog\Product;
 use App\Models\Inventory\Warehouse;
 use App\Services\Billing\BillingService;
+use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -38,8 +34,8 @@ class InvoiceController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('document_number', 'like', "%{$search}%")
-                      ->orWhere('customer_name', 'like', "%{$search}%")
-                      ->orWhere('customer_nuit', 'like', "%{$search}%");
+                        ->orWhere('customer_name', 'like', "%{$search}%")
+                        ->orWhere('customer_nuit', 'like', "%{$search}%");
                 });
             })
             ->when($request->status, function ($query, $status) {
@@ -64,7 +60,7 @@ class InvoiceController extends Controller
             'filters' => $request->only(['search', 'status']),
             'kpis' => $kpis,
             'type' => 'FT',
-            'title' => 'Faturas a Crédito'
+            'title' => 'Faturas a Crédito',
         ]);
     }
 
@@ -82,7 +78,7 @@ class InvoiceController extends Controller
             'products' => $products,
             'series' => $series,
             'warehouses' => $warehouses,
-            'type' => 'FT'
+            'type' => 'FT',
         ]);
     }
 
@@ -134,7 +130,7 @@ class InvoiceController extends Controller
             'document' => $invoice,
             'warehouses' => $warehouses,
             'type' => 'FT',
-            'receivePaymentRoute' => route('billing.invoices.receive-payment')
+            'receivePaymentRoute' => route('billing.invoices.receive-payment'),
         ]);
     }
 
@@ -161,7 +157,7 @@ class InvoiceController extends Controller
             'products' => $products,
             'series' => $series,
             'warehouses' => $warehouses,
-            'type' => 'FT'
+            'type' => 'FT',
         ]);
     }
 
@@ -209,7 +205,7 @@ class InvoiceController extends Controller
 
         try {
             $warehouse = null;
-            if (!empty($validated['warehouse_id'])) {
+            if (! empty($validated['warehouse_id'])) {
                 $warehouse = Warehouse::where('company_id', $companyId)->findOrFail($validated['warehouse_id']);
             }
             $this->billingService->confirmAndEmit($invoice->id, $warehouse);
@@ -224,6 +220,7 @@ class InvoiceController extends Controller
     {
         try {
             $this->billingService->cancel($id);
+
             return redirect()->back()->with('success', 'Fatura cancelada/estornada com sucesso!');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
@@ -233,10 +230,10 @@ class InvoiceController extends Controller
     public function receivePayment(Request $request)
     {
         $validated = $request->validate([
-            'customer_id'    => ['required', Tenant::exists('customers')],
-            'amount'         => 'required|numeric|min:0.01',
+            'customer_id' => ['required', Tenant::exists('customers')],
+            'amount' => 'required|numeric|min:0.01',
             'payment_method' => 'required|string',
-            'reference'      => 'nullable|string|max:100',
+            'reference' => 'nullable|string|max:100',
         ]);
 
         try {
@@ -259,7 +256,7 @@ class InvoiceController extends Controller
 
             return redirect()->back()->with(
                 'success',
-                'Pagamento de ' . number_format($validated['amount'], 2, ',', '.') . ' MT registado com sucesso!'
+                'Pagamento de '.number_format($validated['amount'], 2, ',', '.').' MT registado com sucesso!'
             );
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);

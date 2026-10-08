@@ -4,10 +4,9 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\StockMovement;
+use App\Models\Inventory\Warehouse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-
-use App\Models\Inventory\Warehouse;
 
 class StockMovementController extends Controller
 {
@@ -16,13 +15,13 @@ class StockMovementController extends Controller
         $companyId = auth()->user()->company_id;
 
         $query = StockMovement::with(['product', 'warehouse', 'user'])
-            ->whereHas('product', fn($q) => $q->where('company_id', $companyId));
+            ->whereHas('product', fn ($q) => $q->where('company_id', $companyId));
 
         if ($request->filled('search')) {
             $query->whereHas('product', function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('sku', 'like', "%{$request->search}%")
-                  ->orWhere('barcode', 'like', "%{$request->search}%");
+                    ->orWhere('sku', 'like', "%{$request->search}%")
+                    ->orWhere('barcode', 'like', "%{$request->search}%");
             });
         }
 
@@ -48,7 +47,7 @@ class StockMovementController extends Controller
             'movements' => $movements,
             'warehouses' => $warehouses,
             'filters' => $request->only(['search', 'type', 'warehouse_id']),
-            'kpis' => $kpis
+            'kpis' => $kpis,
         ]);
     }
 }

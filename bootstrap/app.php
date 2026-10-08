@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\CheckOnboarding;
+use App\Http\Middleware\CheckSubscription;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetCompanyContext;
@@ -7,6 +9,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,15 +27,15 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
-            \App\Http\Middleware\CheckOnboarding::class,
+            CheckOnboarding::class,
             SetCompanyContext::class,
-            \App\Http\Middleware\CheckSubscription::class,
+            CheckSubscription::class,
         ]);
 
         $middleware->alias([
-            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
+            'role_or_permission' => RoleOrPermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -38,9 +43,10 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($response->getStatusCode() === 403 && $request->isMethod('GET')) {
                 return inertia('errors/error', [
                     'status' => 403,
-                    'message' => $exception->getMessage() ?: 'Não tens permissão para aceder a esta página.'
+                    'message' => $exception->getMessage() ?: 'Não tens permissão para aceder a esta página.',
                 ])->toResponse($request)->setStatusCode(403);
             }
+
             return $response;
         });
     })->create();

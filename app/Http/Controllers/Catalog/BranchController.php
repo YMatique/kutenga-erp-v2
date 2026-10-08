@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Catalog;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
 use App\Models\Catalog\Branch;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class BranchController extends Controller
@@ -35,7 +34,7 @@ class BranchController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:branches,code,' . $branch->id,
+            'code' => 'required|string|max:50|unique:branches,code,'.$branch->id,
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
         ]);
@@ -48,6 +47,7 @@ class BranchController extends Controller
     public function destroy(Branch $branch)
     {
         $branch->delete();
+
         return back()->with('success', 'Filial removida com sucesso.');
     }
 }

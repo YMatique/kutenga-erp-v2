@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->foreignId('from_warehouse_id')->constrained('warehouses')->restrictOnDelete();
             $table->foreignId('to_warehouse_id')->constrained('warehouses')->restrictOnDelete();
-            $table->enum('status',['pending','approved','completed','cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'approved', 'completed', 'cancelled'])->default('pending');
             // pending | completed | cancelled
             $table->string('notes')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();

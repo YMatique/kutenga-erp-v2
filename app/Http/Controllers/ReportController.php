@@ -5,13 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Billing\Customer;
 use App\Models\Billing\Document;
 use App\Models\Catalog\Product;
-use App\Models\Inventory\ProductStock;
 use App\Models\Inventory\StockMovement;
 use App\Models\Pos\PosShift;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Spatie\SimpleExcel\SimpleExcelWriter;
 
 class ReportController extends Controller
@@ -70,13 +69,13 @@ class ReportController extends Controller
 
         // Vendas por mês/dia (para gráficos)
         $chartData = $sales->get()
-            ->groupBy(function($date) {
+            ->groupBy(function ($date) {
                 return Carbon::parse($date->created_at)->format('d/m');
             })
             ->map(function ($row, $key) {
                 return [
                     'label' => $key,
-                    'value' => (float) $row->sum('grand_total')
+                    'value' => (float) $row->sum('grand_total'),
                 ];
             })->values();
 
@@ -112,7 +111,7 @@ class ReportController extends Controller
             ->where('track_stock', true)
             ->withSum('stocks as total_stock', 'quantity')
             ->get()
-            ->filter(fn($p) => ($p->total_stock ?? 0) <= $p->min_stock)
+            ->filter(fn ($p) => ($p->total_stock ?? 0) <= $p->min_stock)
             ->values();
 
         return [
@@ -173,10 +172,10 @@ class ReportController extends Controller
             ->sum('grand_total');
 
         $totalSales = (float) $posSales;
-        
+
         // Expected cash = Starting Cash + Sales
         $expectedCash = $startingCashTotal + $totalSales;
-        
+
         // Variance = Ending Cash (what user reported in drawer) - Expected Cash
         $variance = $endingCashTotal - $expectedCash;
 
@@ -203,9 +202,9 @@ class ReportController extends Controller
             'data' => $data,
             'date_range' => [
                 'start' => $request->input('start_date'),
-                'end' => $request->input('end_date')
+                'end' => $request->input('end_date'),
             ],
-            'company' => $request->user()->company->name ?? 'Empresa'
+            'company' => $request->user()->company->name ?? 'Empresa',
         ]);
 
         return $pdf->download("relatorio_{$category}.pdf");

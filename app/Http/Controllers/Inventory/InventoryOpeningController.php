@@ -2,26 +2,26 @@
 
 namespace App\Http\Controllers\Inventory;
 
-use App\Support\Tenant;
-
 use App\Http\Controllers\Controller;
 use App\Models\Catalog\Product;
 use App\Models\Inventory\Warehouse;
 use App\Services\Inventory\StockService;
+use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class InventoryOpeningController extends Controller
 {
     //
-      public function index()
+    public function index()
     {
         $products = Product::with('category')
             ->where('track_stock', true)
             ->get();
 
         $warehouses = Warehouse::where('is_active', true)->get();
-// C:\Users\LENOVO\Herd\kutenga-erp-v2\resources\js\pages\inventory\opening\index.tsx
+
+        // C:\Users\LENOVO\Herd\kutenga-erp-v2\resources\js\pages\inventory\opening\index.tsx
         return Inertia::render('inventory/opening/index', [
             'products' => $products,
             'warehouses' => $warehouses,

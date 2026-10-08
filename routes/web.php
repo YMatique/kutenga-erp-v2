@@ -1,44 +1,59 @@
 <?php
 
-use App\Http\Controllers\Catalog\BranchController;
-use App\Http\Controllers\Catalog\BrandController;
-use App\Http\Controllers\Catalog\CategoryController;
-use App\Http\Controllers\ContextController;
+use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\Billing\CreditNoteController;
 use App\Http\Controllers\Billing\CustomerController;
+use App\Http\Controllers\Billing\DebitNoteController;
 use App\Http\Controllers\Billing\DocumentController;
 use App\Http\Controllers\Billing\DocumentSeriesController;
 use App\Http\Controllers\Billing\InvoiceController;
+use App\Http\Controllers\Billing\PaymentReceiptController;
 use App\Http\Controllers\Billing\QuoteController;
 use App\Http\Controllers\Billing\ReceiptController;
-use App\Http\Controllers\Billing\PaymentReceiptController;
-use App\Http\Controllers\Billing\CreditNoteController;
-use App\Http\Controllers\Billing\DebitNoteController;
-use App\Http\Controllers\Inventory\InventoryDashboardController;
-use App\Http\Controllers\Inventory\InventoryOpeningController;
+use App\Http\Controllers\Catalog\BranchController;
+use App\Http\Controllers\Catalog\BrandController;
+use App\Http\Controllers\Catalog\CategoryController;
 use App\Http\Controllers\Catalog\ProductController;
 use App\Http\Controllers\Catalog\ProductLabelController;
 use App\Http\Controllers\Catalog\ProductLookupController;
+use App\Http\Controllers\Catalog\UnitController;
+use App\Http\Controllers\ContextController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Inventory\InventoryClosingController;
+use App\Http\Controllers\Inventory\InventoryDashboardController;
+use App\Http\Controllers\Inventory\InventoryOpeningController;
 use App\Http\Controllers\Inventory\ProductStockController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Inventory\StockMovementController;
 use App\Http\Controllers\Inventory\StockTransferController;
-use App\Http\Controllers\Inventory\InventoryClosingController;
-use App\Http\Controllers\Catalog\UnitController;
 use App\Http\Controllers\Inventory\WarehouseController;
+use App\Http\Controllers\LockScreenController;
+use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\Pos\CashRegisterController;
+use App\Http\Controllers\Pos\PosController;
+use App\Http\Controllers\Pos\PosReceiptController;
+use App\Http\Controllers\Pos\PosReportController;
+use App\Http\Controllers\Pos\PosSaleController;
+use App\Http\Controllers\Pos\PosShiftController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SystemAuditLogController;
+use App\Http\Controllers\SystemNotificationController;
+use App\Http\Controllers\SystemPlanController;
+use App\Http\Middleware\IsSuperAdmin;
 use App\Http\Middleware\SetCompanyContext;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'index')->name('home');
 Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(function () {
-    Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Onboarding
-    Route::get('/onboarding', [\App\Http\Controllers\OnboardingController::class, 'index'])->name('onboarding.index');
-    Route::post('/onboarding', [\App\Http\Controllers\OnboardingController::class, 'store'])->name('onboarding.store');
+    Route::get('/onboarding', [OnboardingController::class, 'index'])->name('onboarding.index');
+    Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
 
     Route::post('context/switch', [ContextController::class, 'switch'])->name('context.switch');
-    Route::post('unlock-screen', [\App\Http\Controllers\LockScreenController::class, 'unlock'])->name('unlock.screen');
-    Route::post('lock-screen', [\App\Http\Controllers\LockScreenController::class, 'lock'])->name('lock.screen');
+    Route::post('unlock-screen', [LockScreenController::class, 'unlock'])->name('unlock.screen');
+    Route::post('lock-screen', [LockScreenController::class, 'lock'])->name('lock.screen');
 
     // Leitura de código de barras/SKU (catálogo, POS e inventário); a permissão é validada no controller
     Route::get('products/lookup', ProductLookupController::class)->name('products.lookup');
@@ -74,7 +89,7 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     });
 
     // Auditoria (acesso principal)
-    Route::get('activity', [\App\Http\Controllers\AuditLogController::class, 'index'])
+    Route::get('activity', [AuditLogController::class, 'index'])
         ->name('activity.index')
         ->middleware('can:audits.view');
 
@@ -83,10 +98,10 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
 
     // Reports
     Route::prefix('reports')->name('reports.')->middleware('can:reports.view')->group(function () {
-        Route::get('/', [\App\Http\Controllers\ReportController::class, 'index'])->name('index');
-        Route::get('/data', [\App\Http\Controllers\ReportController::class, 'data'])->name('data');
-        Route::get('/export/pdf', [\App\Http\Controllers\ReportController::class, 'exportPdf'])->name('export.pdf');
-        Route::get('/export/excel', [\App\Http\Controllers\ReportController::class, 'exportExcel'])->name('export.excel');
+        Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::get('/data', [ReportController::class, 'data'])->name('data');
+        Route::get('/export/pdf', [ReportController::class, 'exportPdf'])->name('export.pdf');
+        Route::get('/export/excel', [ReportController::class, 'exportExcel'])->name('export.excel');
     });
 
     // Inventory
@@ -201,38 +216,37 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     // POS
     Route::prefix('pos')->name('pos.')->group(function () {
         Route::middleware('can:sales.create')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Pos\PosController::class, 'index'])->name('index');
-            Route::get('/products', [\App\Http\Controllers\Pos\PosController::class, 'products'])->name('products');
-            Route::get('/shifts/open', [\App\Http\Controllers\Pos\PosShiftController::class, 'create'])->name('shifts.create');
-            Route::post('/shifts/open', [\App\Http\Controllers\Pos\PosShiftController::class, 'store'])->name('shifts.store');
-            Route::get('/shifts/close', [\App\Http\Controllers\Pos\PosShiftController::class, 'showClose'])->name('shifts.showClose');
-            Route::post('/shifts/{shift}/close', [\App\Http\Controllers\Pos\PosShiftController::class, 'close'])->name('shifts.close');
-            Route::post('/sales', [\App\Http\Controllers\Pos\PosSaleController::class, 'store'])->name('sales.store');
+            Route::get('/', [PosController::class, 'index'])->name('index');
+            Route::get('/products', [PosController::class, 'products'])->name('products');
+            Route::get('/shifts/open', [PosShiftController::class, 'create'])->name('shifts.create');
+            Route::post('/shifts/open', [PosShiftController::class, 'store'])->name('shifts.store');
+            Route::get('/shifts/close', [PosShiftController::class, 'showClose'])->name('shifts.showClose');
+            Route::post('/shifts/{shift}/close', [PosShiftController::class, 'close'])->name('shifts.close');
+            Route::post('/sales', [PosSaleController::class, 'store'])->name('sales.store');
         });
 
         Route::middleware('can:sales.view')->group(function () {
-            Route::get('/registers', [\App\Http\Controllers\Pos\CashRegisterController::class, 'index'])->name('registers.index');
-            Route::post('/registers', [\App\Http\Controllers\Pos\CashRegisterController::class, 'store'])->name('registers.store');
-            Route::put('/registers/{register}', [\App\Http\Controllers\Pos\CashRegisterController::class, 'update'])->name('registers.update');
-            Route::delete('/registers/{register}', [\App\Http\Controllers\Pos\CashRegisterController::class, 'destroy'])->name('registers.destroy');
-            Route::get('/print/job', [\App\Http\Controllers\Pos\PosReceiptController::class, 'job'])->name('print.job');
-            Route::get('/registers/{register}/print/test', [\App\Http\Controllers\Pos\PosReceiptController::class, 'test'])->name('registers.print.test');
-            Route::get('/receipts/{id}', [\App\Http\Controllers\Pos\PosReceiptController::class, 'receipt'])->name('receipts.show');
-            Route::get('/print/day', [\App\Http\Controllers\Pos\PosReceiptController::class, 'daySales'])->name('print.day');
-            Route::get('/shifts/{shift}/print/summary', [\App\Http\Controllers\Pos\PosReceiptController::class, 'shiftSummary'])->name('shifts.print.summary');
-            Route::get('/shifts/{shift}/print/sales', [\App\Http\Controllers\Pos\PosReceiptController::class, 'shiftSales'])->name('shifts.print.sales');
-            Route::get('/shifts', [\App\Http\Controllers\Pos\PosShiftController::class, 'index'])->name('shifts.index');
-            Route::get('/reports', [\App\Http\Controllers\Pos\PosReportController::class, 'index'])->name('reports.index');
+            Route::get('/registers', [CashRegisterController::class, 'index'])->name('registers.index');
+            Route::post('/registers', [CashRegisterController::class, 'store'])->name('registers.store');
+            Route::put('/registers/{register}', [CashRegisterController::class, 'update'])->name('registers.update');
+            Route::delete('/registers/{register}', [CashRegisterController::class, 'destroy'])->name('registers.destroy');
+            Route::get('/print/job', [PosReceiptController::class, 'job'])->name('print.job');
+            Route::get('/registers/{register}/print/test', [PosReceiptController::class, 'test'])->name('registers.print.test');
+            Route::get('/receipts/{id}', [PosReceiptController::class, 'receipt'])->name('receipts.show');
+            Route::get('/print/day', [PosReceiptController::class, 'daySales'])->name('print.day');
+            Route::get('/shifts/{shift}/print/summary', [PosReceiptController::class, 'shiftSummary'])->name('shifts.print.summary');
+            Route::get('/shifts/{shift}/print/sales', [PosReceiptController::class, 'shiftSales'])->name('shifts.print.sales');
+            Route::get('/shifts', [PosShiftController::class, 'index'])->name('shifts.index');
+            Route::get('/reports', [PosReportController::class, 'index'])->name('reports.index');
             // Wildcard route MUST be last to avoid hijacking /pos/shifts/open or /pos/shifts/close
-            Route::get('/shifts/{shift}', [\App\Http\Controllers\Pos\PosShiftController::class, 'show'])->name('shifts.show');
+            Route::get('/shifts/{shift}', [PosShiftController::class, 'show'])->name('shifts.show');
         });
     });
 
-
     // Users
-    Route::get('/notifications', [\App\Http\Controllers\SystemNotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/notifications/{id}/read', [\App\Http\Controllers\SystemNotificationController::class, 'markAsRead'])->name('notifications.read');
-    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\SystemNotificationController::class, 'markAllAsRead'])->name('notifications.markAllRead');
+    Route::get('/notifications', [SystemNotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{id}/read', [SystemNotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [SystemNotificationController::class, 'markAllAsRead'])->name('notifications.markAllRead');
 
     // Docs / User Manual
     Route::inertia('/docs', 'docs/index')->name('docs.index');
@@ -243,11 +257,11 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     // Configs
 
     // System routes — apenas super-admin
-    Route::middleware([\App\Http\Middleware\IsSuperAdmin::class])->prefix('system')->name('system.')->group(function () {
-        Route::get('/audits', [\App\Http\Controllers\SystemAuditLogController::class, 'index'])->name('audits');
-        Route::get('/plans', [\App\Http\Controllers\SystemPlanController::class, 'index'])->name('plans');
-        Route::put('/plans/{plan}', [\App\Http\Controllers\SystemPlanController::class, 'update'])->name('plans.update');
+    Route::middleware([IsSuperAdmin::class])->prefix('system')->name('system.')->group(function () {
+        Route::get('/audits', [SystemAuditLogController::class, 'index'])->name('audits');
+        Route::get('/plans', [SystemPlanController::class, 'index'])->name('plans');
+        Route::put('/plans/{plan}', [SystemPlanController::class, 'update'])->name('plans.update');
     });
 });
 
-require __DIR__ . '/settings.php';
+require __DIR__.'/settings.php';

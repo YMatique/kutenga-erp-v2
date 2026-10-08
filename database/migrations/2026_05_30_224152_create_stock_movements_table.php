@@ -12,21 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('stock_movements', function (Blueprint $table) {
-            $table->id();  
+            $table->id();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-             $table->foreignId('warehouse_id')->constrained()->restrictOnDelete();
+            $table->foreignId('warehouse_id')->constrained()->restrictOnDelete();
 
-            $table->enum('type', ['in','out','adjustment','opening']);
-            //Sales -> StockMovement (out)
-            //Purchase -> StockMovement (in)
-            //Transference -> StockMovement (in + out)
-            //Adjust -> StockMovement (adjustment)
+            $table->enum('type', ['in', 'out', 'adjustment', 'opening']);
+            // Sales -> StockMovement (out)
+            // Purchase -> StockMovement (in)
+            // Transference -> StockMovement (in + out)
+            // Adjust -> StockMovement (adjustment)
 
             $table->decimal('quantity', 12, 2);
 
-            //origem
-            $table->string('source_type')->nullable(); //StockTransfer, StockAdjustment
+            // origem
+            $table->string('source_type')->nullable(); // StockTransfer, StockAdjustment
             $table->unsignedBigInteger('source_id')->nullable();
 
             // $table->string('reference')->nullable();
@@ -36,7 +36,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->index(['product_id','warehouse_id', 'type']);
+            $table->index(['product_id', 'warehouse_id', 'type']);
         });
     }
 

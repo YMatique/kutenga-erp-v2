@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers\Billing;
 
-use App\Support\Tenant;
-
 use App\Http\Controllers\Controller;
-
 use App\Models\Billing\Customer;
-use App\Models\Billing\Quote;
 use App\Models\Billing\DocumentSeries;
+use App\Models\Billing\Quote;
 use App\Models\Catalog\Product;
 use App\Services\Billing\BillingService;
+use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -33,8 +31,8 @@ class QuoteController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('document_number', 'like', "%{$search}%")
-                      ->orWhere('customer_name', 'like', "%{$search}%")
-                      ->orWhere('customer_nuit', 'like', "%{$search}%");
+                        ->orWhere('customer_name', 'like', "%{$search}%")
+                        ->orWhere('customer_nuit', 'like', "%{$search}%");
                 });
             })
             ->when($request->status, function ($query, $status) {
@@ -59,7 +57,7 @@ class QuoteController extends Controller
             'filters' => $request->only(['search', 'status']),
             'kpis' => $kpis,
             'type' => 'CT',
-            'title' => 'Cotações e Orçamentos'
+            'title' => 'Cotações e Orçamentos',
         ]);
     }
 
@@ -75,7 +73,7 @@ class QuoteController extends Controller
             'customers' => $customers,
             'products' => $products,
             'series' => $series,
-            'type' => 'CT'
+            'type' => 'CT',
         ]);
     }
 
@@ -123,7 +121,7 @@ class QuoteController extends Controller
 
         return Inertia::render('billing/quotes/show', [
             'document' => $quote,
-            'type' => 'CT'
+            'type' => 'CT',
         ]);
     }
 
@@ -148,7 +146,7 @@ class QuoteController extends Controller
             'customers' => $customers,
             'products' => $products,
             'series' => $series,
-            'type' => 'CT'
+            'type' => 'CT',
         ]);
     }
 
@@ -190,6 +188,7 @@ class QuoteController extends Controller
 
         try {
             $this->billingService->confirmAndEmit($quote->id, null);
+
             return redirect()->back()->with('success', 'Cotação confirmada e emitida fiscalmente!');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
@@ -200,10 +199,10 @@ class QuoteController extends Controller
     {
         try {
             $this->billingService->cancel($id);
+
             return redirect()->back()->with('success', 'Cotação cancelada com sucesso!');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }
     }
 }
-

@@ -14,7 +14,7 @@ class EscPos
     public function __construct(private int $paperWidthMm = 80)
     {
         $this->buffer = "\x1B@"      // inicializar
-            . "\x1Bt\x02";            // tabela de caracteres CP850
+            ."\x1Bt\x02";            // tabela de caracteres CP850
     }
 
     public function columns(): int
@@ -25,14 +25,14 @@ class EscPos
     public function align(string $align): self
     {
         $n = ['left' => 0, 'center' => 1, 'right' => 2][$align] ?? 0;
-        $this->buffer .= "\x1Ba" . chr($n);
+        $this->buffer .= "\x1Ba".chr($n);
 
         return $this;
     }
 
     public function bold(bool $on = true): self
     {
-        $this->buffer .= "\x1BE" . chr($on ? 1 : 0);
+        $this->buffer .= "\x1BE".chr($on ? 1 : 0);
 
         return $this;
     }
@@ -40,7 +40,7 @@ class EscPos
     /** Tamanho: 1 = normal, 2 = dupla altura e largura. */
     public function size(int $size = 1): self
     {
-        $this->buffer .= "\x1D!" . chr($size >= 2 ? 0x11 : 0x00);
+        $this->buffer .= "\x1D!".chr($size >= 2 ? 0x11 : 0x00);
 
         return $this;
     }
@@ -54,7 +54,7 @@ class EscPos
 
     public function line(string $text = ''): self
     {
-        return $this->text($text . "\n");
+        return $this->text($text."\n");
     }
 
     public function centered(string $text, bool $bold = false, int $size = 1): self
@@ -79,7 +79,7 @@ class EscPos
             $space = $width - mb_strlen($left) - mb_strlen($right);
         }
 
-        return $this->line($left . str_repeat(' ', $space) . $right);
+        return $this->line($left.str_repeat(' ', $space).$right);
     }
 
     public function feed(int $lines = 1): self
@@ -92,7 +92,7 @@ class EscPos
     /** Avança o papel e corta (corte parcial). */
     public function cut(): self
     {
-        $this->buffer .= str_repeat("\n", 3) . "\x1DV\x42\x00";
+        $this->buffer .= str_repeat("\n", 3)."\x1DV\x42\x00";
 
         return $this;
     }

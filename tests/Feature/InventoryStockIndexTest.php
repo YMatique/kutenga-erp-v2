@@ -17,7 +17,9 @@ class InventoryStockIndexTest extends TestCase
     use RefreshDatabase;
 
     private Company $company;
+
     private Warehouse $main;
+
     private Warehouse $store;
 
     protected function setUp(): void
@@ -39,7 +41,7 @@ class InventoryStockIndexTest extends TestCase
         $company ??= $this->company;
 
         $product = Product::create([
-            'company_id' => $company->id, 'name' => $name, 'slug' => str($name)->slug() . '-' . uniqid(),
+            'company_id' => $company->id, 'name' => $name, 'slug' => str($name)->slug().'-'.uniqid(),
             'sku' => strtoupper(substr(md5($name), 0, 6)), 'price' => 10, 'track_stock' => true, 'min_stock' => $min, 'status' => 'active',
         ]);
 
@@ -77,7 +79,7 @@ class InventoryStockIndexTest extends TestCase
             ->pluck('product.name')->sort()->values()->all();
 
         $this->assertSame(['Arroz', 'Arroz da Loja'], $names('search=Arroz'));
-        $this->assertSame(['Arroz da Loja'], $names('warehouse_id=' . $this->store->id));
+        $this->assertSame(['Arroz da Loja'], $names('warehouse_id='.$this->store->id));
         $this->assertSame(['Feijão'], $names('status=low'));
         $this->assertSame(['Óleo'], $names('status=out_of_stock'));
         $this->assertSame(['Arroz', 'Arroz da Loja'], $names('status=in_stock'));

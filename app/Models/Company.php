@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
-use App\Models\Catalog\Branch;
-
-
+use App\Models\Billing\Document;
 // use App\Traits\HasAudit;
+use App\Models\Catalog\Branch;
+use App\Models\Catalog\Product;
+use App\Models\Inventory\Warehouse;
+use App\Models\Pos\CashRegister;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Company extends Model
 {
@@ -73,7 +77,7 @@ class Company extends Model
      */
     public function getCurrentMonthDocumentsCount(): int
     {
-        return \App\Models\Billing\Document::withoutGlobalScope('company')
+        return Document::withoutGlobalScope('company')
             ->where('company_id', $this->id)
             ->where('status', '!=', 'draft')
             ->where('document_type', '!=', 'RC')
@@ -83,17 +87,17 @@ class Company extends Model
 
     public function getProductsCount(): int
     {
-        return \App\Models\Catalog\Product::where('company_id', $this->id)->count();
+        return Product::where('company_id', $this->id)->count();
     }
 
     public function getWarehousesCount(): int
     {
-        return \App\Models\Inventory\Warehouse::where('company_id', $this->id)->count();
+        return Warehouse::where('company_id', $this->id)->count();
     }
 
     public function getCashRegistersCount(): int
     {
-        return \App\Models\Pos\CashRegister::where('company_id', $this->id)->count();
+        return CashRegister::where('company_id', $this->id)->count();
     }
 
     public function getUsersCount(): int
@@ -144,7 +148,7 @@ class Company extends Model
         $limits = $this->limits();
 
         // `??` não serve: null significa ilimitado e chave em falta significa 0
-        if (!array_key_exists($key, $limits)) {
+        if (! array_key_exists($key, $limits)) {
             return 0;
         }
 
@@ -181,14 +185,14 @@ class Company extends Model
             return 'expired';
         }
 
-        if (!$this->subscription_ends_at || now()->lte($this->subscription_ends_at)) {
+        if (! $this->subscription_ends_at || now()->lte($this->subscription_ends_at)) {
             return 'active';
         }
 
         return now()->lte($this->graceEndsAt()) ? 'grace' : 'expired';
     }
 
-    public function graceEndsAt(): ?\Carbon\CarbonInterface
+    public function graceEndsAt(): ?CarbonInterface
     {
         return $this->subscription_ends_at?->copy()->addDays((int) config('subscription.grace_days', 7));
     }
@@ -214,7 +218,7 @@ class Company extends Model
     protected static function booted(): void
     {
         static::creating(function (Company $company) {
-            $company->external_id ??= (string) \Illuminate\Support\Str::uuid();
+            $company->external_id ??= (string) Str::uuid();
         });
 
         // O plano em cache deixa de valer quando a empresa muda de plano

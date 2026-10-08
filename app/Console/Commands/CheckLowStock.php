@@ -2,16 +2,18 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Catalog\Product;
-use App\Models\SystemNotification;
-use App\Models\Company;
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Mail;
 use App\Mail\LowStockAlertMail;
+use App\Models\Catalog\Product;
+use App\Models\Company;
+use App\Models\SystemNotification;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class CheckLowStock extends Command
 {
     protected $signature = 'app:check-low-stock';
+
     protected $description = 'Verifica produtos com stock abaixo do mínimo e gera notificações.';
 
     public function handle()
@@ -36,7 +38,7 @@ class CheckLowStock extends Command
                         ->where('is_read', false)
                         ->exists();
 
-                    if (!$exists) {
+                    if (! $exists) {
                         SystemNotification::create([
                             'company_id' => $product->company_id,
                             'type' => 'out_of_stock',
@@ -51,7 +53,7 @@ class CheckLowStock extends Command
                             try {
                                 Mail::to($company->email)->send(new LowStockAlertMail($product, 0));
                             } catch (\Exception $e) {
-                                \Illuminate\Support\Facades\Log::error("Erro ao enviar email de stock esgotado para {$company->email}: " . $e->getMessage());
+                                Log::error("Erro ao enviar email de stock esgotado para {$company->email}: ".$e->getMessage());
                             }
                         }
                     }
@@ -63,7 +65,7 @@ class CheckLowStock extends Command
                         ->where('is_read', false)
                         ->update(['is_read' => true]);
 
-                } elseif (!is_null($product->min_stock) && $stock <= $product->min_stock) {
+                } elseif (! is_null($product->min_stock) && $stock <= $product->min_stock) {
                     // Low stock
                     $exists = SystemNotification::where('company_id', $product->company_id)
                         ->where('type', 'low_stock')
@@ -71,7 +73,7 @@ class CheckLowStock extends Command
                         ->where('is_read', false)
                         ->exists();
 
-                    if (!$exists) {
+                    if (! $exists) {
                         SystemNotification::create([
                             'company_id' => $product->company_id,
                             'type' => 'low_stock',
@@ -86,7 +88,7 @@ class CheckLowStock extends Command
                             try {
                                 Mail::to($company->email)->send(new LowStockAlertMail($product, $stock));
                             } catch (\Exception $e) {
-                                \Illuminate\Support\Facades\Log::error("Erro ao enviar email de stock mínimo para {$company->email}: " . $e->getMessage());
+                                Log::error("Erro ao enviar email de stock mínimo para {$company->email}: ".$e->getMessage());
                             }
                         }
                     }

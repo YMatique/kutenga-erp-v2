@@ -3,8 +3,6 @@
 namespace App\Models\Inventory;
 
 use App\Models\Catalog\Product;
-
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -20,8 +18,8 @@ class InventoryClosingItem extends Model
 
     protected $casts = [
         'quantity_expected' => 'decimal:4',
-        'quantity_counted'  => 'decimal:4',
-        'variance'          => 'decimal:4',
+        'quantity_counted' => 'decimal:4',
+        'variance' => 'decimal:4',
     ];
 
     protected $appends = ['variance_value'];
@@ -46,8 +44,9 @@ class InventoryClosingItem extends Model
      */
     public function getVarianceValueAttribute(): float
     {
-        $counted  = $this->quantity_counted ?? $this->quantity_expected;
+        $counted = $this->quantity_counted ?? $this->quantity_expected;
         $expected = $this->quantity_expected ?? 0;
+
         return (float) $counted - (float) $expected;
     }
 }

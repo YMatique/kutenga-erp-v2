@@ -3,8 +3,6 @@
 namespace App\Models\Billing;
 
 use App\Models\Inventory\Warehouse;
-
-
 use App\Services\Inventory\StockService;
 
 class PaymentReceipt extends Document

@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Mail\InvoiceOverdueMail;
 use App\Models\Billing\Document;
 use App\Models\SystemNotification;
-use App\Mail\InvoiceOverdueMail;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -53,7 +53,7 @@ class CheckDocumentStatus extends Command
                 'company_id' => $invoice->company_id,
                 'type' => 'invoice_overdue',
                 'title' => 'Fatura em Atraso',
-                'message' => "A fatura {$invoice->document_number} para {$invoice->customer_name} no valor de " . number_format($invoice->grand_total, 2, ',', '.') . " MZN venceu a " . ($invoice->due_date ? $invoice->due_date->format('d/m/Y') : '—') . ".",
+                'message' => "A fatura {$invoice->document_number} para {$invoice->customer_name} no valor de ".number_format($invoice->grand_total, 2, ',', '.').' MZN venceu a '.($invoice->due_date ? $invoice->due_date->format('d/m/Y') : '—').'.',
                 'link' => "/billing/invoices/{$invoice->id}",
                 'is_read' => false,
             ]);
@@ -64,10 +64,10 @@ class CheckDocumentStatus extends Command
                     Mail::to($invoice->customer_email)->send(new InvoiceOverdueMail($invoice));
                     Log::info("E-mail de cobrança enfileirado para {$invoice->customer_email} referente à fatura #{$invoice->id}");
                 } catch (\Exception $e) {
-                    Log::error("Erro ao enfileirar e-mail de cobrança para a fatura #{$invoice->id}: " . $e->getMessage());
+                    Log::error("Erro ao enfileirar e-mail de cobrança para a fatura #{$invoice->id}: ".$e->getMessage());
                 }
             }
-            
+
             Log::info("Fatura #{$invoice->id} ({$invoice->document_number}) marcada como Em Atraso (overdue). Vencimento: {$invoice->due_date->toDateString()}");
         }
 
@@ -86,12 +86,12 @@ class CheckDocumentStatus extends Command
                 ->where('link', "/billing/invoices/{$invoice->id}")
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 SystemNotification::create([
                     'company_id' => $invoice->company_id,
                     'type' => 'invoice_expiring',
                     'title' => 'Fatura Prestes a Expirar',
-                    'message' => "A fatura {$invoice->document_number} para {$invoice->customer_name} no valor de " . number_format($invoice->grand_total, 2, ',', '.') . " MZN expira em 3 dias (" . $invoice->due_date->format('d/m/Y') . ").",
+                    'message' => "A fatura {$invoice->document_number} para {$invoice->customer_name} no valor de ".number_format($invoice->grand_total, 2, ',', '.').' MZN expira em 3 dias ('.$invoice->due_date->format('d/m/Y').').',
                     'link' => "/billing/invoices/{$invoice->id}",
                     'is_read' => false,
                 ]);
@@ -117,11 +117,11 @@ class CheckDocumentStatus extends Command
                 'company_id' => $quote->company_id,
                 'type' => 'quote_expired',
                 'title' => 'Cotação Expirada',
-                'message' => "A cotação {$quote->document_number} para {$quote->customer_name} expirou a " . ($quote->due_date ? $quote->due_date->format('d/m/Y') : '—') . ".",
+                'message' => "A cotação {$quote->document_number} para {$quote->customer_name} expirou a ".($quote->due_date ? $quote->due_date->format('d/m/Y') : '—').'.',
                 'link' => "/billing/quotes/{$quote->id}",
                 'is_read' => false,
             ]);
-            
+
             Log::info("Cotação #{$quote->id} ({$quote->document_number}) marcada como Expirada/Em Atraso (overdue). Vencimento: {$quote->due_date->toDateString()}");
         }
 

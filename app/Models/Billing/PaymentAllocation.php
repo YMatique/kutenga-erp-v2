@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PaymentAllocation extends Model
 {
-     protected $table = 'payment_allocations';
+    protected $table = 'payment_allocations';
+
     protected $fillable = ['payment_id', 'document_id', 'amount_allocated', 'created_by', 'updated_by'];
 
     public function payment(): BelongsTo

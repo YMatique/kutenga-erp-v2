@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Brand extends Model
 {
-    use SoftDeletes /* , HasAudit */, BelongsToCompany;
+    use BelongsToCompany /* , HasAudit */, SoftDeletes;
 
     protected $fillable = [
         'company_id',

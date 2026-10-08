@@ -5,6 +5,7 @@ namespace Database\Seeders\Demo;
 use App\Models\Catalog\Branch;
 use App\Models\Company;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -18,6 +19,7 @@ use Spatie\Permission\Models\Role;
 class DemoCompanySeeder extends Seeder
 {
     public const NUIT_KUTENGA = '123456789';
+
     public const NUIT_NOVA_ESPERANCA = '400987654';
 
     public const PASSWORD = 'password';
@@ -27,6 +29,7 @@ class DemoCompanySeeder extends Seeder
      * (docs/api-subscricoes.md) sempre com os mesmos UUID depois de um reset.
      */
     public const EXTERNAL_ID_KUTENGA = '00000000-0000-4000-8000-000000000001';
+
     public const EXTERNAL_ID_NOVA_ESPERANCA = '00000000-0000-4000-8000-000000000002';
 
     private const EXTERNAL_IDS = [
@@ -84,7 +87,7 @@ class DemoCompanySeeder extends Seeder
         ];
     }
 
-    /** @return \Illuminate\Database\Eloquent\Collection<int, Company> */
+    /** @return Collection<int, Company> */
     public static function demoCompanies()
     {
         return Company::whereIn('nuit', [self::NUIT_KUTENGA, self::NUIT_NOVA_ESPERANCA])->get();

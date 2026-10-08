@@ -2,19 +2,16 @@
 
 namespace App\Http\Controllers\Billing;
 
-use App\Support\Tenant;
-
-use App\Models\Billing\Payment;
-
-
 use App\Http\Controllers\Controller;
-
 use App\Models\Billing\Customer;
-use App\Models\Billing\Receipt;
 use App\Models\Billing\DocumentSeries;
+use App\Models\Billing\Payment;
+use App\Models\Billing\PaymentAllocation;
+use App\Models\Billing\Receipt;
 use App\Models\Catalog\Product;
 use App\Models\Inventory\Warehouse;
 use App\Services\Billing\BillingService;
+use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -38,8 +35,8 @@ class ReceiptController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('document_number', 'like', "%{$search}%")
-                      ->orWhere('customer_name', 'like', "%{$search}%")
-                      ->orWhere('customer_nuit', 'like', "%{$search}%");
+                        ->orWhere('customer_name', 'like', "%{$search}%")
+                        ->orWhere('customer_nuit', 'like', "%{$search}%");
                 });
             })
             ->when($request->status, function ($query, $status) {
@@ -64,7 +61,7 @@ class ReceiptController extends Controller
             'filters' => $request->only(['search', 'status']),
             'kpis' => $kpis,
             'type' => 'FR',
-            'title' => 'Faturas-Recibo'
+            'title' => 'Faturas-Recibo',
         ]);
     }
 
@@ -82,7 +79,7 @@ class ReceiptController extends Controller
             'products' => $products,
             'series' => $series,
             'warehouses' => $warehouses,
-            'type' => 'FR'
+            'type' => 'FR',
         ]);
     }
 
@@ -134,7 +131,7 @@ class ReceiptController extends Controller
         return Inertia::render('billing/receipts/show', [
             'document' => $receipt,
             'warehouses' => $warehouses,
-            'type' => 'FR'
+            'type' => 'FR',
         ]);
     }
 
@@ -161,7 +158,7 @@ class ReceiptController extends Controller
             'products' => $products,
             'series' => $series,
             'warehouses' => $warehouses,
-            'type' => 'FR'
+            'type' => 'FR',
         ]);
     }
 
@@ -213,7 +210,7 @@ class ReceiptController extends Controller
             DB::beginTransaction();
 
             $warehouse = null;
-            if (!empty($validated['warehouse_id'])) {
+            if (! empty($validated['warehouse_id'])) {
                 $warehouse = Warehouse::where('company_id', $companyId)->findOrFail($validated['warehouse_id']);
             }
             $this->billingService->confirmAndEmit($receipt->id, $warehouse);
@@ -222,18 +219,18 @@ class ReceiptController extends Controller
             $receipt->refresh();
 
             // Register Payment
-            $payment = \App\Models\Billing\Payment::create([
+            $payment = Payment::create([
                 'company_id' => $companyId,
                 'customer_id' => $receipt->customer_id,
                 'payment_date' => now(),
                 'payment_method' => $validated['payment_method'],
                 'amount' => $receipt->grand_total,
                 'status' => 'completed',
-                'reference' => 'FR-' . $receipt->id . '-' . time(),
+                'reference' => 'FR-'.$receipt->id.'-'.time(),
                 'created_by' => $user->id,
             ]);
 
-            \App\Models\Billing\PaymentAllocation::create([
+            PaymentAllocation::create([
                 'payment_id' => $payment->id,
                 'document_id' => $receipt->id,
                 'amount_allocated' => $receipt->grand_total,
@@ -245,6 +242,7 @@ class ReceiptController extends Controller
             return redirect()->back()->with('success', 'Fatura-Recibo emitido oficialmente e pagamento registado!');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }
     }
@@ -253,10 +251,10 @@ class ReceiptController extends Controller
     {
         try {
             $this->billingService->cancel($id);
+
             return redirect()->back()->with('success', 'Fatura-Recibo cancelada com sucesso!');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }
     }
 }
-

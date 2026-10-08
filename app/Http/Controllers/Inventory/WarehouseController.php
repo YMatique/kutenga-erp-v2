@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-
-use App\Models\Inventory\Warehouse;
 use App\Models\Inventory\ProductStock;
 use App\Models\Inventory\StockMovement;
+use App\Models\Inventory\Warehouse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -21,6 +20,7 @@ class WarehouseController extends Controller
                 ->get()
                 ->map(function ($w) {
                     $w->total_quantity = (float) ($w->total_quantity ?? 0);
+
                     return $w;
                 }),
         ]);

@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Mail\UserCreatedMail;
 use App\Models\Role;
+use App\Models\SystemNotification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -47,12 +51,12 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $companyId = $request->user()->company_id;
-        
+
         $users = User::with('roles')
             ->where('company_id', $companyId)
             ->latest()
             ->paginate(10);
-            
+
         $roles = Role::whereNull('company_id')
             ->orWhere('company_id', $companyId)
             ->get();
@@ -87,7 +91,7 @@ class UserController extends Controller
         $user->assignRole($role);
 
         // Create system notification
-        \App\Models\SystemNotification::create([
+        SystemNotification::create([
             'company_id' => $companyId,
             'type' => 'user_created',
             'title' => 'Novo Utilizador',
@@ -103,9 +107,9 @@ class UserController extends Controller
                 'email' => $user->email,
             ]);
 
-            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\UserCreatedMail($user, $setPasswordUrl));
+            Mail::to($user->email)->send(new UserCreatedMail($user, $setPasswordUrl));
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Erro ao enviar email de credenciais para {$user->email}: " . $e->getMessage());
+            Log::error("Erro ao enviar email de credenciais para {$user->email}: ".$e->getMessage());
         }
 
         return back()->with('success', 'Utilizador criado com sucesso.');
@@ -117,7 +121,7 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
             'password' => 'nullable|string|min:8',
             'role' => $this->roleRule($user->company_id),
         ]);
@@ -127,11 +131,11 @@ class UserController extends Controller
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
-        
-        if (!empty($validated['password'])) {
+
+        if (! empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
         }
-        
+
         $user->save();
 
         $user->syncRoles([$role]);

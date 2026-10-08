@@ -2,22 +2,20 @@
 
 namespace Tests\Feature;
 
-use App\Models\Company;
+use App\Mail\InvoiceOverdueMail;
+use App\Models\Billing\CreditNote;
 use App\Models\Billing\Customer;
-use App\Models\Billing\Document;
 use App\Models\Billing\DocumentSeries;
 use App\Models\Billing\Invoice;
-use App\Models\Catalog\Product;
 use App\Models\Billing\Quote;
-use App\Models\Billing\CreditNote;
-use App\Models\Billing\Receipt;
-use App\Models\User;
+use App\Models\Catalog\Product;
+use App\Models\Company;
 use App\Models\Inventory\Warehouse;
-use App\Models\Inventory\ProductStock;
+use App\Models\User;
 use App\Services\Billing\BillingService;
 use App\Services\Inventory\StockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class BillingStiTest extends TestCase
@@ -25,12 +23,19 @@ class BillingStiTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected Company $company;
+
     protected Warehouse $warehouse;
+
     protected Customer $customer;
+
     protected Product $product;
+
     protected DocumentSeries $series;
+
     protected BillingService $billingService;
+
     protected StockService $stockService;
 
     protected function setUp(): void
@@ -114,8 +119,8 @@ class BillingStiTest extends TestCase
                     'quantity' => 2,
                     'unit_price' => 100.00,
                     'tax_rate' => 16.00,
-                ]
-            ]
+                ],
+            ],
         ], $this->company->id);
 
         $this->assertInstanceOf(Invoice::class, $invoiceDraft);
@@ -138,8 +143,8 @@ class BillingStiTest extends TestCase
                     'quantity' => 1,
                     'unit_price' => 100.00,
                     'tax_rate' => 16.00,
-                ]
-            ]
+                ],
+            ],
         ], $this->company->id);
 
         $this->assertInstanceOf(Quote::class, $quoteDraft);
@@ -160,8 +165,8 @@ class BillingStiTest extends TestCase
                     'quantity' => 3,
                     'unit_price' => 100.00,
                     'tax_rate' => 16.00,
-                ]
-            ]
+                ],
+            ],
         ], $this->company->id);
 
         $confirmedInvoice = $this->billingService->confirmAndEmit($invoice->id, $this->warehouse);
@@ -190,8 +195,8 @@ class BillingStiTest extends TestCase
                     'quantity' => 5,
                     'unit_price' => 100.00,
                     'tax_rate' => 16.00,
-                ]
-            ]
+                ],
+            ],
         ], $this->company->id);
 
         $confirmedQuote = $this->billingService->confirmAndEmit($quote->id, $this->warehouse);
@@ -224,8 +229,8 @@ class BillingStiTest extends TestCase
                     'quantity' => 2,
                     'unit_price' => 100.00,
                     'tax_rate' => 16.00,
-                ]
-            ]
+                ],
+            ],
         ], $this->company->id);
         $invoice = $this->billingService->confirmAndEmit($invoice->id, $this->warehouse);
 
@@ -244,8 +249,8 @@ class BillingStiTest extends TestCase
                     'quantity' => 2,
                     'unit_price' => 100.00,
                     'tax_rate' => 16.00,
-                ]
-            ]
+                ],
+            ],
         ], $this->company->id);
 
         $this->assertInstanceOf(CreditNote::class, $creditNote);
@@ -277,8 +282,8 @@ class BillingStiTest extends TestCase
                     'quantity' => 1,
                     'unit_price' => 100.00,
                     'tax_rate' => 16.00,
-                ]
-            ]
+                ],
+            ],
         ], $this->company->id);
 
         $confirmed = $this->billingService->confirmAndEmit($invoice->id, $this->warehouse);
@@ -292,7 +297,7 @@ class BillingStiTest extends TestCase
             'Cash',
             'REF-123'
         );
-        
+
         $confirmed->refresh();
         $this->assertEquals('partial', $confirmed->status);
         $this->assertEquals('partial', $confirmed->payment_status);
@@ -315,14 +320,14 @@ class BillingStiTest extends TestCase
 
         // 5. Testar que alteração de campos protegidos (ex: grand_total) em documento confirmado joga exceção
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage("Regra de Imutabilidade Fiscal");
+        $this->expectExceptionMessage('Regra de Imutabilidade Fiscal');
         $cancelled->grand_total = 200.00;
         $cancelled->save();
     }
 
     public function test_check_document_status_command()
     {
-        \Illuminate\Support\Facades\Mail::fake();
+        Mail::fake();
 
         // 1. Criar Fatura que venceu ontem (vencida) com email do cliente
         $invoice = $this->billingService->createDraft([
@@ -341,8 +346,8 @@ class BillingStiTest extends TestCase
                     'quantity' => 1,
                     'unit_price' => 100.00,
                     'tax_rate' => 16.00,
-                ]
-            ]
+                ],
+            ],
         ], $this->company->id);
         $invoiceConfirmed = $this->billingService->confirmAndEmit($invoice->id, $this->warehouse);
         $this->assertEquals('confirmed', $invoiceConfirmed->status);
@@ -363,8 +368,8 @@ class BillingStiTest extends TestCase
                     'quantity' => 1,
                     'unit_price' => 100.00,
                     'tax_rate' => 16.00,
-                ]
-            ]
+                ],
+            ],
         ], $this->company->id);
         $quoteConfirmed = $this->billingService->confirmAndEmit($quote->id, $this->warehouse);
         $this->assertEquals('confirmed', $quoteConfirmed->status);
@@ -393,7 +398,7 @@ class BillingStiTest extends TestCase
         ]);
 
         // 6. Verificar se o e-mail foi enfileirado para o cliente
-        \Illuminate\Support\Facades\Mail::assertQueued(\App\Mail\InvoiceOverdueMail::class, function ($mail) use ($invoiceConfirmed) {
+        Mail::assertQueued(InvoiceOverdueMail::class, function ($mail) use ($invoiceConfirmed) {
             return $mail->hasTo('client@example.com') && $mail->document->id === $invoiceConfirmed->id;
         });
     }

@@ -124,7 +124,7 @@ class StockExporter
     private function download(string $name, Request $request, callable $fill): StreamedResponse
     {
         $csv = $request->query('format') === 'csv';
-        $filename = $name . '_' . now()->format('Ymd_His') . '.' . ($csv ? 'csv' : 'xlsx');
+        $filename = $name.'_'.now()->format('Ymd_His').'.'.($csv ? 'csv' : 'xlsx');
 
         return response()->streamDownload(function () use ($csv, $fill) {
             // noHeaderRow: a primeira linha que adicionamos já é o cabeçalho

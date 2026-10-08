@@ -40,12 +40,12 @@ class CheckSubscriptions extends Command
                         ->whereDate('created_at', today())
                         ->exists();
 
-                    if (!$already) {
+                    if (! $already) {
                         SystemNotification::create([
                             'company_id' => $company->id,
                             'type' => 'subscription_warning',
                             'title' => 'Subscrição a terminar',
-                            'message' => "A subscrição termina em {$days} " . ($days === 1 ? 'dia' : 'dias') . '. Renove para não perder o acesso.',
+                            'message' => "A subscrição termina em {$days} ".($days === 1 ? 'dia' : 'dias').'. Renove para não perder o acesso.',
                             'link' => $link,
                             'is_read' => false,
                         ]);

@@ -3,8 +3,6 @@
 namespace App\Models\Billing;
 
 use App\Models\Inventory\Warehouse;
-
-
 use App\Services\Inventory\StockService;
 
 class Quote extends Document
@@ -28,5 +26,4 @@ class Quote extends Document
     {
         // Cotação/Orçamento não gera impacto financeiro
     }
-    
 }

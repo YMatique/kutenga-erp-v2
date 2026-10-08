@@ -20,12 +20,12 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->string('logo_path')->nullable();
             $table->string('status')->default('active');
-            
+
             // Audit fields
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->foreignId('deleted_by')->nullable()->constrained('users');
-            
+
             $table->timestamps();
             $table->softDeletes();
         });

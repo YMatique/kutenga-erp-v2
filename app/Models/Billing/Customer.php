@@ -7,13 +7,12 @@ use App\Traits\HasAudit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 class Customer extends Model
 {
-    use BelongsToCompany, SoftDeletes, HasAudit, LogsActivity;
+    use BelongsToCompany, HasAudit, LogsActivity, SoftDeletes;
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -24,6 +23,7 @@ class Customer extends Model
     }
 
     protected $table = 'customers';
+
     protected $fillable = [
         'company_id',
         'name',
@@ -33,7 +33,7 @@ class Customer extends Model
         'address',
         'credit_limit',
         'balance',
-        'is_active'
+        'is_active',
     ];
 
     public function contacts(): HasMany
@@ -41,7 +41,7 @@ class Customer extends Model
         return $this->hasMany(CustomerContact::class);
     }
 
-    public function addresses(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function addresses(): HasMany
     {
         return $this->hasMany(CustomerAddress::class);
     }

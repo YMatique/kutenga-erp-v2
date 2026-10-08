@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RoleAndPermissionSeeder extends Seeder
 {
@@ -13,7 +15,7 @@ class RoleAndPermissionSeeder extends Seeder
     public function run(): void
     {
         // Reset cached roles and permissions
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Create Permissions
         $permissions = [
@@ -36,14 +38,14 @@ class RoleAndPermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            \Spatie\Permission\Models\Permission::findOrCreate($permission, 'web');
+            Permission::findOrCreate($permission, 'web');
         }
 
         // Create Roles and assign permissions
-        $admin = \Spatie\Permission\Models\Role::findOrCreate('Admin', 'web');
-        $admin->givePermissionTo(\Spatie\Permission\Models\Permission::all());
+        $admin = Role::findOrCreate('Admin', 'web');
+        $admin->givePermissionTo(Permission::all());
 
-        $manager = \Spatie\Permission\Models\Role::findOrCreate('Manager', 'web');
+        $manager = Role::findOrCreate('Manager', 'web');
         $manager->givePermissionTo([
             'sales.view',
             'sales.create',
@@ -55,7 +57,7 @@ class RoleAndPermissionSeeder extends Seeder
             'pos.manage',
         ]);
 
-        $operator = \Spatie\Permission\Models\Role::findOrCreate('Operator', 'web');
+        $operator = Role::findOrCreate('Operator', 'web');
         $operator->givePermissionTo([
             'sales.create',
             'sales.view',

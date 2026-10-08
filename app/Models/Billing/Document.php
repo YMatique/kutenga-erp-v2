@@ -2,26 +2,23 @@
 
 namespace App\Models\Billing;
 
-use App\Models\Pos\PosShift;
 use App\Models\Company;
-use App\Traits\BelongsToCompany;
-
-
+use App\Models\Inventory\Warehouse;
+use App\Models\Pos\PosShift;
 // use App\Traits\HasAudit;
+use App\Services\Inventory\StockService;
+use App\Traits\BelongsToCompany;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Services\Inventory\StockService;
-use App\Models\Inventory\Warehouse;
-
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 class Document extends Model
 {
-    use BelongsToCompany, SoftDeletes /* , HasAudit */, LogsActivity;
+    use BelongsToCompany, LogsActivity /* , HasAudit */, SoftDeletes;
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -56,6 +53,7 @@ class Document extends Model
         $model->setRawAttributes((array) $attributes, true);
         $model->setConnection($connection ?: $this->getConnectionName());
         $model->fireModelEvent('retrieved', false);
+
         return $model;
     }
 
@@ -65,7 +63,7 @@ class Document extends Model
     public function newInstance($attributes = [], $exists = false)
     {
         $type = is_object($attributes) ? ($attributes->document_type ?? null) : ($attributes['document_type'] ?? null);
-        if (!$type) {
+        if (! $type) {
             $type = $this->document_type ?? null;
         }
         $class = static::$typeMap[$type] ?? static::class;
@@ -73,6 +71,7 @@ class Document extends Model
         $model = new $class((array) $attributes);
         $model->exists = $exists;
         $model->setConnection($this->getConnectionName());
+
         return $model;
     }
 
@@ -104,7 +103,7 @@ class Document extends Model
         'referenced_document_id',
         'pos_shift_id',
         'created_by',
-        'updated_by'
+        'updated_by',
     ];
 
     protected $appends = ['has_physical_products'];
@@ -116,7 +115,7 @@ class Document extends Model
         'tax_total' => 'decimal:2',
         'discount_total' => 'decimal:2',
         'grand_total' => 'decimal:2',
-        'exchange_rate' => 'decimal:6'
+        'exchange_rate' => 'decimal:6',
     ];
 
     /** Página de detalhe do documento, conforme o tipo (cada tipo tem o seu módulo). */
@@ -173,7 +172,7 @@ class Document extends Model
                 $unallowedDirty = array_diff($dirtyFields, $allowedChanges);
 
                 if (count($unallowedDirty) > 0) {
-                    throw new Exception("Regra de Imutabilidade Fiscal: Documentos emitidos/confirmados não podem ter seus dados alterados.");
+                    throw new Exception('Regra de Imutabilidade Fiscal: Documentos emitidos/confirmados não podem ter seus dados alterados.');
                 }
             }
         });
@@ -181,7 +180,7 @@ class Document extends Model
         // Impedir eliminação física de documentos emitidos
         static::deleting(function (Document $document) {
             if (in_array($document->status, ['confirmed', 'paid', 'partial'])) {
-                throw new Exception("Regra de Imutabilidade Fiscal: Não é permitido eliminar fisicamente documentos ativos.");
+                throw new Exception('Regra de Imutabilidade Fiscal: Não é permitido eliminar fisicamente documentos ativos.');
             }
         });
     }
@@ -233,6 +232,7 @@ class Document extends Model
     {
         return $this->hasMany(PaymentAllocation::class, 'document_id');
     }
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);

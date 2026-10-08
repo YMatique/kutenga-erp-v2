@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         $tableNames = config('permission.table_names');
-        
+
         Schema::table($tableNames['roles'], function (Blueprint $table) {
             $table->foreignId('company_id')->nullable()->constrained()->cascadeOnDelete();
         });
@@ -24,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         $tableNames = config('permission.table_names');
-        
+
         Schema::table($tableNames['roles'], function (Blueprint $table) {
             $table->dropForeign(['company_id']);
             $table->dropColumn('company_id');

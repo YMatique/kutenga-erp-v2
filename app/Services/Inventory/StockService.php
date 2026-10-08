@@ -3,15 +3,17 @@
 namespace App\Services\Inventory;
 
 use App\Exceptions\InsufficientStockException;
+use App\Mail\LowStockAlertMail;
 use App\Models\Catalog\Product;
+use App\Models\Company;
 use App\Models\Inventory\ProductStock;
 use App\Models\Inventory\StockMovement;
 use App\Models\Inventory\Warehouse;
+use App\Models\SystemNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\LowStockAlertMail;
-use App\Models\Company;
 
 class StockService
 {
@@ -238,14 +240,14 @@ class StockService
 
             if ($totalStock <= 0) {
                 // Out of stock
-                $exists = \App\Models\SystemNotification::where('company_id', $product->company_id)
+                $exists = SystemNotification::where('company_id', $product->company_id)
                     ->where('type', 'out_of_stock')
                     ->where('link', "/products/{$product->id}")
                     ->where('is_read', false)
                     ->exists();
 
-                if (!$exists) {
-                    \App\Models\SystemNotification::create([
+                if (! $exists) {
+                    SystemNotification::create([
                         'company_id' => $product->company_id,
                         'type' => 'out_of_stock',
                         'title' => 'Stock Esgotado',
@@ -259,28 +261,28 @@ class StockService
                         try {
                             Mail::to($company->email)->send(new LowStockAlertMail($product, 0));
                         } catch (\Exception $e) {
-                            \Illuminate\Support\Facades\Log::error("Erro ao enviar email de stock esgotado para {$company->email}: " . $e->getMessage());
+                            Log::error("Erro ao enviar email de stock esgotado para {$company->email}: ".$e->getMessage());
                         }
                     }
                 }
 
                 // Resolve low stock notification
-                \App\Models\SystemNotification::where('company_id', $product->company_id)
+                SystemNotification::where('company_id', $product->company_id)
                     ->where('type', 'low_stock')
                     ->where('link', "/products/{$product->id}")
                     ->where('is_read', false)
                     ->update(['is_read' => true]);
 
-            } elseif (!is_null($product->min_stock) && $totalStock <= $product->min_stock) {
+            } elseif (! is_null($product->min_stock) && $totalStock <= $product->min_stock) {
                 // Low stock
-                $exists = \App\Models\SystemNotification::where('company_id', $product->company_id)
+                $exists = SystemNotification::where('company_id', $product->company_id)
                     ->where('type', 'low_stock')
                     ->where('link', "/products/{$product->id}")
                     ->where('is_read', false)
                     ->exists();
 
-                if (!$exists) {
-                    \App\Models\SystemNotification::create([
+                if (! $exists) {
+                    SystemNotification::create([
                         'company_id' => $product->company_id,
                         'type' => 'low_stock',
                         'title' => 'Stock Mínimo Atingido',
@@ -294,13 +296,13 @@ class StockService
                         try {
                             Mail::to($company->email)->send(new LowStockAlertMail($product, $totalStock));
                         } catch (\Exception $e) {
-                            \Illuminate\Support\Facades\Log::error("Erro ao enviar email de stock mínimo para {$company->email}: " . $e->getMessage());
+                            Log::error("Erro ao enviar email de stock mínimo para {$company->email}: ".$e->getMessage());
                         }
                     }
                 }
 
                 // Resolve out of stock notification (since stock is > 0 now)
-                \App\Models\SystemNotification::where('company_id', $product->company_id)
+                SystemNotification::where('company_id', $product->company_id)
                     ->where('type', 'out_of_stock')
                     ->where('link', "/products/{$product->id}")
                     ->where('is_read', false)
@@ -308,7 +310,7 @@ class StockService
 
             } else {
                 // Healthy stock -> resolve both alerts
-                \App\Models\SystemNotification::where('company_id', $product->company_id)
+                SystemNotification::where('company_id', $product->company_id)
                     ->whereIn('type', ['low_stock', 'out_of_stock'])
                     ->where('link', "/products/{$product->id}")
                     ->where('is_read', false)
@@ -332,9 +334,10 @@ class StockService
         ?string $notes = null
     ): StockMovement {
 
-     if ($this->openingExists($product, $warehouse)) {
-        throw new \Exception("Stock inicial já foi definido para este produto neste armazém.");
-    }
+        if ($this->openingExists($product, $warehouse)) {
+            throw new \Exception('Stock inicial já foi definido para este produto neste armazém.');
+        }
+
         return $this->recordMovement(
             $product,
             $warehouse,

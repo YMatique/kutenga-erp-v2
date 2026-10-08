@@ -1,7 +1,11 @@
 <?php
 
+use App\Http\Controllers\Settings\CompanySettingsController;
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Settings\RoleController;
 use App\Http\Controllers\Settings\SecurityController;
+use App\Http\Controllers\Settings\SubscriptionController;
+use App\Http\Controllers\Settings\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
@@ -24,13 +28,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified', 'role:Admin|owner'])->group(function () {
-    Route::get('settings/company', [\App\Http\Controllers\Settings\CompanySettingsController::class, 'edit'])->name('company-settings.edit');
-    Route::post('settings/company', [\App\Http\Controllers\Settings\CompanySettingsController::class, 'update'])->name('company-settings.update');
-    Route::post('settings/company/test-smtp', [\App\Http\Controllers\Settings\CompanySettingsController::class, 'testSmtp'])->name('company-settings.test-smtp');
+    Route::get('settings/company', [CompanySettingsController::class, 'edit'])->name('company-settings.edit');
+    Route::post('settings/company', [CompanySettingsController::class, 'update'])->name('company-settings.update');
+    Route::post('settings/company/test-smtp', [CompanySettingsController::class, 'testSmtp'])->name('company-settings.test-smtp');
 
-    Route::get('settings/subscription', [\App\Http\Controllers\Settings\SubscriptionController::class, 'edit'])->name('settings.subscription.edit');
-    Route::post('settings/subscription/upgrade', [\App\Http\Controllers\Settings\SubscriptionController::class, 'upgrade'])->name('settings.subscription.upgrade');
+    Route::get('settings/subscription', [SubscriptionController::class, 'edit'])->name('settings.subscription.edit');
+    Route::post('settings/subscription/upgrade', [SubscriptionController::class, 'upgrade'])->name('settings.subscription.upgrade');
 
-    Route::resource('settings/users', \App\Http\Controllers\Settings\UserController::class)->except(['create', 'show', 'edit']);
-    Route::resource('settings/roles', \App\Http\Controllers\Settings\RoleController::class)->except(['create', 'show', 'edit']);
+    Route::resource('settings/users', UserController::class)->except(['create', 'show', 'edit']);
+    Route::resource('settings/roles', RoleController::class)->except(['create', 'show', 'edit']);
 });

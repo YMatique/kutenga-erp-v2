@@ -2,17 +2,15 @@
 
 namespace App\Http\Controllers\Billing;
 
-use App\Support\Tenant;
-
 use App\Http\Controllers\Controller;
-
-use App\Models\Billing\Customer;
 use App\Models\Billing\CreditNote;
+use App\Models\Billing\Customer;
 use App\Models\Billing\Document;
 use App\Models\Billing\DocumentSeries;
 use App\Models\Catalog\Product;
 use App\Models\Inventory\Warehouse;
 use App\Services\Billing\BillingService;
+use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -61,7 +59,7 @@ class CreditNoteController extends Controller
             'filters' => $request->only(['search', 'status']),
             'kpis' => $kpis,
             'type' => 'NC',
-            'title' => 'Notas de Crédito'
+            'title' => 'Notas de Crédito',
         ]);
     }
 
@@ -87,7 +85,7 @@ class CreditNoteController extends Controller
             'series' => $series,
             'warehouses' => $warehouses,
             'invoices' => $invoices,
-            'type' => 'NC'
+            'type' => 'NC',
         ]);
     }
 
@@ -139,7 +137,7 @@ class CreditNoteController extends Controller
         return Inertia::render('billing/credit-notes/show', [
             'document' => $note,
             'warehouses' => $warehouses,
-            'type' => 'NC'
+            'type' => 'NC',
         ]);
     }
 
@@ -174,7 +172,7 @@ class CreditNoteController extends Controller
             'series' => $series,
             'warehouses' => $warehouses,
             'invoices' => $invoices,
-            'type' => 'NC'
+            'type' => 'NC',
         ]);
     }
 
@@ -223,7 +221,7 @@ class CreditNoteController extends Controller
 
         try {
             $warehouse = null;
-            if (!empty($validated['warehouse_id'])) {
+            if (! empty($validated['warehouse_id'])) {
                 $warehouse = Warehouse::where('company_id', $companyId)->findOrFail($validated['warehouse_id']);
             }
             $this->billingService->confirmAndEmit($note->id, $warehouse);
@@ -238,10 +236,10 @@ class CreditNoteController extends Controller
     {
         try {
             $this->billingService->cancel($id);
+
             return redirect()->back()->with('success', 'Nota de Crédito cancelada com sucesso!');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }
     }
 }
-

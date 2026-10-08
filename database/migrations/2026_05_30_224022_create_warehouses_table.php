@@ -21,7 +21,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->boolean('is_default')->default(false);
             $table->boolean('is_active')->default(true);
-            //indices
+            // indices
             $table->index(['company_id', 'is_active']);
             $table->timestamps();
             $table->softDeletes();

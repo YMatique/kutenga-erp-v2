@@ -74,12 +74,12 @@ class CashRegister extends Model
     public function currentSeries(int $userId): DocumentSeries
     {
         $year = (int) date('Y');
-        $code = 'P' . $this->id;
+        $code = 'P'.$this->id;
 
         $series = DocumentSeries::firstOrCreate(
             ['company_id' => $this->company_id, 'code' => $code, 'year' => $year],
             [
-                'name' => 'POS ' . $this->name . ' ' . $year,
+                'name' => 'POS '.$this->name.' '.$year,
                 'scope' => 'pos',
                 'next_number' => 1,
                 'is_active' => true,
@@ -114,7 +114,7 @@ class CashRegister extends Model
             ->orderBy('id')
             ->value('id');
 
-        if (!$branchId) {
+        if (! $branchId) {
             return null;
         }
 

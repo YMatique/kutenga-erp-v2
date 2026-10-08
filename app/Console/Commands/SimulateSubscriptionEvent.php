@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Company;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 /**
  * Simula a aplicação externa de gestão: envia um pedido assinado (HMAC) à API interna.
@@ -25,7 +26,7 @@ class SimulateSubscriptionEvent extends Command
     {
         $secret = config('subscription.api.secret');
 
-        if (!$secret) {
+        if (! $secret) {
             $this->error('Defina SUBSCRIPTION_API_SECRET no .env.');
 
             return self::FAILURE;
@@ -35,7 +36,7 @@ class SimulateSubscriptionEvent extends Command
             ->orWhere('id', $this->argument('company'))
             ->first();
 
-        if (!$company) {
+        if (! $company) {
             $this->error('Empresa não encontrada.');
 
             return self::FAILURE;
@@ -49,13 +50,13 @@ class SimulateSubscriptionEvent extends Command
 
         $body = json_encode($payload);
         $timestamp = (string) time();
-        $signature = hash_hmac('sha256', $timestamp . '.' . $body, $secret);
-        $url = rtrim($this->option('url') ?: config('app.url'), '/') . "/api/internal/companies/{$company->external_id}/subscription";
+        $signature = hash_hmac('sha256', $timestamp.'.'.$body, $secret);
+        $url = rtrim($this->option('url') ?: config('app.url'), '/')."/api/internal/companies/{$company->external_id}/subscription";
 
         $response = Http::withHeaders([
             'X-Kutenga-Timestamp' => $timestamp,
             'X-Kutenga-Signature' => $signature,
-            'Idempotency-Key' => (string) \Illuminate\Support\Str::uuid(),
+            'Idempotency-Key' => (string) Str::uuid(),
             'Content-Type' => 'application/json',
         ])->withBody($body, 'application/json')->put($url);
 

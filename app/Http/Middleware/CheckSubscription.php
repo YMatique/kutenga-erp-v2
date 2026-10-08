@@ -37,21 +37,21 @@ class CheckSubscription
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
         $user = auth()->user();
         $company = $user?->company;
 
-        if (!$company) {
+        if (! $company) {
             return $next($request);
         }
 
         $allowed = $request->is(self::ALWAYS_ALLOWED);
 
         // 1. Bloqueio total (expirada ou suspensa)
-        if ($company->isSubscriptionExpired() && !$allowed) {
+        if ($company->isSubscriptionExpired() && ! $allowed) {
             $suspended = $company->subscriptionState() === 'suspended';
             $message = $suspended
                 ? 'A subscrição da sua empresa foi suspensa. Contacte o suporte para regularizar.'
@@ -69,9 +69,9 @@ class CheckSubscription
         }
 
         // 2. Tolerância: só leitura (consultar sim, criar/emitir/alterar não)
-        if ($company->isSubscriptionReadOnly() && !$allowed && !$request->isMethodSafe()) {
-            $message = 'A subscrição terminou. Até ' . $company->graceEndsAt()->format('d/m/Y')
-                . ' só pode consultar dados; renove o plano para voltar a criar ou emitir documentos.';
+        if ($company->isSubscriptionReadOnly() && ! $allowed && ! $request->isMethodSafe()) {
+            $message = 'A subscrição terminou. Até '.$company->graceEndsAt()->format('d/m/Y')
+                .' só pode consultar dados; renove o plano para voltar a criar ou emitir documentos.';
 
             return $request->expectsJson()
                 ? response()->json(['error' => $message], 403)
@@ -79,7 +79,7 @@ class CheckSubscription
         }
 
         // 3. Acesso ao POS depende do plano
-        if ($request->is('pos*') && !$company->can('pos')) {
+        if ($request->is('pos*') && ! $company->can('pos')) {
             return $request->expectsJson()
                 ? response()->json(['error' => 'O Ponto de Venda (POS) não está incluído no seu plano atual.'], 403)
                 : redirect()->route('dashboard')
@@ -89,8 +89,8 @@ class CheckSubscription
         // 4. Limites do plano na criação de recursos
         if ($request->isMethod('POST')) {
             foreach (self::CREATION_LIMITS as $path => [$limitKey, $label]) {
-                if ($request->is($path) && !$company->withinLimit($limitKey)) {
-                    $message = 'Limite do plano atingido! O seu plano atual permite apenas ' . $company->limit($limitKey) . ' ' . $label . '.';
+                if ($request->is($path) && ! $company->withinLimit($limitKey)) {
+                    $message = 'Limite do plano atingido! O seu plano atual permite apenas '.$company->limit($limitKey).' '.$label.'.';
 
                     return $request->expectsJson()
                         ? response()->json(['error' => $message], 403)

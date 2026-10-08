@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Catalog;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\Catalog\Unit;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -44,6 +43,7 @@ class UnitController extends Controller
     public function destroy(Unit $unit)
     {
         $unit->delete();
+
         return back()->with('success', 'Unidade removida com sucesso.');
     }
 }

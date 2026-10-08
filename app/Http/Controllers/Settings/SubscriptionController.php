@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Models\Plan;
+use App\Services\Subscription\SubscriptionService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class SubscriptionController extends Controller
@@ -11,12 +14,12 @@ class SubscriptionController extends Controller
     public function edit(Request $request)
     {
         $company = $request->user()->company;
-        
+
         return Inertia::render('settings/subscription', [
             'company' => $company,
-            'plans' => \App\Models\Plan::where('is_active', true)->orderBy('sort_order')->get(),
-            'limitLabels' => \App\Models\Plan::LIMIT_KEYS,
-            'featureLabels' => \App\Models\Plan::FEATURE_KEYS,
+            'plans' => Plan::where('is_active', true)->orderBy('sort_order')->get(),
+            'limitLabels' => Plan::LIMIT_KEYS,
+            'featureLabels' => Plan::FEATURE_KEYS,
         ]);
     }
 
@@ -29,7 +32,7 @@ class SubscriptionController extends Controller
         abort_unless($request->user()->isSuperAdmin(), 403, 'A alteração de plano é gerida pela Kutenga. Contacte o suporte.');
 
         $validated = $request->validate([
-            'plan' => ['required', 'string', \Illuminate\Validation\Rule::exists('plans', 'code')->where('is_active', true)],
+            'plan' => ['required', 'string', Rule::exists('plans', 'code')->where('is_active', true)],
         ]);
 
         $plan = $validated['plan'];
@@ -39,12 +42,12 @@ class SubscriptionController extends Controller
             default => null,
         };
 
-        app(\App\Services\Subscription\SubscriptionService::class)->apply($company, [
+        app(SubscriptionService::class)->apply($company, [
             'plan' => $plan,
             'status' => 'active',
             'ends_at' => $endsAt,
         ], 'admin');
 
-        return back()->with('success', 'Plano atualizado com sucesso para ' . ucfirst($plan) . '!');
+        return back()->with('success', 'Plano atualizado com sucesso para '.ucfirst($plan).'!');
     }
 }

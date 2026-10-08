@@ -3,8 +3,6 @@
 namespace App\Models\Inventory;
 
 use App\Models\User;
-
-
 use App\Traits\BelongsToCompany;
 // use App\Traits\HasAudit;
 use Illuminate\Database\Eloquent\Model;

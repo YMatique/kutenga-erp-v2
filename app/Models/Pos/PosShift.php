@@ -2,16 +2,16 @@
 
 namespace App\Models\Pos;
 
+use App\Models\Billing\Document;
+use App\Models\Catalog\Branch;
+use App\Models\Company;
+use App\Models\User;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Company;
-use App\Models\Catalog\Branch;
-use App\Models\User;
-use App\Models\Billing\Document;
-use App\Traits\BelongsToCompany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class PosShift extends Model
 {

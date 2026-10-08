@@ -37,7 +37,7 @@ class Ean13
     {
         $last = Product::withoutGlobalScopes()->withTrashed()
             ->where('company_id', $companyId)
-            ->where('barcode', 'like', self::PREFIX . '___________')
+            ->where('barcode', 'like', self::PREFIX.'___________')
             ->orderByDesc('barcode')
             ->limit(50)
             ->pluck('barcode')
@@ -47,8 +47,8 @@ class Ean13
 
         do {
             $sequence++;
-            $body = self::PREFIX . str_pad((string) $sequence, 10, '0', STR_PAD_LEFT);
-            $code = $body . self::checkDigit($body);
+            $body = self::PREFIX.str_pad((string) $sequence, 10, '0', STR_PAD_LEFT);
+            $code = $body.self::checkDigit($body);
         } while (Product::withoutGlobalScopes()->withTrashed()->where('company_id', $companyId)->where('barcode', $code)->exists());
 
         return $code;

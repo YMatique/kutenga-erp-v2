@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\Catalog;
 
-use App\Support\Tenant;
-
 use App\Http\Controllers\Controller;
-
 use App\Models\Catalog\Category;
+use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -28,7 +26,7 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(5);
+        $validated['slug'] = Str::slug($validated['name']).'-'.Str::random(5);
 
         Category::create($validated);
 
@@ -44,7 +42,7 @@ class CategoryController extends Controller
         ]);
 
         if ($request->name !== $category->name) {
-            $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(5);
+            $validated['slug'] = Str::slug($validated['name']).'-'.Str::random(5);
         }
 
         $category->update($validated);
@@ -55,6 +53,7 @@ class CategoryController extends Controller
     public function destroy(Category $category)
     {
         $category->delete();
+
         return back()->with('success', 'Categoria removida com sucesso.');
     }
 }

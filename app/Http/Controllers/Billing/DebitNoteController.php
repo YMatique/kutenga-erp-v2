@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers\Billing;
 
-use App\Support\Tenant;
-
 use App\Http\Controllers\Controller;
-
 use App\Models\Billing\Customer;
 use App\Models\Billing\DebitNote;
 use App\Models\Billing\Document;
@@ -13,6 +10,7 @@ use App\Models\Billing\DocumentSeries;
 use App\Models\Catalog\Product;
 use App\Models\Inventory\Warehouse;
 use App\Services\Billing\BillingService;
+use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -35,8 +33,8 @@ class DebitNoteController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('document_number', 'like', "%{$search}%")
-                      ->orWhere('customer_name', 'like', "%{$search}%")
-                      ->orWhere('customer_nuit', 'like', "%{$search}%");
+                        ->orWhere('customer_name', 'like', "%{$search}%")
+                        ->orWhere('customer_nuit', 'like', "%{$search}%");
                 });
             })
             ->when($request->status, function ($query, $status) {
@@ -61,7 +59,7 @@ class DebitNoteController extends Controller
             'filters' => $request->only(['search', 'status']),
             'kpis' => $kpis,
             'type' => 'ND',
-            'title' => 'Notas de Débito'
+            'title' => 'Notas de Débito',
         ]);
     }
 
@@ -87,7 +85,7 @@ class DebitNoteController extends Controller
             'series' => $series,
             'warehouses' => $warehouses,
             'invoices' => $invoices,
-            'type' => 'ND'
+            'type' => 'ND',
         ]);
     }
 
@@ -139,7 +137,7 @@ class DebitNoteController extends Controller
         return Inertia::render('billing/debit-notes/show', [
             'document' => $note,
             'warehouses' => $warehouses,
-            'type' => 'ND'
+            'type' => 'ND',
         ]);
     }
 
@@ -174,7 +172,7 @@ class DebitNoteController extends Controller
             'series' => $series,
             'warehouses' => $warehouses,
             'invoices' => $invoices,
-            'type' => 'ND'
+            'type' => 'ND',
         ]);
     }
 
@@ -228,10 +226,10 @@ class DebitNoteController extends Controller
     {
         try {
             $this->billingService->cancel($id);
+
             return redirect()->back()->with('success', 'Nota de Débito cancelada com sucesso!');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }
     }
 }
-

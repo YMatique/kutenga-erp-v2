@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Category extends Model
 {
-    use SoftDeletes /* , HasAudit */, BelongsToCompany;
+    use BelongsToCompany /* , HasAudit */, SoftDeletes;
 
     protected $fillable = [
         'company_id',

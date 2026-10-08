@@ -11,6 +11,7 @@ class LockScreenController extends Controller
     public function lock(Request $request)
     {
         $request->session()->put('screen_locked', true);
+
         return response()->json(['locked' => true]);
     }
 
@@ -20,7 +21,7 @@ class LockScreenController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (!Hash::check($request->password, $request->user()->password)) {
+        if (! Hash::check($request->password, $request->user()->password)) {
             throw ValidationException::withMessages([
                 'password' => ['A senha fornecida está incorreta.'],
             ]);

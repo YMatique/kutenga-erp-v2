@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Billing;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\Billing\PaymentReceipt;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,8 +19,8 @@ class PaymentReceiptController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('document_number', 'like', "%{$search}%")
-                      ->orWhere('customer_name', 'like', "%{$search}%")
-                      ->orWhere('customer_nuit', 'like', "%{$search}%");
+                        ->orWhere('customer_name', 'like', "%{$search}%")
+                        ->orWhere('customer_nuit', 'like', "%{$search}%");
                 });
             })
             ->when($request->status, function ($query, $status) {
@@ -46,7 +45,7 @@ class PaymentReceiptController extends Controller
             'filters' => $request->only(['search', 'status']),
             'kpis' => $kpis,
             'type' => 'RC',
-            'title' => 'Recibos de Pagamento'
+            'title' => 'Recibos de Pagamento',
         ]);
     }
 
@@ -60,7 +59,7 @@ class PaymentReceiptController extends Controller
 
         return Inertia::render('billing/payment-receipts/show', [
             'document' => $receipt,
-            'type' => 'RC'
+            'type' => 'RC',
         ]);
     }
 }

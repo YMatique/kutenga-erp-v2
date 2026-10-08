@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers\Inventory;
 
-use App\Support\Tenant;
-
 use App\Http\Controllers\Controller;
-
 use App\Models\Catalog\Product;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\Warehouse;
 use App\Services\Inventory\StockAdjustmentService;
 use App\Services\Inventory\StockService;
+use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;

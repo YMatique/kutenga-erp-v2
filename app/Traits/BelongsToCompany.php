@@ -10,7 +10,7 @@ trait BelongsToCompany
     protected static function bootBelongsToCompany()
     {
         static::creating(function ($model) {
-            if (!$model->company_id && Session::has('current_company_id')) {
+            if (! $model->company_id && Session::has('current_company_id')) {
                 $model->company_id = Session::get('current_company_id');
             }
             // if (!$model->company_id) {
@@ -26,7 +26,7 @@ trait BelongsToCompany
         static::addGlobalScope('company', function (Builder $builder) {
             if (Session::has('current_company_id')) {
                 // $builder->where('company_id', Session::get('current_company_id'));
-                $builder->where($builder->getQuery()->from . '.company_id', Session::get('current_company_id'));
+                $builder->where($builder->getQuery()->from.'.company_id', Session::get('current_company_id'));
             }
         });
     }

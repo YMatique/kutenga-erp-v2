@@ -2,10 +2,10 @@
 
 require __DIR__.'/../vendor/autoload.php';
 $app = require_once __DIR__.'/../bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$app->make(Kernel::class)->bootstrap();
 
+use Illuminate\Contracts\Console\Kernel;
 use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 
 $role = Role::where('name', 'Admin')->first();
 if ($role) {

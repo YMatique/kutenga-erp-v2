@@ -11,6 +11,7 @@ class Payment extends Model
     use BelongsToCompany;
 
     protected $table = 'payments';
+
     protected $fillable = ['company_id', 'customer_id', 'payment_method', 'amount', 'amount_tendered', 'change_given', 'payment_date', 'reference', 'notes', 'created_by', 'updated_by'];
 
     public function allocations(): HasMany

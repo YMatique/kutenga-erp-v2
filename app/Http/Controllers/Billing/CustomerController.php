@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers\Billing;
 
-use App\Support\Tenant;
-
 use App\Http\Controllers\Controller;
 use App\Models\Billing\Customer;
+use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -35,9 +34,10 @@ class CustomerController extends Controller
 
         return Inertia::render('billing/customers/index', [
             'customers' => $customers,
-            'filters' => $request->only(['search'])
+            'filters' => $request->only(['search']),
         ]);
     }
+
     public function create()
     {
         return Inertia::render('billing/customers/create');
@@ -56,7 +56,7 @@ class CustomerController extends Controller
                 'required',
                 'string',
                 'size:9', // NUIT em Moçambique tem exatamente 9 dígitos
-                "unique:customers,nuit,NULL,id,company_id,{$companyId}"
+                "unique:customers,nuit,NULL,id,company_id,{$companyId}",
             ],
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:30',
@@ -90,19 +90,19 @@ class CustomerController extends Controller
                 'is_active' => true,
             ]);
 
-            if (!empty($validated['contacts'])) {
+            if (! empty($validated['contacts'])) {
                 foreach ($validated['contacts'] as $contact) {
                     // Só cria se tiver nome ou telefone (para evitar registos vazios)
-                    if (!empty($contact['name']) || !empty($contact['phone']) || !empty($contact['email'])) {
+                    if (! empty($contact['name']) || ! empty($contact['phone']) || ! empty($contact['email'])) {
                         $customer->contacts()->create($contact);
                     }
                 }
             }
 
             // Guardar endereços (apenas os que têm address ou city preenchidos)
-            if (!empty($validated['addresses'])) {
+            if (! empty($validated['addresses'])) {
                 foreach ($validated['addresses'] as $address) {
-                    if (!empty($address['address']) || !empty($address['city'])) {
+                    if (! empty($address['address']) || ! empty($address['city'])) {
                         $customer->addresses()->create($address);
                     }
                 }
@@ -126,7 +126,7 @@ class CustomerController extends Controller
                 'required',
                 'string',
                 'size:9',
-                "unique:customers,nuit,{$customer->id},id,company_id,{$companyId}"
+                "unique:customers,nuit,{$customer->id},id,company_id,{$companyId}",
             ],
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:30',
@@ -164,9 +164,9 @@ class CustomerController extends Controller
 
             // 2. Sincronizar contactos: apaga todos e recria apenas os que têm nome ou telefone
             $customer->contacts()->delete();
-            if (!empty($validated['contacts'])) {
+            if (! empty($validated['contacts'])) {
                 foreach ($validated['contacts'] as $contact) {
-                    if (!empty($contact['name']) || !empty($contact['phone']) || !empty($contact['email'])) {
+                    if (! empty($contact['name']) || ! empty($contact['phone']) || ! empty($contact['email'])) {
                         $customer->contacts()->create([
                             'name' => $contact['name'] ?? null,
                             'role' => $contact['role'] ?? null,
@@ -179,9 +179,9 @@ class CustomerController extends Controller
 
             // 3. Sincronizar endereços: apaga todos e recria apenas os que têm address ou city
             $customer->addresses()->delete();
-            if (!empty($validated['addresses'])) {
+            if (! empty($validated['addresses'])) {
                 foreach ($validated['addresses'] as $address) {
-                    if (!empty($address['address']) || !empty($address['city'])) {
+                    if (! empty($address['address']) || ! empty($address['city'])) {
                         $customer->addresses()->create([
                             'type' => $address['type'],
                             'address' => $address['address'] ?? null,
@@ -208,9 +208,10 @@ class CustomerController extends Controller
             ->findOrFail($id);
 
         return Inertia::render('billing/customers/edit', [
-            'customer' => $customer
+            'customer' => $customer,
         ]);
     }
+
     /**
      * Exibe os detalhes de um cliente específico.
      */
@@ -228,9 +229,10 @@ class CustomerController extends Controller
         // }]);
 
         return Inertia::render('billing/customers/show', [
-            'customer' => $customer
+            'customer' => $customer,
         ]);
     }
+
     /**
      * Elimina logicamente um cliente do sistema.
      */
@@ -242,7 +244,7 @@ class CustomerController extends Controller
         // Se tiver saldo devedor pendente, bloqueia a eliminação
         if ($customer->balance > 0) {
             return redirect()->back()->withErrors([
-                'error' => 'Não é possível eliminar um cliente com saldo corrente devedor pendente.'
+                'error' => 'Não é possível eliminar um cliente com saldo corrente devedor pendente.',
             ]);
         }
 

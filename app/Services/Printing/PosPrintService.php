@@ -43,7 +43,7 @@ class PosPrintService
 
         $summary = [
             ['Fundo de maneio', $shift->starting_cash],
-            ['Vendas (' . $docs . ')', array_sum($totals)],
+            ['Vendas ('.$docs.')', array_sum($totals)],
             ['  Dinheiro', $totals['cash']],
             ['  Cartão / TPA', $totals['card']],
             ['  Transferência', $totals['transfer']],
@@ -55,7 +55,7 @@ class PosPrintService
             $summary[] = ['Diferença', $shift->cash_difference];
         }
 
-        return $this->report($shift->company, $shift->cashRegister, 'Resumo do Turno #' . $shift->id, $this->shiftMeta($shift), $summary, collect());
+        return $this->report($shift->company, $shift->cashRegister, 'Resumo do Turno #'.$shift->id, $this->shiftMeta($shift), $summary, collect());
     }
 
     public function shiftSalesData(PosShift $shift): array
@@ -64,13 +64,13 @@ class PosPrintService
 
         $rows = $this->salesRows($shift->documents()->getQuery());
 
-        return $this->report($shift->company, $shift->cashRegister, 'Vendas do Turno #' . $shift->id, $this->shiftMeta($shift), $this->methodSummary($rows), $rows);
+        return $this->report($shift->company, $shift->cashRegister, 'Vendas do Turno #'.$shift->id, $this->shiftMeta($shift), $this->methodSummary($rows), $rows);
     }
 
     public function dayData(User $user, bool $allRegisters, ?CashRegister $register = null): array
     {
         $shiftIds = PosShift::where('company_id', $user->company_id)
-            ->when(!$allRegisters, fn ($q) => $q->where('user_id', $user->id))
+            ->when(! $allRegisters, fn ($q) => $q->where('user_id', $user->id))
             ->pluck('id');
 
         $rows = $this->salesRows(
@@ -84,7 +84,7 @@ class PosPrintService
             $user->company,
             $register,
             'Vendas do Dia',
-            [now()->format('d/m/Y'), $allRegisters ? 'Todas as caixas' : 'Operador: ' . $user->name],
+            [now()->format('d/m/Y'), $allRegisters ? 'Todas as caixas' : 'Operador: '.$user->name],
             $this->methodSummary($rows),
             $rows
         );
@@ -96,7 +96,7 @@ class PosPrintService
 
         return $this->report($register->company, $register, 'Teste de Impressão', [$register->name], [
             ['Driver', strtoupper($register->printer_driver)],
-            ['Largura do papel', $this->paperWidth($register->company, $register) . ' mm'],
+            ['Largura do papel', $this->paperWidth($register->company, $register).' mm'],
             ['Acentos', 'ção áé õü ç'],
         ], collect(), false);
     }
@@ -118,9 +118,9 @@ class PosPrintService
     {
         return array_values(array_filter([
             $shift->cashRegister?->name,
-            'Operador: ' . $shift->user?->name,
-            'Abertura: ' . $shift->opened_at->format('d/m/Y H:i'),
-            $shift->closed_at ? 'Fecho: ' . $shift->closed_at->format('d/m/Y H:i') : 'Turno em curso',
+            'Operador: '.$shift->user?->name,
+            'Abertura: '.$shift->opened_at->format('d/m/Y H:i'),
+            $shift->closed_at ? 'Fecho: '.$shift->closed_at->format('d/m/Y H:i') : 'Turno em curso',
         ]));
     }
 
@@ -142,10 +142,10 @@ class PosPrintService
 
     private function methodSummary(Collection $rows): array
     {
-        $summary = [['Total (' . $rows->count() . ' vendas)', $rows->sum('total')]];
+        $summary = [['Total ('.$rows->count().' vendas)', $rows->sum('total')]];
 
         foreach (self::METHODS as $key => $label) {
-            $summary[] = ['  ' . $label, $rows->where('method', $key)->sum('total')];
+            $summary[] = ['  '.$label, $rows->where('method', $key)->sum('total')];
         }
 
         return $summary;
@@ -158,12 +158,12 @@ class PosPrintService
         $esc = new EscPos($data['paperWidth']);
         $company = $data['company'];
         $methods = ['cash' => 'Dinheiro', 'card' => 'Cartão', 'transfer' => 'Transf.'];
-        $fmt = fn ($v) => number_format((float) $v, 2, ',', '.') . ' MT';
+        $fmt = fn ($v) => number_format((float) $v, 2, ',', '.').' MT';
 
         $esc->centered($company?->name ?? 'Kutenga', true);
 
         if ($company?->nuit) {
-            $esc->centered('NUIT: ' . $company->nuit);
+            $esc->centered('NUIT: '.$company->nuit);
         }
 
         $esc->feed()->centered(mb_strtoupper($data['title']), true);
@@ -172,10 +172,10 @@ class PosPrintService
             $esc->centered($line);
         }
 
-        $esc->centered('Impresso: ' . now()->format('d/m/Y H:i'))->separator();
+        $esc->centered('Impresso: '.now()->format('d/m/Y H:i'))->separator();
 
         foreach ($data['summary'] as [$label, $value]) {
-            $bold = !str_starts_with($label, ' ');
+            $bold = ! str_starts_with($label, ' ');
             $esc->bold($bold)->pair($label, $data['isMoney'] ? $fmt($value) : (string) $value)->bold(false);
         }
 
@@ -184,7 +184,7 @@ class PosPrintService
 
             foreach ($data['rows'] as $row) {
                 $esc->pair(
-                    $row['time'] . ' ' . $row['number'] . ' ' . ($methods[$row['method']] ?? $row['method']),
+                    $row['time'].' '.$row['number'].' '.($methods[$row['method']] ?? $row['method']),
                     number_format($row['total'], 2, ',', '.')
                 );
             }
@@ -213,43 +213,43 @@ class PosPrintService
         }
 
         if ($company?->phone) {
-            $esc->centered('Tel: ' . $company->phone);
+            $esc->centered('Tel: '.$company->phone);
         }
 
         if ($company?->nuit) {
-            $esc->centered('NUIT: ' . $company->nuit);
+            $esc->centered('NUIT: '.$company->nuit);
         }
 
         $esc->separator()
             ->centered(mb_strtoupper(self::documentTitle($document)), true)
             ->centered($document->document_number ?? 'RASCUNHO', true)
-            ->centered(($document->issue_date ?? now())->format('d/m/Y') . ' ' . ($document->created_at ?? now())->format('H:i'));
+            ->centered(($document->issue_date ?? now())->format('d/m/Y').' '.($document->created_at ?? now())->format('H:i'));
 
         if ($document->status === 'cancelled') {
             $esc->centered('*** DOCUMENTO CANCELADO ***', true);
         }
 
         $esc->separator()
-            ->line('Cliente: ' . $document->customer_name)
-            ->line('NUIT: ' . $document->customer_nuit)
+            ->line('Cliente: '.$document->customer_name)
+            ->line('NUIT: '.$document->customer_nuit)
             ->separator();
 
         foreach ($document->items as $item) {
             $esc->bold()->line($item->product_name)->bold(false);
 
-            $detail = $fmt($item->quantity) . ' x ' . $fmt($item->unit_price);
+            $detail = $fmt($item->quantity).' x '.$fmt($item->unit_price);
 
             if ((float) $item->discount_percent > 0) {
-                $detail .= ' (-' . $fmt($item->discount_percent) . '%)';
+                $detail .= ' (-'.$fmt($item->discount_percent).'%)';
             }
 
             $esc->pair($detail, $fmt($item->total));
         }
 
-        $esc->separator()->pair('Subtotal', $fmt($document->subtotal) . ' MT');
+        $esc->separator()->pair('Subtotal', $fmt($document->subtotal).' MT');
 
         if ((float) $document->discount_total > 0) {
-            $esc->pair('Desconto', '-' . $fmt($document->discount_total) . ' MT');
+            $esc->pair('Desconto', '-'.$fmt($document->discount_total).' MT');
         }
 
         $taxByRate = $document->items
@@ -259,7 +259,7 @@ class PosPrintService
             ));
 
         foreach ($taxByRate as $rate => $amount) {
-            $esc->pair('IVA (' . $rate . '%)', $fmt($amount) . ' MT');
+            $esc->pair('IVA ('.$rate.'%)', $fmt($amount).' MT');
         }
 
         $esc->separator()->bold()->size(2)->pair('TOTAL', $fmt($document->grand_total))->size(1)->bold(false);
@@ -268,13 +268,13 @@ class PosPrintService
             $esc->separator()->pair('Pagamento', self::METHODS[$payment->payment_method] ?? $payment->payment_method);
 
             if ($payment->payment_method === 'cash' && $payment->amount_tendered !== null) {
-                $esc->pair('Entregue', $fmt($payment->amount_tendered) . ' MT')
-                    ->pair('Troco', $fmt($payment->change_given ?? 0) . ' MT');
+                $esc->pair('Entregue', $fmt($payment->amount_tendered).' MT')
+                    ->pair('Troco', $fmt($payment->change_given ?? 0).' MT');
             }
         }
 
         if ($shift = $document->posShift) {
-            $esc->separator()->centered('Operador: ' . $shift->user?->name . ($shift->cashRegister ? ' | ' . $shift->cashRegister->name : ''));
+            $esc->separator()->centered('Operador: '.$shift->user?->name.($shift->cashRegister ? ' | '.$shift->cashRegister->name : ''));
         }
 
         return $esc->separator()
@@ -305,27 +305,27 @@ class PosPrintService
     /** Envia bytes brutos para uma impressora de rede (RAW, normalmente porta 9100). */
     public function sendToNetwork(CashRegister $register, string $bytes): void
     {
-        if (!$register->printer_host) {
+        if (! $register->printer_host) {
             throw new RuntimeException('A caixa não tem o endereço da impressora configurado.');
         }
 
         // Liga ao IP já validado (não ao nome) e só às portas de impressão permitidas
         $port = (int) ($register->printer_port ?: 9100);
 
-        if (!in_array($port, config('pos.printer_ports'), true)) {
+        if (! in_array($port, config('pos.printer_ports'), true)) {
             throw new RuntimeException('A porta da impressora não é permitida.');
         }
 
         $ip = PrinterHost::safeIp($register->printer_host);
 
         $socket = @stream_socket_client(
-            'tcp://' . (str_contains($ip, ':') ? "[$ip]" : $ip) . ':' . $port,
+            'tcp://'.(str_contains($ip, ':') ? "[$ip]" : $ip).':'.$port,
             $errno,
             $error,
             3
         );
 
-        if (!$socket) {
+        if (! $socket) {
             throw new RuntimeException("Não foi possível ligar à impressora ({$register->printer_host}).");
         }
 

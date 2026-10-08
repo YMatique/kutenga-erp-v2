@@ -16,6 +16,7 @@ class LowStockAlertMail extends Mailable implements ShouldQueue
     use Queueable, SerializesModels;
 
     public Product $product;
+
     public float $stock;
 
     /**

@@ -54,7 +54,7 @@ class SubscriptionService
             }
 
             // Reativar sem indicar nova data de fim limpa o estado "expirado"
-            if (($data['status'] ?? null) === 'active' && !array_key_exists('ends_at', $data)
+            if (($data['status'] ?? null) === 'active' && ! array_key_exists('ends_at', $data)
                 && $company->subscription_ends_at && $company->subscription_ends_at->isPast()) {
                 $changes['subscription_ends_at'] = null;
             }
@@ -103,7 +103,7 @@ class SubscriptionService
         $planChanged = $previousPlan !== $company->subscription_plan;
         $statusChanged = $previousStatus !== $company->subscription_status;
 
-        if (!$planChanged && !$statusChanged) {
+        if (! $planChanged && ! $statusChanged) {
             return;
         }
 
@@ -112,11 +112,11 @@ class SubscriptionService
         SystemNotification::create([
             'company_id' => $company->id,
             'type' => 'subscription',
-            'title' => $blocked ? 'Subscrição ' . ($company->subscription_status === 'expired' ? 'Expirada' : 'Suspensa') : 'Subscrição Atualizada',
+            'title' => $blocked ? 'Subscrição '.($company->subscription_status === 'expired' ? 'Expirada' : 'Suspensa') : 'Subscrição Atualizada',
             'message' => $blocked
                 ? 'O acesso da empresa foi limitado. Contacte o suporte para regularizar a subscrição.'
-                : 'O plano da empresa é agora ' . ucfirst($company->subscription_plan)
-                    . ($company->subscription_ends_at ? ', válido até ' . $company->subscription_ends_at->format('d/m/Y') . '.' : '.'),
+                : 'O plano da empresa é agora '.ucfirst($company->subscription_plan)
+                    .($company->subscription_ends_at ? ', válido até '.$company->subscription_ends_at->format('d/m/Y').'.' : '.'),
             'link' => '/settings/subscription',
             'is_read' => false,
         ]);

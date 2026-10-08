@@ -2,7 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Catalog\Product;
+use App\Models\Company;
+use App\Models\Inventory\Warehouse;
 use App\Models\Pos\CashRegister;
+use App\Models\User;
 use Database\Seeders\Demo\DemoCompanySeeder;
 use Database\Seeders\Demo\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,11 +25,11 @@ class DemoSeedersTest extends TestCase
         $this->seed(DemoDataSeeder::class);
 
         $counts = fn () => [
-            \App\Models\Company::count(),
-            \App\Models\User::count(),
+            Company::count(),
+            User::count(),
             CashRegister::count(),
-            \App\Models\Catalog\Product::count(),
-            \App\Models\Inventory\Warehouse::count(),
+            Product::count(),
+            Warehouse::count(),
         ];
         $first = $counts();
 
@@ -82,11 +86,11 @@ class DemoSeedersTest extends TestCase
         config(['subscription.api.secret' => 'segredo']);
 
         $ts = (string) time();
-        $uri = '/api/internal/companies/' . DemoCompanySeeder::EXTERNAL_ID_KUTENGA . '/subscription';
+        $uri = '/api/internal/companies/'.DemoCompanySeeder::EXTERNAL_ID_KUTENGA.'/subscription';
 
         $this->call('GET', $uri, [], [], [], [
             'HTTP_X-Kutenga-Timestamp' => $ts,
-            'HTTP_X-Kutenga-Signature' => hash_hmac('sha256', $ts . '.', 'segredo'),
+            'HTTP_X-Kutenga-Signature' => hash_hmac('sha256', $ts.'.', 'segredo'),
         ])->assertOk()->assertJsonPath('plan', 'crescimento')->assertJsonPath('state', 'active');
     }
 }

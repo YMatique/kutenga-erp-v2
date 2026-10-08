@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Catalog;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\Catalog\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -24,7 +23,7 @@ class BrandController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(5);
+        $validated['slug'] = Str::slug($validated['name']).'-'.Str::random(5);
 
         Brand::create($validated);
 
@@ -38,7 +37,7 @@ class BrandController extends Controller
         ]);
 
         if ($request->name !== $brand->name) {
-            $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(5);
+            $validated['slug'] = Str::slug($validated['name']).'-'.Str::random(5);
         }
 
         $brand->update($validated);
@@ -49,6 +48,7 @@ class BrandController extends Controller
     public function destroy(Brand $brand)
     {
         $brand->delete();
+
         return back()->with('success', 'Marca removida com sucesso.');
     }
 }

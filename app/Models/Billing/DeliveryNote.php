@@ -2,10 +2,8 @@
 
 namespace App\Models\Billing;
 
-use App\Models\Inventory\Warehouse;
 use App\Models\Catalog\Product;
-
-
+use App\Models\Inventory\Warehouse;
 use App\Services\Inventory\StockService;
 
 class DeliveryNote extends Document

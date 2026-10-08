@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Plan;
+use App\Models\SystemNotification;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -46,13 +48,14 @@ class HandleInertiaRequests extends Middleware
                     return null;
                 }
                 $company = $request->user()->company;
+
                 return [
                     'plan' => $company->subscription_plan ?? 'inicial',
                     'status' => $company->subscription_status ?? 'active',
                     'ends_at' => $company->subscription_ends_at ? $company->subscription_ends_at->toIso8601String() : null,
                     'state' => $company->subscriptionState(),
                     'grace_ends_at' => $company->graceEndsAt()?->toIso8601String(),
-                    'usage' => collect(array_keys(\App\Models\Plan::LIMIT_KEYS))
+                    'usage' => collect(array_keys(Plan::LIMIT_KEYS))
                         ->mapWithKeys(fn ($key) => [$key => $company->usage($key)])
                         ->all(),
                     'limits' => $company->getSubscriptionLimits(),
@@ -71,7 +74,8 @@ class HandleInertiaRequests extends Middleware
                 if (! $request->user()) {
                     return [];
                 }
-                return \App\Models\SystemNotification::where('company_id', $request->user()->company_id)
+
+                return SystemNotification::where('company_id', $request->user()->company_id)
                     ->where('is_read', false)
                     ->orderBy('created_at', 'desc')
                     ->limit(5)

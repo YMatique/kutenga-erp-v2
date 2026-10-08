@@ -16,7 +16,9 @@ class PosCatalogTest extends TestCase
     use RefreshDatabase;
 
     private Company $a;
+
     private Company $b;
+
     private User $user;
 
     protected function setUp(): void
@@ -37,7 +39,7 @@ class PosCatalogTest extends TestCase
 
     private function userFor(Company $company, array $permissions): User
     {
-        $user = User::create(['company_id' => $company->id, 'name' => 'U', 'email' => uniqid() . '@x.test', 'password' => bcrypt('password')]);
+        $user = User::create(['company_id' => $company->id, 'name' => 'U', 'email' => uniqid().'@x.test', 'password' => bcrypt('password')]);
         $user->givePermissionTo($permissions);
 
         return $user;
@@ -46,7 +48,7 @@ class PosCatalogTest extends TestCase
     private function product(Company $company, string $name, ?string $barcode = null, array $extra = []): Product
     {
         return Product::create(array_merge([
-            'company_id' => $company->id, 'name' => $name, 'slug' => str($name)->slug() . '-' . uniqid(),
+            'company_id' => $company->id, 'name' => $name, 'slug' => str($name)->slug().'-'.uniqid(),
             'barcode' => $barcode, 'price' => 10, 'track_stock' => true, 'status' => 'active',
         ], $extra));
     }

@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers\Inventory;
 
-use App\Support\Tenant;
-
 use App\Http\Controllers\Controller;
-
 use App\Models\Inventory\InventoryClosing;
 use App\Models\Inventory\InventoryClosingItem;
 use App\Models\Inventory\ProductStock;
 use App\Models\Inventory\Warehouse;
+use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -41,22 +39,22 @@ class InventoryClosingController extends Controller
             ->withQueryString()
             ->through(function ($closing) {
                 return [
-                    'id'               => $closing->id,
-                    'reference_date'   => $closing->reference_date,
-                    'status'           => $closing->status,
-                    'warehouse'        => $closing->warehouse?->name ?? 'Todos os Armazéns',
-                    'creator'          => $closing->creator?->name ?? '—',
-                    'items_count'      => $closing->items_count,
+                    'id' => $closing->id,
+                    'reference_date' => $closing->reference_date,
+                    'status' => $closing->status,
+                    'warehouse' => $closing->warehouse?->name ?? 'Todos os Armazéns',
+                    'creator' => $closing->creator?->name ?? '—',
+                    'items_count' => $closing->items_count,
                     'blocks_movements' => $closing->blocks_movements,
-                    'completed_at'     => $closing->completed_at,
-                    'notes'            => $closing->notes,
-                    'created_at'       => $closing->created_at,
+                    'completed_at' => $closing->completed_at,
+                    'notes' => $closing->notes,
+                    'created_at' => $closing->created_at,
                 ];
             });
 
         $stats = [
-            'total'     => InventoryClosing::where('company_id', $companyId)->count(),
-            'drafts'    => InventoryClosing::where('company_id', $companyId)->where('status', 'draft')->count(),
+            'total' => InventoryClosing::where('company_id', $companyId)->count(),
+            'drafts' => InventoryClosing::where('company_id', $companyId)->where('status', 'draft')->count(),
             'completed' => InventoryClosing::where('company_id', $companyId)->where('status', 'completed')->count(),
         ];
 
@@ -65,10 +63,10 @@ class InventoryClosingController extends Controller
             ->get(['id', 'name']);
 
         return Inertia::render('inventory/closings/index', [
-            'closings'   => $closings,
-            'stats'      => $stats,
+            'closings' => $closings,
+            'stats' => $stats,
             'warehouses' => $warehouses,
-            'filters'    => $request->only(['status', 'warehouse_id']),
+            'filters' => $request->only(['status', 'warehouse_id']),
         ]);
     }
 
@@ -85,7 +83,7 @@ class InventoryClosingController extends Controller
 
         // Preview do stock atual para pré-visualização
         $warehouseId = $request->warehouse_id;
-        $stockQuery  = ProductStock::where('company_id', $companyId)
+        $stockQuery = ProductStock::where('company_id', $companyId)
             ->with(['product:id,name,sku,unit_id', 'product.unit:id,short_name', 'warehouse:id,name'])
             ->where('quantity', '>', 0);
 
@@ -93,20 +91,20 @@ class InventoryClosingController extends Controller
             $stockQuery->where('warehouse_id', $warehouseId);
         }
 
-        $stockPreview = $stockQuery->get()->map(fn($s) => [
-            'product_id'       => $s->product_id,
-            'product_name'     => $s->product?->name ?? '—',
-            'product_sku'      => $s->product?->sku ?? '—',
-            'unit'             => $s->product?->unit?->short_name ?? '—',
-            'warehouse_id'     => $s->warehouse_id,
-            'warehouse_name'   => $s->warehouse?->name ?? '—',
+        $stockPreview = $stockQuery->get()->map(fn ($s) => [
+            'product_id' => $s->product_id,
+            'product_name' => $s->product?->name ?? '—',
+            'product_sku' => $s->product?->sku ?? '—',
+            'unit' => $s->product?->unit?->short_name ?? '—',
+            'warehouse_id' => $s->warehouse_id,
+            'warehouse_name' => $s->warehouse?->name ?? '—',
             'quantity_current' => (float) $s->quantity,
         ]);
 
         return Inertia::render('inventory/closings/create', [
-            'warehouses'   => $warehouses,
+            'warehouses' => $warehouses,
             'stockPreview' => $stockPreview,
-            'today'        => now()->toDateString(),
+            'today' => now()->toDateString(),
         ]);
     }
 
@@ -118,45 +116,45 @@ class InventoryClosingController extends Controller
         $companyId = Auth::user()->company_id;
 
         $validated = $request->validate([
-            'reference_date'   => 'required|date|before_or_equal:today',
-            'warehouse_id'     => ['nullable', Tenant::exists('warehouses')],
-            'notes'            => 'nullable|string|max:1000',
+            'reference_date' => 'required|date|before_or_equal:today',
+            'warehouse_id' => ['nullable', Tenant::exists('warehouses')],
+            'notes' => 'nullable|string|max:1000',
             'blocks_movements' => 'boolean',
         ]);
 
         DB::beginTransaction();
         try {
             $closing = InventoryClosing::create([
-                'company_id'       => $companyId,
-                'warehouse_id'     => $validated['warehouse_id'] ?? null,
-                'created_by'       => Auth::id(),
-                'reference_date'   => $validated['reference_date'],
-                'status'           => 'draft',
-                'notes'            => $validated['notes'] ?? null,
+                'company_id' => $companyId,
+                'warehouse_id' => $validated['warehouse_id'] ?? null,
+                'created_by' => Auth::id(),
+                'reference_date' => $validated['reference_date'],
+                'status' => 'draft',
+                'notes' => $validated['notes'] ?? null,
                 'blocks_movements' => $validated['blocks_movements'] ?? false,
             ]);
 
             // Gerar snapshot do stock actual
             $stockQuery = ProductStock::where('company_id', $companyId);
-            if (!empty($validated['warehouse_id'])) {
+            if (! empty($validated['warehouse_id'])) {
                 $stockQuery->where('warehouse_id', $validated['warehouse_id']);
             }
 
             $stocks = $stockQuery->get();
-            $items  = [];
+            $items = [];
             foreach ($stocks as $stock) {
                 $items[] = [
-                    'closing_id'        => $closing->id,
-                    'product_id'        => $stock->product_id,
-                    'warehouse_id'      => $stock->warehouse_id,
+                    'closing_id' => $closing->id,
+                    'product_id' => $stock->product_id,
+                    'warehouse_id' => $stock->warehouse_id,
                     'quantity_expected' => $stock->quantity,
-                    'quantity_counted'  => null,
-                    'created_at'        => now(),
-                    'updated_at'        => now(),
+                    'quantity_counted' => null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ];
             }
 
-            if (!empty($items)) {
+            if (! empty($items)) {
                 InventoryClosingItem::insert($items);
             }
 
@@ -167,6 +165,7 @@ class InventoryClosingController extends Controller
                 ->with('success', 'Fechamento de inventário iniciado! Preencha as quantidades contadas.');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
@@ -188,41 +187,42 @@ class InventoryClosingController extends Controller
 
         $items = $closing->items->map(function ($item) {
             $variance = $item->variance_value;
+
             return [
-                'id'                => $item->id,
-                'product_id'        => $item->product_id,
-                'product_name'      => $item->product?->name ?? '—',
-                'product_sku'       => $item->product?->sku ?? '—',
-                'product_barcode'   => $item->product?->barcode,
-                'unit'              => $item->product?->unit?->short_name ?? '—',
-                'warehouse_name'    => $item->warehouse?->name ?? '—',
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'product_name' => $item->product?->name ?? '—',
+                'product_sku' => $item->product?->sku ?? '—',
+                'product_barcode' => $item->product?->barcode,
+                'unit' => $item->product?->unit?->short_name ?? '—',
+                'warehouse_name' => $item->warehouse?->name ?? '—',
                 'quantity_expected' => (float) $item->quantity_expected,
-                'quantity_counted'  => $item->quantity_counted !== null ? (float) $item->quantity_counted : null,
-                'variance'          => $variance,
-                'variance_class'    => $variance > 0 ? 'positive' : ($variance < 0 ? 'negative' : 'zero'),
+                'quantity_counted' => $item->quantity_counted !== null ? (float) $item->quantity_counted : null,
+                'variance' => $variance,
+                'variance_class' => $variance > 0 ? 'positive' : ($variance < 0 ? 'negative' : 'zero'),
             ];
         });
 
         $summary = [
-            'total_items'       => $items->count(),
-            'items_counted'     => $items->where('quantity_counted', '!==', null)->count(),
+            'total_items' => $items->count(),
+            'items_counted' => $items->where('quantity_counted', '!==', null)->count(),
             'items_with_excess' => $items->where('variance', '>', 0)->count(),
-            'items_with_deficit'=> $items->where('variance', '<', 0)->count(),
-            'items_ok'          => $items->where('variance', '===', 0)->count(),
+            'items_with_deficit' => $items->where('variance', '<', 0)->count(),
+            'items_ok' => $items->where('variance', '===', 0)->count(),
         ];
 
         return Inertia::render('inventory/closings/show', [
             'closing' => [
-                'id'               => $closing->id,
-                'reference_date'   => $closing->reference_date,
-                'status'           => $closing->status,
-                'warehouse'        => $closing->warehouse?->name ?? 'Todos os Armazéns',
-                'creator'          => $closing->creator?->name ?? '—',
+                'id' => $closing->id,
+                'reference_date' => $closing->reference_date,
+                'status' => $closing->status,
+                'warehouse' => $closing->warehouse?->name ?? 'Todos os Armazéns',
+                'creator' => $closing->creator?->name ?? '—',
                 'blocks_movements' => $closing->blocks_movements,
-                'completed_at'     => $closing->completed_at,
-                'notes'            => $closing->notes,
+                'completed_at' => $closing->completed_at,
+                'notes' => $closing->notes,
             ],
-            'items'   => $items,
+            'items' => $items,
             'summary' => $summary,
         ]);
     }
@@ -239,8 +239,8 @@ class InventoryClosingController extends Controller
         }
 
         $validated = $request->validate([
-            'items'                    => 'required|array',
-            'items.*.id'               => ['required', Tenant::exists('inventory_closing_items')],
+            'items' => 'required|array',
+            'items.*.id' => ['required', Tenant::exists('inventory_closing_items')],
             'items.*.quantity_counted' => 'nullable|numeric|min:0',
         ]);
 
@@ -252,9 +252,11 @@ class InventoryClosingController extends Controller
                     ->update(['quantity_counted' => $item['quantity_counted']]);
             }
             DB::commit();
+
             return back()->with('success', 'Quantidades atualizadas com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
@@ -271,7 +273,7 @@ class InventoryClosingController extends Controller
         }
 
         $closing->update([
-            'status'       => 'completed',
+            'status' => 'completed',
             'completed_at' => now(),
         ]);
 

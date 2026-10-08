@@ -2,16 +2,17 @@
 
 namespace Tests\Feature;
 
-use App\Models\Company;
-use App\Models\Catalog\Branch;
 use App\Models\Billing\Customer;
 use App\Models\Billing\DocumentSeries;
+use App\Models\Catalog\Branch;
+use App\Models\Catalog\Product;
+use App\Models\Company;
+use App\Models\Inventory\Warehouse;
 use App\Models\Pos\CashRegister;
 use App\Models\Pos\PosShift;
-use App\Models\Catalog\Product;
 use App\Models\User;
-use App\Models\Inventory\Warehouse;
 use App\Services\Inventory\StockService;
+use App\Services\Printing\EscPos;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -21,12 +22,19 @@ class PosSaleTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected Company $company;
+
     protected Branch $branch;
+
     protected Warehouse $warehouse;
+
     protected Product $product;
+
     protected DocumentSeries $series;
+
     protected PosShift $shift;
+
     protected CashRegister $register;
 
     protected function setUp(): void
@@ -122,7 +130,7 @@ class PosSaleTest extends TestCase
                     'unit_price' => 100.00,
                     'tax_rate' => 16.00,
                     'discount_percent' => 0,
-                ]
+                ],
             ],
             'payment_method' => 'cash',
             'amount_paid' => 232.00, // 200 + 32 tax
@@ -285,13 +293,13 @@ class PosSaleTest extends TestCase
         $posSeries = DocumentSeries::where('scope', 'pos')->first();
 
         $this->assertNotNull($posSeries);
-        $this->assertEquals('P' . $this->register->id, $posSeries->code);
+        $this->assertEquals('P'.$this->register->id, $posSeries->code);
         $this->assertEquals(3, $posSeries->next_number);
         $this->assertEquals($posSeries->id, $this->register->fresh()->series_id);
 
         // A série de faturação não foi consumida
         $this->assertEquals(1, $this->series->fresh()->next_number);
-        $this->assertDatabaseHas('documents', ['document_number' => 'FR P' . $this->register->id . '/' . date('Y') . '/00001']);
+        $this->assertDatabaseHas('documents', ['document_number' => 'FR P'.$this->register->id.'/'.date('Y').'/00001']);
     }
 
     public function test_print_job_for_browser_driver_returns_the_html_url(): void
@@ -301,7 +309,7 @@ class PosSaleTest extends TestCase
         $this->getJson(route('pos.print.job', ['type' => 'receipt', 'id' => $id]))
             ->assertOk()
             ->assertJsonPath('driver', 'browser')
-            ->assertJsonPath('url', '/pos/receipts/' . $id);
+            ->assertJsonPath('url', '/pos/receipts/'.$id);
     }
 
     public function test_print_job_for_qz_driver_returns_escpos_bytes(): void
@@ -318,19 +326,19 @@ class PosSaleTest extends TestCase
 
         $bytes = base64_decode($job['data']);
 
-        $this->assertStringStartsWith("@", $bytes);           // inicialização
-        $this->assertStringContainsString("p ", $bytes);    // gaveta (venda em dinheiro)
+        $this->assertStringStartsWith('@', $bytes);           // inicialização
+        $this->assertStringContainsString('p ', $bytes);    // gaveta (venda em dinheiro)
         $this->assertStringContainsString('TOTAL', $bytes);
-        $this->assertStringContainsString("V", $bytes);       // corte
+        $this->assertStringContainsString('V', $bytes);       // corte
     }
 
     public function test_escpos_encodes_portuguese_accents_in_cp850(): void
     {
-        $esc = (new \App\Services\Printing\EscPos(80))->line('Venda à vista - ção');
+        $esc = (new EscPos(80))->line('Venda à vista - ção');
 
         $this->assertStringContainsString(mb_convert_encoding('Venda à vista - ção', 'CP850', 'UTF-8'), $esc->bytes());
         $this->assertEquals(48, $esc->columns());
-        $this->assertEquals(32, (new \App\Services\Printing\EscPos(58))->columns());
+        $this->assertEquals(32, (new EscPos(58))->columns());
     }
 
     public function test_network_driver_without_host_reports_error_and_fallback(): void

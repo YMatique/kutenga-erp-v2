@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use App\Models\Pos\PosShift;
 use App\Models\Catalog\Category;
 use App\Models\Catalog\Product;
+use App\Models\Pos\PosShift;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class PosController extends Controller
 {
@@ -27,7 +27,7 @@ class PosController extends Controller
             ->with(['branch'])
             ->first();
 
-        if (!$openShift) {
+        if (! $openShift) {
             return redirect()->route('pos.shifts.create');
         }
 
@@ -38,11 +38,11 @@ class PosController extends Controller
         $page = $this->catalogQuery($user->company_id)->simplePaginate(self::PAGE_SIZE);
 
         return Inertia::render('pos/Index', [
-            'shift'      => $openShift,
+            'shift' => $openShift,
             'categories' => $categories,
-            'products'   => $page->getCollection()->map(fn ($p) => $this->present($p))->values(),
-            'has_more'   => $page->hasMorePages(),
-            'auth'       => ['user' => ['name' => $user->name]],
+            'products' => $page->getCollection()->map(fn ($p) => $this->present($p))->values(),
+            'has_more' => $page->hasMorePages(),
+            'auth' => ['user' => ['name' => $user->name]],
         ]);
     }
 
@@ -86,16 +86,16 @@ class PosController extends Controller
     private function present(Product $product): array
     {
         return [
-            'id'          => $product->id,
-            'name'        => $product->name,
-            'sku'         => $product->sku,
-            'barcode'     => $product->barcode,
-            'sale_price'  => (float) $product->price,
-            'tax_rate'    => (float) $product->tax_rate,
+            'id' => $product->id,
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'barcode' => $product->barcode,
+            'sale_price' => (float) $product->price,
+            'tax_rate' => (float) $product->tax_rate,
             'category_id' => $product->category_id,
-            'category'    => $product->category?->name,
-            'unit'        => $product->unit?->name,
-            'image_url'   => $product->image_path
+            'category' => $product->category?->name,
+            'unit' => $product->unit?->name,
+            'image_url' => $product->image_path
                 ? (str_starts_with($product->image_path, '/storage/')
                     ? $product->image_path
                     : Storage::url($product->image_path))

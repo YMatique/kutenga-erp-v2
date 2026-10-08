@@ -21,9 +21,7 @@ use Throwable;
  */
 class PosReceiptController extends Controller
 {
-    public function __construct(private PosPrintService $printing)
-    {
-    }
+    public function __construct(private PosPrintService $printing) {}
 
     private function canViewAll(): bool
     {
@@ -122,7 +120,7 @@ class PosReceiptController extends Controller
 
         $driver = $register?->printer_driver ?? 'browser';
 
-        if ($driver === 'browser' || !$register) {
+        if ($driver === 'browser' || ! $register) {
             return response()->json(['driver' => 'browser', 'url' => $htmlUrl]);
         }
 

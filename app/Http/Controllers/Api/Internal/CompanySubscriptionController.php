@@ -16,9 +16,7 @@ use Illuminate\Validation\Rule;
  */
 class CompanySubscriptionController extends Controller
 {
-    public function __construct(private SubscriptionService $subscriptions)
-    {
-    }
+    public function __construct(private SubscriptionService $subscriptions) {}
 
     public function show(string $externalId): JsonResponse
     {
@@ -45,7 +43,7 @@ class CompanySubscriptionController extends Controller
         // validated() descarta chaves sem regra; as desconhecidas têm de ser recusadas, não ignoradas
         if (is_array($request->input('limits_override'))) {
             $unknown = array_diff(array_keys($request->input('limits_override')), array_keys(Plan::LIMIT_KEYS));
-            abort_if($unknown, 422, 'Limites desconhecidos: ' . implode(', ', $unknown));
+            abort_if($unknown, 422, 'Limites desconhecidos: '.implode(', ', $unknown));
         }
 
         // Idempotency-Key: reenviar o mesmo pedido devolve o resultado sem reaplicar

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Billing\DocumentSeries;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Response;
 
 class DocumentSeriesController extends Controller
 {
@@ -26,7 +25,7 @@ class DocumentSeriesController extends Controller
 
         return Inertia::render('billing/series/index', [
             'series' => $series,
-            'filters' => $request->only(['search'])
+            'filters' => $request->only(['search']),
         ]);
     }
 
@@ -35,7 +34,7 @@ class DocumentSeriesController extends Controller
         $companyId = $request->user()->company_id;
 
         $validated = $request->validate([
-            'code' => 'required|string|max:10|unique:document_series,code,NULL,id,company_id,' . $companyId,
+            'code' => 'required|string|max:10|unique:document_series,code,NULL,id,company_id,'.$companyId,
             'name' => 'required|string|max:255',
             'year' => 'required|integer|min:2000|max:2099',
             'is_active' => 'required|boolean',
@@ -61,7 +60,7 @@ class DocumentSeriesController extends Controller
         $series = DocumentSeries::where('company_id', $companyId)->findOrFail($id);
 
         $validated = $request->validate([
-            'code' => 'required|string|max:10|unique:document_series,code,' . $series->id . ',id,company_id,' . $companyId,
+            'code' => 'required|string|max:10|unique:document_series,code,'.$series->id.',id,company_id,'.$companyId,
             'name' => 'required|string|max:255',
             'year' => 'required|integer|min:2000|max:2099',
             'is_active' => 'required|boolean',
@@ -89,7 +88,7 @@ class DocumentSeriesController extends Controller
         // Verificar se já existem documentos associados
         if ($series->documents()->withTrashed()->exists()) {
             return redirect()->back()->withErrors([
-                'error' => 'Não é possível eliminar esta série pois já existem documentos emitidos com ela.'
+                'error' => 'Não é possível eliminar esta série pois já existem documentos emitidos com ela.',
             ]);
         }
 

@@ -5,10 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Billing\Customer;
 use App\Models\Billing\Document;
 use App\Models\Catalog\Product;
-use App\Models\Inventory\ProductStock;
 use App\Models\Inventory\StockMovement;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -26,7 +24,7 @@ class DashboardController extends Controller
 
         foreach ($areas as $permission => $url) {
             // O POS depende do plano: mandar para lá quem não o tem faria um ciclo com o dashboard
-            if ($url === '/pos' && !$user->company?->can('pos')) {
+            if ($url === '/pos' && ! $user->company?->can('pos')) {
                 continue;
             }
 
@@ -43,7 +41,7 @@ class DashboardController extends Controller
         // O Dashboard geral mostra indicadores da empresa inteira (permissão reports.view).
         // É a página inicial de toda a gente, por isso quem não a tem não leva um 403: segue
         // para a primeira área a que tem acesso.
-        if (!$request->user()->can('reports.view')) {
+        if (! $request->user()->can('reports.view')) {
             return redirect($this->landingPageFor($request->user()));
         }
 
@@ -129,7 +127,7 @@ class DashboardController extends Controller
             $monthDate = now()->subMonths($i);
             $monthKey = $monthDate->format('Y-m');
             $label = $monthDate->format('M Y');
-            
+
             $totalForMonth = $docsForChart->filter(function ($doc) use ($monthKey) {
                 return $doc->created_at->format('Y-m') === $monthKey;
             })->sum('grand_total');

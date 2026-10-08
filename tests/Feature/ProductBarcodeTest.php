@@ -16,7 +16,9 @@ class ProductBarcodeTest extends TestCase
     use RefreshDatabase;
 
     private Company $a;
+
     private Company $b;
+
     private User $user;
 
     protected function setUp(): void
@@ -37,7 +39,7 @@ class ProductBarcodeTest extends TestCase
 
     private function userFor(Company $company, array $permissions): User
     {
-        $user = User::create(['company_id' => $company->id, 'name' => 'U', 'email' => uniqid() . '@x.test', 'password' => bcrypt('password')]);
+        $user = User::create(['company_id' => $company->id, 'name' => 'U', 'email' => uniqid().'@x.test', 'password' => bcrypt('password')]);
         $user->givePermissionTo($permissions);
 
         return $user;
@@ -46,7 +48,7 @@ class ProductBarcodeTest extends TestCase
     private function product(Company $company, string $name, ?string $barcode, ?string $sku = null, string $status = 'active'): Product
     {
         return Product::create([
-            'company_id' => $company->id, 'name' => $name, 'slug' => str($name)->slug() . '-' . uniqid(),
+            'company_id' => $company->id, 'name' => $name, 'slug' => str($name)->slug().'-'.uniqid(),
             'sku' => $sku, 'barcode' => $barcode, 'price' => 10, 'track_stock' => true, 'status' => $status,
         ]);
     }

@@ -3,8 +3,6 @@
 namespace App\Models\Inventory;
 
 use App\Models\Catalog\Product;
-
-
 use Illuminate\Database\Eloquent\Model;
 
 class StockAdjustmentItem extends Model

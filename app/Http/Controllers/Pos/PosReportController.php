@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
-use Inertia\Inertia;
 use App\Models\Pos\PosShift;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class PosReportController extends Controller
 {
     public function index()
     {
-        $user    = Auth::user();
+        $user = Auth::user();
         $company = $user->company_id;
 
         $canViewAll = $user->can('pos.manage');
@@ -23,7 +23,7 @@ class PosReportController extends Controller
                 ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
                 ->where('pos_shifts.company_id', $company)
                 ->where('documents.source_module', 'pos')
-                ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
+                ->when(! $canViewAll, fn ($q) => $q->where('pos_shifts.user_id', $user->id))
                 ->whereMonth('documents.created_at', now()->month)
                 ->whereYear('documents.created_at', now()->year)
                 ->whereNull('documents.deleted_at')
@@ -33,7 +33,7 @@ class PosReportController extends Controller
                 ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
                 ->where('pos_shifts.company_id', $company)
                 ->where('documents.source_module', 'pos')
-                ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
+                ->when(! $canViewAll, fn ($q) => $q->where('pos_shifts.user_id', $user->id))
                 ->whereMonth('documents.created_at', now()->month)
                 ->whereYear('documents.created_at', now()->year)
                 ->whereNull('documents.deleted_at')
@@ -43,14 +43,14 @@ class PosReportController extends Controller
                 ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
                 ->where('pos_shifts.company_id', $company)
                 ->where('documents.source_module', 'pos')
-                ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
+                ->when(! $canViewAll, fn ($q) => $q->where('pos_shifts.user_id', $user->id))
                 ->whereMonth('documents.created_at', now()->month)
                 ->whereYear('documents.created_at', now()->year)
                 ->whereNull('documents.deleted_at')
                 ->sum('documents.tax_total'),
 
             'shifts_count' => PosShift::where('company_id', $company)
-                ->when(!$canViewAll, fn($q) => $q->where('user_id', $user->id))
+                ->when(! $canViewAll, fn ($q) => $q->where('user_id', $user->id))
                 ->whereMonth('opened_at', now()->month)
                 ->whereYear('opened_at', now()->year)
                 ->count(),
@@ -65,14 +65,14 @@ class PosReportController extends Controller
             ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
             ->where('pos_shifts.company_id', $company)
             ->where('documents.source_module', 'pos')
-            ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
+            ->when(! $canViewAll, fn ($q) => $q->where('pos_shifts.user_id', $user->id))
             ->where('documents.created_at', '>=', now()->subDays(29)->startOfDay())
             ->whereNull('documents.deleted_at')
             ->selectRaw('DATE(documents.created_at) as date, SUM(documents.grand_total) as total, COUNT(*) as count')
             ->groupByRaw('DATE(documents.created_at)')
             ->orderBy('date')
             ->get()
-            ->map(fn($r) => ['date' => $r->date, 'total' => (float) $r->total, 'count' => $r->count]);
+            ->map(fn ($r) => ['date' => $r->date, 'total' => (float) $r->total, 'count' => $r->count]);
 
         // Vendas por operador (mês atual)
         $byOperator = DB::table('documents')
@@ -80,7 +80,7 @@ class PosReportController extends Controller
             ->join('users', 'pos_shifts.user_id', '=', 'users.id')
             ->where('pos_shifts.company_id', $company)
             ->where('documents.source_module', 'pos')
-            ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
+            ->when(! $canViewAll, fn ($q) => $q->where('pos_shifts.user_id', $user->id))
             ->whereMonth('documents.created_at', now()->month)
             ->whereYear('documents.created_at', now()->year)
             ->whereNull('documents.deleted_at')
@@ -88,7 +88,7 @@ class PosReportController extends Controller
             ->groupBy('users.id', 'users.name')
             ->orderByDesc('total')
             ->get()
-            ->map(fn($r) => ['operator' => $r->operator, 'total' => (float) $r->total, 'transactions' => $r->transactions]);
+            ->map(fn ($r) => ['operator' => $r->operator, 'total' => (float) $r->total, 'transactions' => $r->transactions]);
 
         // Top 10 produtos mais vendidos (mês atual)
         $topProducts = DB::table('document_items')
@@ -96,7 +96,7 @@ class PosReportController extends Controller
             ->join('pos_shifts', 'documents.pos_shift_id', '=', 'pos_shifts.id')
             ->where('pos_shifts.company_id', $company)
             ->where('documents.source_module', 'pos')
-            ->when(!$canViewAll, fn($q) => $q->where('pos_shifts.user_id', $user->id))
+            ->when(! $canViewAll, fn ($q) => $q->where('pos_shifts.user_id', $user->id))
             ->whereMonth('documents.created_at', now()->month)
             ->whereYear('documents.created_at', now()->year)
             ->whereNull('documents.deleted_at')
@@ -105,35 +105,35 @@ class PosReportController extends Controller
             ->orderByDesc('qty')
             ->limit(10)
             ->get()
-            ->map(fn($r) => ['name' => $r->product_name, 'qty' => (float) $r->qty, 'revenue' => (float) $r->revenue]);
+            ->map(fn ($r) => ['name' => $r->product_name, 'qty' => (float) $r->qty, 'revenue' => (float) $r->revenue]);
 
         // Turnos recentes
         $recentShifts = PosShift::where('company_id', $company)
-            ->when(!$canViewAll, fn($q) => $q->where('user_id', $user->id))
+            ->when(! $canViewAll, fn ($q) => $q->where('user_id', $user->id))
             ->with(['user:id,name'])
             ->withSum('documents', 'grand_total')
             ->withCount('documents')
             ->orderByDesc('opened_at')
             ->limit(10)
             ->get()
-            ->map(fn($s) => [
-                'id'             => $s->id,
-                'operator'       => $s->user?->name ?? '—',
-                'status'         => $s->status,
-                'opened_at'      => $s->opened_at,
-                'closed_at'      => $s->closed_at,
-                'sales_total'    => (float) ($s->documents_sum_grand_total ?? 0),
-                'documents_count'=> $s->documents_count,
+            ->map(fn ($s) => [
+                'id' => $s->id,
+                'operator' => $s->user?->name ?? '—',
+                'status' => $s->status,
+                'opened_at' => $s->opened_at,
+                'closed_at' => $s->closed_at,
+                'sales_total' => (float) ($s->documents_sum_grand_total ?? 0),
+                'documents_count' => $s->documents_count,
             ]);
 
         return Inertia::render('pos/Reports/Index', [
-            'kpis'         => $thisMonth,
-            'dailySales'   => $dailySales,
-            'byOperator'   => $byOperator,
-            'topProducts'  => $topProducts,
+            'kpis' => $thisMonth,
+            'dailySales' => $dailySales,
+            'byOperator' => $byOperator,
+            'topProducts' => $topProducts,
             'recentShifts' => $recentShifts,
-            'period'       => ['month' => now()->month, 'year' => now()->year, 'label' => now()->translatedFormat('F Y')],
-            'canViewAll'   => $canViewAll,
+            'period' => ['month' => now()->month, 'year' => now()->year, 'label' => now()->translatedFormat('F Y')],
+            'canViewAll' => $canViewAll,
         ]);
     }
 }

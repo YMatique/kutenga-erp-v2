@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\WelcomeToKutenga;
 use App\Models\Company;
+use App\Models\Role;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Inertia\Inertia;
 
 class OnboardingController extends Controller
 {
@@ -18,12 +21,12 @@ class OnboardingController extends Controller
         $company = $user->company;
 
         // Se já tiver empresa e estiver tudo preenchido, sai
-        if ($company && !empty($company->nuit) && !empty($company->address) && !empty($company->phone)) {
+        if ($company && ! empty($company->nuit) && ! empty($company->address) && ! empty($company->phone)) {
             return redirect()->route('dashboard');
         }
 
         return Inertia::render('onboarding/index', [
-            'existingCompany' => $company
+            'existingCompany' => $company,
         ]);
     }
 
@@ -36,7 +39,7 @@ class OnboardingController extends Controller
         $company = $user->company;
 
         // Se já tiver empresa e estiver tudo preenchido, não deve fazer submissões aqui
-        if ($company && !empty($company->nuit) && !empty($company->address) && !empty($company->phone)) {
+        if ($company && ! empty($company->nuit) && ! empty($company->address) && ! empty($company->phone)) {
             return redirect()->route('dashboard');
         }
 
@@ -44,8 +47,8 @@ class OnboardingController extends Controller
 
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
-            'nuit' => 'required|string|max:50|unique:companies,nuit' . ($companyId ? ',' . $companyId : ''),
-            'email' => 'required|email|max:255|unique:companies,email' . ($companyId ? ',' . $companyId : ''),
+            'nuit' => 'required|string|max:50|unique:companies,nuit'.($companyId ? ','.$companyId : ''),
+            'email' => 'required|email|max:255|unique:companies,email'.($companyId ? ','.$companyId : ''),
             'phone' => 'required|string|max:50',
             'address' => 'required|string',
             'default_currency' => 'required|string|max:3',
@@ -88,10 +91,10 @@ class OnboardingController extends Controller
 
                 // Atribuir a permissão máxima ao criador: 'owner' é um papel do sistema, partilhado
                 // por todas as empresas (a empresa vem de users.company_id, não do papel)
-                $user->assignRole(\App\Models\Role::findOrCreate('owner', 'web'));
+                $user->assignRole(Role::findOrCreate('owner', 'web'));
 
                 // Enviar email de boas-vindas apenas na criação original
-                \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\WelcomeToKutenga($user, $company));
+                Mail::to($user->email)->send(new WelcomeToKutenga($user, $company));
             }
 
             DB::commit();
@@ -100,7 +103,8 @@ class OnboardingController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Ocorreu um erro ao criar a empresa: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Ocorreu um erro ao criar a empresa: '.$e->getMessage()]);
         }
     }
 }

@@ -2,24 +2,21 @@
 
 namespace App\Models\Catalog;
 
+use App\Models\Company;
 use App\Models\Inventory\ProductStock;
 use App\Models\Inventory\StockMovement;
-use App\Models\Company;
-
-
 use App\Traits\BelongsToCompany;
 // use App\Traits\HasAudit;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 class Product extends Model
 {
-    use SoftDeletes /* , HasAudit */, BelongsToCompany, LogsActivity;
+    use BelongsToCompany /* , HasAudit */, LogsActivity, SoftDeletes;
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -90,10 +87,11 @@ class Product extends Model
     {
         return $this->belongsTo(Brand::class);
     }
+
     public function stocks()
-{
-    return $this->hasMany(ProductStock::class);
-}
+    {
+        return $this->hasMany(ProductStock::class);
+    }
 
     public function stockMovements()
     {

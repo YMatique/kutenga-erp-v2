@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Models\Company;
 use App\Models\Plan;
 use App\Models\SubscriptionEvent;
+use App\Models\SystemNotification;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class SubscriptionApiTest extends TestCase
@@ -32,7 +34,7 @@ class SubscriptionApiTest extends TestCase
     {
         $body = $payload ? json_encode($payload) : '';
         $timestamp = (string) ($timestamp ?? time());
-        $signature = hash_hmac('sha256', $timestamp . '.' . $body, $secret ?? self::SECRET);
+        $signature = hash_hmac('sha256', $timestamp.'.'.$body, $secret ?? self::SECRET);
 
         return $this->call($method, $uri, [], [], [], $this->transformHeadersToServerVars($headers + [
             'X-Kutenga-Timestamp' => $timestamp,
@@ -201,7 +203,7 @@ class SubscriptionApiTest extends TestCase
 
         // Segunda execução no mesmo dia não duplica o aviso
         $this->artisan('subscription:check')->assertSuccessful();
-        $this->assertEquals(1, \App\Models\SystemNotification::where('company_id', $expiring->id)->where('type', 'subscription_warning')->count());
+        $this->assertEquals(1, SystemNotification::where('company_id', $expiring->id)->where('type', 'subscription_warning')->count());
     }
 
     public function test_company_cannot_change_its_own_plan_but_super_admin_can(): void
@@ -211,7 +213,7 @@ class SubscriptionApiTest extends TestCase
             'company_id' => $company->id, 'name' => 'Admin', 'email' => 'a@x.test', 'password' => bcrypt('password'),
         ]);
 
-        $user->assignRole(\Spatie\Permission\Models\Role::findOrCreate('Admin', 'web'));
+        $user->assignRole(Role::findOrCreate('Admin', 'web'));
 
         // Admin da empresa passa a rota, mas o controller recusa quem não é super admin
         $this->actingAs($user)->post('/settings/subscription/upgrade', ['plan' => 'empresarial'])->assertForbidden();

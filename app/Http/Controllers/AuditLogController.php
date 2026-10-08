@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Activity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Models\Activity;
 
 class AuditLogController extends Controller
 {
     public function index(Request $request)
     {
         // Autorização: Apenas owner ou quem tiver a permissão audits.view
-        if (!$request->user()->hasRole('owner') && !$request->user()->hasPermissionTo('audits.view')) {
+        if (! $request->user()->hasRole('owner') && ! $request->user()->hasPermissionTo('audits.view')) {
             abort(403, 'Acesso Negado: Não tens permissão para ver auditorias.');
         }
 
@@ -31,7 +31,7 @@ class AuditLogController extends Controller
             $subject = $request->subject;
             $query->where(function ($q) use ($subject) {
                 $q->where('subject_type', 'like', "%\\{$subject}")
-                  ->orWhere('subject_type', $subject);
+                    ->orWhere('subject_type', $subject);
             });
         }
 
@@ -48,12 +48,12 @@ class AuditLogController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
-                  ->orWhere('subject_type', 'like', "%{$search}%")
-                  ->orWhere('subject_id', 'like', "%{$search}%")
-                  ->orWhereHas('causer', function ($userQuery) use ($search) {
-                      $userQuery->where('name', 'like', "%{$search}%")
-                                ->orWhere('email', 'like', "%{$search}%");
-                  });
+                    ->orWhere('subject_type', 'like', "%{$search}%")
+                    ->orWhere('subject_id', 'like', "%{$search}%")
+                    ->orWhereHas('causer', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -80,7 +80,7 @@ class AuditLogController extends Controller
 
         return Inertia::render('activity/index', [
             'activities' => $activities,
-            'filters' => $request->only(['search', 'action', 'subject', 'date_start', 'date_end'])
+            'filters' => $request->only(['search', 'action', 'subject', 'date_start', 'date_end']),
         ]);
     }
 }

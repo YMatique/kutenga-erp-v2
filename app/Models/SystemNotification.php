@@ -14,10 +14,10 @@ class SystemNotification extends Model
         'title',
         'message',
         'link',
-        'is_read'
+        'is_read',
     ];
 
     protected $casts = [
-        'is_read' => 'boolean'
+        'is_read' => 'boolean',
     ];
 }

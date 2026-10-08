@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('quote_prefix', 10)->default('CT')->after('invoice_prefix');
             $table->string('receipt_prefix', 10)->default('FR')->after('quote_prefix');
             $table->json('bank_accounts')->nullable()->after('receipt_prefix');
-            
+
             $table->unique('nuit');
             $table->unique('email');
         });
@@ -32,14 +32,14 @@ return new class extends Migration
         Schema::table('companies', function (Blueprint $table) {
             $table->dropUnique(['nuit']);
             $table->dropUnique(['email']);
-            
+
             $table->dropColumn([
                 'default_currency',
                 'default_due_days',
                 'invoice_prefix',
                 'quote_prefix',
                 'receipt_prefix',
-                'bank_accounts'
+                'bank_accounts',
             ]);
         });
     }

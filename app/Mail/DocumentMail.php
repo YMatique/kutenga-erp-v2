@@ -3,11 +3,12 @@
 namespace App\Mail;
 
 use App\Models\Billing\Document;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -39,11 +40,11 @@ class DocumentMail extends Mailable implements ShouldQueue
             'ND' => 'Nota de Débito',
             'GR' => 'Guia de Remessa',
         ];
-        
+
         $label = $typeLabels[$this->document->document_type] ?? 'Documento';
-        
+
         $companyName = $this->document->company->name ?? config('app.name', 'Kutenga');
-        $subject = "{$companyName} - {$label} " . ($this->document->document_number ?? 'Rascunho');
+        $subject = "{$companyName} - {$label} ".($this->document->document_number ?? 'Rascunho');
 
         return new Envelope(
             from: new Address(
@@ -67,7 +68,7 @@ class DocumentMail extends Mailable implements ShouldQueue
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {
@@ -75,13 +76,13 @@ class DocumentMail extends Mailable implements ShouldQueue
         $this->document->loadMissing(['items', 'series', 'customer', 'company']);
 
         // Gerar PDF em buffer na memória do worker
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.document', ['document' => $this->document]);
+        $pdf = Pdf::loadView('pdf.document', ['document' => $this->document]);
         $pdf->setPaper('a4', 'portrait');
         $pdfContent = $pdf->output();
 
         // Nome do ficheiro em anexo
         $name = $this->document->document_number ?: "{$this->document->document_type}_draft_{$this->document->id}";
-        $filename = str_replace(['/', ' '], '_', $name) . '.pdf';
+        $filename = str_replace(['/', ' '], '_', $name).'.pdf';
 
         return [
             Attachment::fromData(fn () => $pdfContent, $filename)

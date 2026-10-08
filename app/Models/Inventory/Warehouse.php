@@ -5,13 +5,12 @@ namespace App\Models\Inventory;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 class Warehouse extends Model
 {
-    use BelongsToCompany, SoftDeletes, LogsActivity;
+    use BelongsToCompany, LogsActivity, SoftDeletes;
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -53,8 +52,9 @@ class Warehouse extends Model
             'from_warehouse_id'
         );
     }
+
     public function stocks()
-{
-    return $this->hasMany(ProductStock::class);
-}
+    {
+        return $this->hasMany(ProductStock::class);
+    }
 }

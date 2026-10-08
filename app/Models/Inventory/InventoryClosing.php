@@ -2,15 +2,14 @@
 
 namespace App\Models\Inventory;
 
-use App\Models\User;
 use App\Models\Company;
+use App\Models\User;
 use App\Traits\BelongsToCompany;
-
-
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InventoryClosing extends Model
 {
@@ -28,8 +27,8 @@ class InventoryClosing extends Model
     ];
 
     protected $casts = [
-        'reference_date'   => 'date',
-        'completed_at'     => 'datetime',
+        'reference_date' => 'date',
+        'completed_at' => 'datetime',
         'blocks_movements' => 'boolean',
     ];
 
@@ -67,7 +66,7 @@ class InventoryClosing extends Model
      * Verifica se este fecho bloqueia um dado movimento de stock.
      * Usado quando blocks_movements = true para validar movimentos retroativos.
      */
-    public function blocksMovementOnDate(\Carbon\Carbon $date): bool
+    public function blocksMovementOnDate(Carbon $date): bool
     {
         return $this->blocks_movements
             && $this->isCompleted()

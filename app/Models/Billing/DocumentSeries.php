@@ -11,6 +11,7 @@ class DocumentSeries extends Model
     use BelongsToCompany;
 
     protected $table = 'document_series';
+
     protected $fillable = ['company_id', 'code', 'name', 'scope', 'year', 'next_number', 'is_active', 'created_by', 'updated_by'];
 
     public function documents(): HasMany

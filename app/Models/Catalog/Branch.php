@@ -2,10 +2,8 @@
 
 namespace App\Models\Catalog;
 
-use App\Models\User;
 use App\Models\Company;
-
-
+use App\Models\User;
 use App\Traits\BelongsToCompany;
 // use App\Traits\HasAudit;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Branch extends Model
 {
-    use SoftDeletes /* , HasAudit */, BelongsToCompany;
+    use BelongsToCompany /* , HasAudit */, SoftDeletes;
 
     protected $fillable = [
         'company_id',

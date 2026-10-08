@@ -2,18 +2,19 @@
 
 namespace App\Services\Billing;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\Billing\Customer;
-use App\Models\Company;
 use App\Models\Billing\Document;
 use App\Models\Billing\DocumentItem;
 use App\Models\Billing\DocumentSeries;
 use App\Models\Billing\Payment;
 use App\Models\Billing\PaymentAllocation;
 use App\Models\Catalog\Product;
-use App\Models\Inventory\Warehouse;
-use App\Services\Inventory\StockService;
+use App\Models\Company;
 use App\Models\Inventory\StockMovement;
-use App\Exceptions\BusinessRuleException;
+use App\Models\Inventory\Warehouse;
+use App\Models\SystemNotification;
+use App\Services\Inventory\StockService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -22,7 +23,7 @@ class BillingService
     /** Tipos de documento cujos itens não são repreçados a partir do catálogo. */
     private const FREE_PRICING_TYPES = ['NC', 'ND', 'RC'];
 
-     protected StockService $stockService;
+    protected StockService $stockService;
 
     /**
      * Injeção de dependência do StockService existente para baixa automática.
@@ -38,17 +39,17 @@ class BillingService
     public function createDraft(array $payload, int $companyId): Document
     {
         return DB::transaction(function () use ($payload, $companyId) {
-            
+
             $seriesId = $payload['series_id'] ?? null;
-            if (!$seriesId) {
+            if (! $seriesId) {
                 $series = DocumentSeries::where('company_id', $companyId)
                     ->where('scope', 'billing')
                     ->where('year', date('Y'))
                     ->where('is_active', true)
                     ->first();
-                
-                if (!$series) {
-                    throw new BusinessRuleException("Nenhuma série documental ativa configurada para o ano atual.");
+
+                if (! $series) {
+                    throw new BusinessRuleException('Nenhuma série documental ativa configurada para o ano atual.');
                 }
                 $seriesId = $series->id;
             }
@@ -59,14 +60,14 @@ class BillingService
                 'branch_id' => $payload['branch_id'] ?? null,
                 'series_id' => $seriesId,
                 'customer_id' => $payload['customer_id'] ?? null,
-                
+
                 // Persistência Histórica do Cliente (Snapshot imutável)
                 'customer_name' => $payload['customer_name'] ?? 'Consumidor Final',
                 'customer_nuit' => $payload['customer_nuit'] ?? '999999999',
                 'customer_phone' => $payload['customer_phone'] ?? null,
                 'customer_email' => $payload['customer_email'] ?? null,
                 'customer_address' => $payload['customer_address'] ?? 'Maputo, Moçambique',
-                
+
                 'document_type' => $payload['document_type'] ?? 'FR',
                 'source_module' => $payload['source_module'] ?? 'billing',
                 'status' => 'draft',
@@ -78,7 +79,7 @@ class BillingService
             ]);
 
             // Insere os itens calculando as taxas individuais
-            if (!empty($payload['items'])) {
+            if (! empty($payload['items'])) {
                 foreach ($payload['items'] as $item) {
                     $this->addItem($document, $item);
                 }
@@ -96,7 +97,7 @@ class BillingService
     public function addItem(Document $document, array $itemData): DocumentItem
     {
         if ($document->status !== 'draft') {
-            throw new BusinessRuleException("Imutabilidade: Não é permitido modificar itens de um documento já emitido.");
+            throw new BusinessRuleException('Imutabilidade: Não é permitido modificar itens de um documento já emitido.');
         }
 
         $qty = floatval($itemData['quantity']);
@@ -125,7 +126,7 @@ class BillingService
         $discountAmount = $base * ($discountPercent / 100);
         $taxable = $base - $discountAmount;
         $taxAmount = $taxable * ($taxRate / 100);
-        
+
         $total = $taxable + $taxAmount;
 
         return DocumentItem::create([
@@ -139,7 +140,7 @@ class BillingService
             'unit_price' => $price,
             'tax_rate' => $taxRate,
             'discount_percent' => $discountPercent,
-            'total' => $total
+            'total' => $total,
         ]);
     }
 
@@ -168,7 +169,7 @@ class BillingService
             'subtotal' => $subtotal,
             'discount_total' => $discountTotal,
             'tax_total' => $taxTotal,
-            'grand_total' => $subtotal - $discountTotal + $taxTotal
+            'grand_total' => $subtotal - $discountTotal + $taxTotal,
         ]);
     }
 
@@ -179,19 +180,19 @@ class BillingService
     public function confirmAndEmit(int $documentId, ?Warehouse $warehouse = null): Document
     {
         return DB::transaction(function () use ($documentId, $warehouse) {
-            
+
             // Bloqueio pessimista para evitar duplicação em concorrência
             $document = Document::lockForUpdate()->findOrFail($documentId);
 
             if ($document->status !== 'draft') {
-                throw new BusinessRuleException("Este documento já se encontra emitido ou cancelado.");
+                throw new BusinessRuleException('Este documento já se encontra emitido ou cancelado.');
             }
 
             // Bloqueia a empresa para que duas emissões simultâneas não ultrapassem o limite do plano
             $company = Company::withoutGlobalScopes()->lockForUpdate()->find($document->company_id);
             if ($company) {
                 if ($company->isSubscriptionExpired()) {
-                    throw new BusinessRuleException("A subscrição da sua empresa expirou. Por favor, regularize a sua conta para poder emitir documentos comerciais.");
+                    throw new BusinessRuleException('A subscrição da sua empresa expirou. Por favor, regularize a sua conta para poder emitir documentos comerciais.');
                 }
 
                 // O rascunho ainda não conta (só contam os documentos já numerados) e o recibo
@@ -206,20 +207,20 @@ class BillingService
             // Validar regras de retificação para NC e ND
             if (in_array($document->document_type, ['NC', 'ND'])) {
                 if (empty($document->referenced_document_id)) {
-                    throw new BusinessRuleException("Documento de Referência obrigatório para " . ($document->document_type === 'NC' ? 'Nota de Crédito' : 'Nota de Débito') . ".");
+                    throw new BusinessRuleException('Documento de Referência obrigatório para '.($document->document_type === 'NC' ? 'Nota de Crédito' : 'Nota de Débito').'.');
                 }
 
                 $referencedDoc = Document::findOrFail($document->referenced_document_id);
                 if ($referencedDoc->company_id !== $document->company_id) {
-                    throw new BusinessRuleException("O documento retificado deve pertencer à mesma empresa.");
+                    throw new BusinessRuleException('O documento retificado deve pertencer à mesma empresa.');
                 }
 
-                if (!in_array($referencedDoc->document_type, ['FT', 'FR'])) {
-                    throw new BusinessRuleException("Apenas Faturas (FT) ou Faturas-Recibo (FR) podem ser retificadas.");
+                if (! in_array($referencedDoc->document_type, ['FT', 'FR'])) {
+                    throw new BusinessRuleException('Apenas Faturas (FT) ou Faturas-Recibo (FR) podem ser retificadas.');
                 }
 
                 if (in_array($referencedDoc->status, ['draft', 'cancelled'])) {
-                    throw new BusinessRuleException("O documento retificado deve estar emitido (Confirmado ou Pago).");
+                    throw new BusinessRuleException('O documento retificado deve estar emitido (Confirmado ou Pago).');
                 }
 
                 // Para Nota de Crédito (NC), validar valor máximo acumulado
@@ -231,9 +232,9 @@ class BillingService
                         ->sum('grand_total');
 
                     $remainingToCredit = $referencedDoc->grand_total - $alreadyCredited;
-                    
+
                     if (round((float) $document->grand_total, 2) > round((float) $remainingToCredit, 2)) {
-                        throw new BusinessRuleException("O valor total da Nota de Crédito (" . number_format($document->grand_total, 2, ',', '.') . " MZN) excede o valor restante da fatura retificada (" . number_format($remainingToCredit, 2, ',', '.') . " MZN).");
+                        throw new BusinessRuleException('O valor total da Nota de Crédito ('.number_format($document->grand_total, 2, ',', '.').' MZN) excede o valor restante da fatura retificada ('.number_format($remainingToCredit, 2, ',', '.').' MZN).');
                     }
                 }
             }
@@ -248,11 +249,11 @@ class BillingService
 
             // Formatação do número fiscal (ex: FT A/2026/00148)
             $formattedNumber = sprintf(
-                "%s %s/%d/%s",
+                '%s %s/%d/%s',
                 $document->document_type,
                 $series->code,
                 $series->year,
-                str_pad((string)$sequence, 5, "0", STR_PAD_LEFT)
+                str_pad((string) $sequence, 5, '0', STR_PAD_LEFT)
             );
 
             $status = $document->getInitialStatus();
@@ -262,7 +263,7 @@ class BillingService
                 'status' => $status,
                 'document_number' => $formattedNumber,
                 'sequence_number' => $sequence,
-                'payment_status' => $paymentStatus
+                'payment_status' => $paymentStatus,
             ]);
 
             // Movimentação física de stock conforme as regras de negócio do tipo de documento
@@ -270,7 +271,7 @@ class BillingService
                 $document->processStock($this->stockService, $warehouse);
             } else {
                 if ($document->has_physical_products && in_array($document->document_type, ['FT', 'FR', 'NC', 'GR'])) {
-                    throw new BusinessRuleException("Um armazém de saída/entrada é obrigatório para confirmar este documento, pois contém itens físicos.");
+                    throw new BusinessRuleException('Um armazém de saída/entrada é obrigatório para confirmar este documento, pois contém itens físicos.');
                 }
             }
 
@@ -297,7 +298,7 @@ class BillingService
                 'amount' => $amount,
                 'payment_date' => date('Y-m-d'),
                 'reference' => $reference,
-                'created_by' => Auth::id()
+                'created_by' => Auth::id(),
             ]);
 
             // Deduz o saldo geral pendente do cliente
@@ -313,22 +314,26 @@ class BillingService
                 ->get();
 
             foreach ($pendingInvoices as $invoice) {
-                if ($remaining <= 0) break;
+                if ($remaining <= 0) {
+                    break;
+                }
 
                 // Calcula o montante em dívida na fatura
                 $alreadyPaid = PaymentAllocation::where('document_id', $invoice->id)->sum('amount_allocated');
                 $dueInInvoice = $invoice->grand_total - $alreadyPaid;
 
-                if ($dueInInvoice <= 0) continue;
+                if ($dueInInvoice <= 0) {
+                    continue;
+                }
 
                 $allocationAmount = min($remaining, $dueInInvoice);
-                
+
                 // Cria o registo de alocação de liquidação
                 PaymentAllocation::create([
                     'payment_id' => $payment->id,
                     'document_id' => $invoice->id,
                     'amount_allocated' => $allocationAmount,
-                    'created_by' => Auth::id() ?? $payment->created_by
+                    'created_by' => Auth::id() ?? $payment->created_by,
                 ]);
 
                 $remaining -= $allocationAmount;
@@ -337,15 +342,15 @@ class BillingService
                 // Atualiza o estado da fatura individual
                 $invoice->update([
                     'payment_status' => $newDue <= 0 ? 'paid' : 'partial',
-                    'status' => $newDue <= 0 ? 'paid' : 'partial'
+                    'status' => $newDue <= 0 ? 'paid' : 'partial',
                 ]);
 
                 if ($newDue <= 0) {
-                    \App\Models\SystemNotification::create([
+                    SystemNotification::create([
                         'company_id' => $invoice->company_id,
                         'type' => 'invoice_paid',
                         'title' => 'Fatura Liquidada',
-                        'message' => "A fatura {$invoice->document_number} foi totalmente paga com a receção de " . number_format($allocationAmount, 2, ',', '.') . " MZN.",
+                        'message' => "A fatura {$invoice->document_number} foi totalmente paga com a receção de ".number_format($allocationAmount, 2, ',', '.').' MZN.',
                         'link' => "/billing/invoices/{$invoice->id}",
                         'is_read' => false,
                     ]);
@@ -383,7 +388,7 @@ class BillingService
                 $totalAllocated = 0;
 
                 foreach ($allocations as $alloc) {
-                    $desc = "Pagamento da Fatura " . ($alloc->document ? $alloc->document->document_number : '');
+                    $desc = 'Pagamento da Fatura '.($alloc->document ? $alloc->document->document_number : '');
                     $this->addItem($rcDoc, [
                         'product_name' => $desc,
                         'quantity' => 1,
@@ -413,7 +418,7 @@ class BillingService
                 // Vincular o Payment ao Recibo para fácil consulta futura
                 $rcNumber = Document::find($rcDoc->id)->document_number;
                 $payment->update([
-                    'reference' => ($payment->reference ? $payment->reference . ' | ' : '') . 'Recibo: ' . $rcNumber
+                    'reference' => ($payment->reference ? $payment->reference.' | ' : '').'Recibo: '.$rcNumber,
                 ]);
             }
 
@@ -430,15 +435,16 @@ class BillingService
             $document = Document::lockForUpdate()->findOrFail($documentId);
 
             if ($document->status === 'cancelled') {
-                throw new BusinessRuleException("Este documento já se encontra cancelado.");
+                throw new BusinessRuleException('Este documento já se encontra cancelado.');
             }
 
             // Se for rascunho, apenas cancelamos o estado
             if ($document->status === 'draft') {
                 $document->update([
                     'status' => 'cancelled',
-                    'cancelled_by' => Auth::id()
+                    'cancelled_by' => Auth::id(),
                 ]);
+
                 return $document;
             }
 
@@ -449,8 +455,8 @@ class BillingService
 
             $warehouse = $warehouseId ? Warehouse::find($warehouseId) : Warehouse::where('company_id', $document->company_id)->where('is_active', true)->first();
 
-            if (!$warehouse && in_array($document->document_type, ['FT', 'FR', 'NC', 'GR'])) {
-                throw new BusinessRuleException("Não foi possível determinar o armazém para reverter os movimentos de stock.");
+            if (! $warehouse && in_array($document->document_type, ['FT', 'FR', 'NC', 'GR'])) {
+                throw new BusinessRuleException('Não foi possível determinar o armazém para reverter os movimentos de stock.');
             }
 
             // Reverte a movimentação física de stock
@@ -464,10 +470,10 @@ class BillingService
             // Atualiza status e registo de cancelamento
             $document->update([
                 'status' => 'cancelled',
-                'cancelled_by' => Auth::id()
+                'cancelled_by' => Auth::id(),
             ]);
 
-            \App\Models\SystemNotification::create([
+            SystemNotification::create([
                 'company_id' => $document->company_id,
                 'type' => 'document_cancelled',
                 'title' => 'Documento Cancelado',
@@ -489,7 +495,7 @@ class BillingService
             $document = Document::lockForUpdate()->findOrFail($documentId);
 
             if ($document->status !== 'draft') {
-                throw new BusinessRuleException("Apenas rascunhos podem ser editados.");
+                throw new BusinessRuleException('Apenas rascunhos podem ser editados.');
             }
 
             $document->update([
@@ -508,7 +514,7 @@ class BillingService
             // Limpa os itens antigos e insere os novos
             $document->items()->delete();
 
-            if (!empty($payload['items'])) {
+            if (! empty($payload['items'])) {
                 foreach ($payload['items'] as $item) {
                     $this->addItem($document, $item);
                 }

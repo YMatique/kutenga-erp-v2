@@ -15,7 +15,7 @@ class RoleController extends Controller
      * ficar com (ou entregar a outros) mais acesso do que o seu. O owner tem acesso total.
      *
      * @param  array<int, string>  $requested
-     * @return array<int, string>|null  null = pedido válido; caso contrário, as permissões recusadas
+     * @return array<int, string>|null null = pedido válido; caso contrário, as permissões recusadas
      */
     private function ungrantable(Request $request, array $requested): ?array
     {
@@ -27,19 +27,19 @@ class RoleController extends Controller
     public function index(Request $request)
     {
         $companyId = $request->user()->company_id;
-        
+
         $roles = Role::with('permissions')
             ->whereNull('company_id')
             ->orWhere('company_id', $companyId)
             ->get();
-            
+
         $permissions = Permission::all();
 
         return Inertia::render('settings/roles/index', [
             'roles' => $roles,
-            'permissions' => $permissions->groupBy(function($item) {
+            'permissions' => $permissions->groupBy(function ($item) {
                 return explode('.', $item->name)[0]; // group by prefix
-            })
+            }),
         ]);
     }
 
@@ -50,26 +50,26 @@ class RoleController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'permissions' => 'array',
-            'permissions.*' => 'exists:permissions,name'
+            'permissions.*' => 'exists:permissions,name',
         ]);
 
         if ($denied = $this->ungrantable($request, $validated['permissions'] ?? [])) {
-            return back()->withErrors(['permissions' => 'Não pode atribuir permissões que não tem: ' . implode(', ', $denied) . '.']);
+            return back()->withErrors(['permissions' => 'Não pode atribuir permissões que não tem: '.implode(', ', $denied).'.']);
         }
 
         if (Role::where('name', $validated['name'])
-            ->where(function($q) use ($companyId) {
+            ->where(function ($q) use ($companyId) {
                 $q->whereNull('company_id')->orWhere('company_id', $companyId);
             })->exists()) {
             return back()->withErrors(['name' => 'Já existe um papel com este nome.']);
         }
 
-        $role = new Role();
+        $role = new Role;
         $role->name = $validated['name'];
         $role->company_id = $companyId;
         $role->save();
 
-        if (!empty($validated['permissions'])) {
+        if (! empty($validated['permissions'])) {
             $role->syncPermissions($validated['permissions']);
         }
 
@@ -84,12 +84,12 @@ class RoleController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'permissions' => 'array',
-            'permissions.*' => 'exists:permissions,name'
+            'permissions.*' => 'exists:permissions,name',
         ]);
 
         if (Role::where('name', $validated['name'])
             ->where('id', '!=', $role->id)
-            ->where(function($q) use ($request) {
+            ->where(function ($q) use ($request) {
                 $q->whereNull('company_id')->orWhere('company_id', $request->user()->company_id);
             })->exists()) {
             return back()->withErrors(['name' => 'Já existe um papel com este nome.']);
@@ -98,7 +98,7 @@ class RoleController extends Controller
         $requested = $validated['permissions'] ?? [];
 
         if ($denied = $this->ungrantable($request, $requested)) {
-            return back()->withErrors(['permissions' => 'Não pode atribuir permissões que não tem: ' . implode(', ', $denied) . '.']);
+            return back()->withErrors(['permissions' => 'Não pode atribuir permissões que não tem: '.implode(', ', $denied).'.']);
         }
 
         $role->update(['name' => $validated['name']]);

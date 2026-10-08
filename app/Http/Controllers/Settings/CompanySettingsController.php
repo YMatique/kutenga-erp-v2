@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
-use Symfony\Component\Mailer\Transport;
 use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\Transport;
 use Symfony\Component\Mime\Email;
 
 class CompanySettingsController extends Controller
@@ -27,7 +27,7 @@ class CompanySettingsController extends Controller
         $company->setAttribute('has_smtp_password', filled($company->smtp_password));
 
         return Inertia::render('settings/company', [
-            'company' => $company
+            'company' => $company,
         ]);
     }
 
@@ -37,8 +37,8 @@ class CompanySettingsController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'nuit' => 'nullable|string|max:50|unique:companies,nuit,' . $company->id,
-            'email' => 'nullable|email|max:255|unique:companies,email,' . $company->id,
+            'nuit' => 'nullable|string|max:50|unique:companies,nuit,'.$company->id,
+            'email' => 'nullable|email|max:255|unique:companies,email,'.$company->id,
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string',
             'default_tax_rate' => 'nullable|numeric|min:0|max:100',
@@ -121,7 +121,7 @@ class CompanySettingsController extends Controller
             $transport = Transport::fromDsn($dsn);
             $mailer = new Mailer($transport);
 
-            $email = (new Email())
+            $email = (new Email)
                 ->from($request->smtp_username)
                 ->to($request->user()->email)
                 ->subject('Kutenga ERP - Teste de Ligação SMTP')
@@ -129,9 +129,9 @@ class CompanySettingsController extends Controller
 
             $mailer->send($email);
 
-            return back()->with('success', 'Conexão SMTP estabelecida com sucesso. Foi enviado um email de teste para ' . $request->user()->email);
+            return back()->with('success', 'Conexão SMTP estabelecida com sucesso. Foi enviado um email de teste para '.$request->user()->email);
         } catch (\Exception $e) {
-            return back()->withErrors(['smtp' => 'Falha ao ligar ao servidor SMTP: ' . $e->getMessage()]);
+            return back()->withErrors(['smtp' => 'Falha ao ligar ao servidor SMTP: '.$e->getMessage()]);
         }
     }
 }
