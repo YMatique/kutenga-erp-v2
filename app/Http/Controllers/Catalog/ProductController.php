@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Catalog;
 
+use App\Support\Tenant;
+
 use App\Http\Controllers\Controller;
 
 use App\Models\Catalog\Brand;
@@ -80,9 +82,9 @@ class ProductController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'category_id' => 'nullable|exists:categories,id',
-            'unit_id' => 'nullable|exists:units,id',
-            'brand_id' => 'nullable|exists:brands,id',
+            'category_id' => ['nullable', Tenant::exists('categories')],
+            'unit_id' => ['nullable', Tenant::exists('units')],
+            'brand_id' => ['nullable', Tenant::exists('brands')],
             'sku' => 'nullable|string|max:50',
             'barcode' => ['nullable', 'string', 'max:50', Rule::unique('products', 'barcode')->where('company_id', Auth::user()->company_id)],
             'description' => 'nullable|string',
@@ -160,9 +162,9 @@ class ProductController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'category_id' => 'nullable|exists:categories,id',
-            'unit_id' => 'nullable|exists:units,id',
-            'brand_id' => 'nullable|exists:brands,id',
+            'category_id' => ['nullable', Tenant::exists('categories')],
+            'unit_id' => ['nullable', Tenant::exists('units')],
+            'brand_id' => ['nullable', Tenant::exists('brands')],
             'sku' => 'nullable|string|max:50',
             'barcode' => ['nullable', 'string', 'max:50', Rule::unique('products', 'barcode')->where('company_id', Auth::user()->company_id)->ignore($product->id)],
             'description' => 'nullable|string',

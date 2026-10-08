@@ -4,6 +4,7 @@ namespace App\Models\Billing;
 
 use App\Models\Pos\PosShift;
 use App\Models\Company;
+use App\Traits\BelongsToCompany;
 
 
 // use App\Traits\HasAudit;
@@ -20,7 +21,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Document extends Model
 {
-    use SoftDeletes /* , HasAudit */, LogsActivity;
+    use BelongsToCompany, SoftDeletes /* , HasAudit */, LogsActivity;
 
     public function getActivitylogOptions(): LogOptions
     {

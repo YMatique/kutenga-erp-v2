@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Catalog;
 
+use App\Support\Tenant;
+
 use App\Http\Controllers\Controller;
 
 use App\Models\Catalog\Category;
@@ -22,7 +24,7 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:categories,id',
+            'parent_id' => ['nullable', Tenant::exists('categories')],
             'description' => 'nullable|string',
         ]);
 
@@ -37,7 +39,7 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:categories,id',
+            'parent_id' => ['nullable', Tenant::exists('categories')],
             'description' => 'nullable|string',
         ]);
 

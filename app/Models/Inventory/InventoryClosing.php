@@ -4,6 +4,7 @@ namespace App\Models\Inventory;
 
 use App\Models\User;
 use App\Models\Company;
+use App\Traits\BelongsToCompany;
 
 
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InventoryClosing extends Model
 {
-    use SoftDeletes;
+    use BelongsToCompany, SoftDeletes;
 
     protected $fillable = [
         'company_id',

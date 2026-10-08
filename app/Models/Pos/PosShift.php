@@ -11,10 +11,11 @@ use App\Models\Company;
 use App\Models\Catalog\Branch;
 use App\Models\User;
 use App\Models\Billing\Document;
+use App\Traits\BelongsToCompany;
 
 class PosShift extends Model
 {
-    use SoftDeletes;
+    use BelongsToCompany, SoftDeletes;
 
     protected $fillable = [
         'company_id',

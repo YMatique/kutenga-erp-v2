@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Support\Tenant;
+
 use App\Http\Controllers\Controller;
 use App\Models\Catalog\Product;
 use App\Models\Inventory\Warehouse;
@@ -29,8 +31,8 @@ class InventoryOpeningController extends Controller
     public function store(Request $request, StockService $stockService)
     {
         $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'warehouse_id' => 'required|exists:warehouses,id',
+            'product_id' => ['required', Tenant::exists('products')],
+            'warehouse_id' => ['required', Tenant::exists('warehouses')],
             'quantity' => 'required|numeric|min:0',
             'notes' => 'nullable|string',
         ]);

@@ -6,6 +6,7 @@ use App\Models\Billing\DocumentSeries;
 use App\Models\Catalog\Branch;
 use App\Models\Company;
 use App\Models\Inventory\Warehouse;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CashRegister extends Model
 {
-    use SoftDeletes;
+    use BelongsToCompany, SoftDeletes;
 
     protected $fillable = [
         'company_id',

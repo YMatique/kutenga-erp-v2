@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Support\Tenant;
+
 use App\Http\Controllers\Controller;
 
 use App\Models\Inventory\InventoryClosing;
@@ -117,7 +119,7 @@ class InventoryClosingController extends Controller
 
         $validated = $request->validate([
             'reference_date'   => 'required|date|before_or_equal:today',
-            'warehouse_id'     => 'nullable|exists:warehouses,id',
+            'warehouse_id'     => ['nullable', Tenant::exists('warehouses')],
             'notes'            => 'nullable|string|max:1000',
             'blocks_movements' => 'boolean',
         ]);
@@ -238,7 +240,7 @@ class InventoryClosingController extends Controller
 
         $validated = $request->validate([
             'items'                    => 'required|array',
-            'items.*.id'               => 'required|exists:inventory_closing_items,id',
+            'items.*.id'               => ['required', Tenant::exists('inventory_closing_items')],
             'items.*.quantity_counted' => 'nullable|numeric|min:0',
         ]);
 

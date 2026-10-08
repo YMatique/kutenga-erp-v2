@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Billing;
 
+use App\Support\Tenant;
+
 use App\Http\Controllers\Controller;
 use App\Models\Billing\Customer;
 use Illuminate\Http\Request;

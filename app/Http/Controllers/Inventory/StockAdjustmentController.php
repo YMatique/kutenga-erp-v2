@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Support\Tenant;
+
 use App\Http\Controllers\Controller;
 
 use App\Models\Catalog\Product;
@@ -67,7 +69,7 @@ class StockAdjustmentController extends Controller
     public function store(Request $request, StockService $stockService)
     {
         $data = $request->validate([
-            'warehouse_id' => ['required', 'exists:warehouses,id'],
+            'warehouse_id' => ['required', Tenant::exists('warehouses')],
             'reason' => ['required', 'string'],
             'notes' => ['nullable', 'string'],
 
@@ -75,7 +77,7 @@ class StockAdjustmentController extends Controller
 
             'items.*.product_id' => [
                 'required',
-                'exists:products,id',
+                Tenant::exists('products'),
             ],
 
             'items.*.new_quantity' => [

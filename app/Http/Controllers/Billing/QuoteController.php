@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Billing;
 
+use App\Support\Tenant;
+
 use App\Http\Controllers\Controller;
 
 use App\Models\Billing\Customer;
@@ -82,18 +84,18 @@ class QuoteController extends Controller
         $companyId = $request->user()->company_id;
 
         $validated = $request->validate([
-            'customer_id' => 'nullable|exists:customers,id',
+            'customer_id' => ['nullable', Tenant::exists('customers')],
             'customer_name' => 'required|string|max:255',
             'customer_nuit' => 'required|string|max:15',
             'customer_phone' => 'nullable|string|max:30',
             'customer_email' => 'nullable|email|max:255',
             'customer_address' => 'nullable|string',
-            'series_id' => 'nullable|exists:document_series,id',
+            'series_id' => ['nullable', Tenant::exists('document_series')],
             'issue_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:issue_date',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'nullable|exists:products,id',
+            'items.*.product_id' => ['nullable', Tenant::exists('products')],
             'items.*.product_name' => 'required|string|max:255',
             'items.*.product_sku' => 'nullable|string|max:50',
             'items.*.product_barcode' => 'nullable|string|max:50',
@@ -155,7 +157,7 @@ class QuoteController extends Controller
         $companyId = $request->user()->company_id;
 
         $validated = $request->validate([
-            'customer_id' => 'nullable|exists:customers,id',
+            'customer_id' => ['nullable', Tenant::exists('customers')],
             'customer_name' => 'required|string|max:255',
             'customer_nuit' => 'required|string|max:15',
             'customer_phone' => 'nullable|string|max:30',
@@ -165,7 +167,7 @@ class QuoteController extends Controller
             'due_date' => 'required|date|after_or_equal:issue_date',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'nullable|exists:products,id',
+            'items.*.product_id' => ['nullable', Tenant::exists('products')],
             'items.*.product_name' => 'required|string|max:255',
             'items.*.product_sku' => 'nullable|string|max:50',
             'items.*.product_barcode' => 'nullable|string|max:50',

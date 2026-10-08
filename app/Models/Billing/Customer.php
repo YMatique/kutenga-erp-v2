@@ -2,6 +2,7 @@
 
 namespace App\Models\Billing;
 
+use App\Traits\BelongsToCompany;
 use App\Traits\HasAudit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,7 +13,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Customer extends Model
 {
-    use SoftDeletes, HasAudit, LogsActivity;
+    use BelongsToCompany, SoftDeletes, HasAudit, LogsActivity;
 
     public function getActivitylogOptions(): LogOptions
     {
