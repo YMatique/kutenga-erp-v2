@@ -207,6 +207,7 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     Route::prefix('pos')->name('pos.')->group(function () {
         Route::middleware('can:sales.create')->group(function () {
             Route::get('/', [\App\Http\Controllers\Pos\PosController::class, 'index'])->name('index');
+            Route::get('/products', [\App\Http\Controllers\Pos\PosController::class, 'products'])->name('products');
             Route::get('/shifts/open', [\App\Http\Controllers\Pos\PosShiftController::class, 'create'])->name('shifts.create');
             Route::post('/shifts/open', [\App\Http\Controllers\Pos\PosShiftController::class, 'store'])->name('shifts.store');
             Route::get('/shifts/close', [\App\Http\Controllers\Pos\PosShiftController::class, 'showClose'])->name('shifts.showClose');

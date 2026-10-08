@@ -2,9 +2,15 @@ import { Head } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 import { Search, ShoppingCart, Trash2, Plus, Minus, LayoutGrid, LogOut, Package, Barcode } from 'lucide-react';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { toast } from 'sonner';
+import { CameraScanButton } from '@/components/camera-scanner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Toaster } from '@/components/ui/sonner';
 import { useAppearance } from '@/hooks/use-appearance';
+import { useBarcodeScanner } from '@/hooks/use-barcode-scanner';
+import { matchesCode } from '@/lib/product-lookup';
+import { beepError, beepSuccess } from '@/lib/scan-feedback';
 import PaymentModal from './Components/PaymentModal';
 
 interface Product {
@@ -45,7 +51,7 @@ function LiveClock({ dark }: { dark: boolean }) {
     );
 }
 
-export default function PosIndex({ shift, categories, products, auth }: any) {
+export default function PosIndex({ shift, categories, products: initialProducts, has_more: initialHasMore, auth }: any) {
     const { resolvedAppearance } = useAppearance();
     const dark = resolvedAppearance === 'dark';
 
@@ -54,23 +60,73 @@ export default function PosIndex({ shift, categories, products, auth }: any) {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [payOpen, setPayOpen] = useState(false);
 
-    // ── Barcode scanner refs ──
     const searchRef = useRef<HTMLInputElement>(null);
-    const lastKeyTime = useRef<number>(0);
-    const barcodeBuffer = useRef<string>('');
 
-    const filtered = useMemo(() =>
-        products.filter((p: Product) => {
-            const q = search.toLowerCase();
+    // ── Catálogo paginado no servidor (não carrega a empresa inteira no browser) ──
+    const [catalog, setCatalog] = useState<Product[]>(initialProducts);
+    const [hasMore, setHasMore] = useState<boolean>(initialHasMore);
+    const [loadingCatalog, setLoadingCatalog] = useState(false);
+    const catalogPage = useRef(1);
+    const catalogRequest = useRef(0);
+    const firstRun = useRef(true);
 
-            return (
-                !q ||
-                p.name.toLowerCase().includes(q) ||
-                (p.sku ?? '').toLowerCase().includes(q) ||
-                (p.barcode ?? '').toLowerCase().includes(q)
-            ) && (activeCat === null || p.category_id === activeCat);
-        }),
-    [products, search, activeCat]);
+    const fetchProducts = useCallback(async (params: Record<string, string>): Promise<{ data: Product[]; has_more: boolean }> => {
+        const response = await fetch(`/pos/products?${new URLSearchParams(params)}`, {
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+        });
+
+        if (!response.ok) {
+            throw new Error(`Falha ao carregar produtos (${response.status})`);
+        }
+
+        return response.json();
+    }, []);
+
+    const loadCatalog = useCallback(async (page: number) => {
+        const request = ++catalogRequest.current;
+        const params: Record<string, string> = { page: String(page) };
+
+        if (search.trim()) {
+            params.search = search.trim();
+        }
+
+        if (activeCat !== null) {
+            params.category_id = String(activeCat);
+        }
+
+        setLoadingCatalog(true);
+
+        try {
+            const result = await fetchProducts(params);
+
+            if (request !== catalogRequest.current) {
+                return; // chegou uma resposta mais recente
+            }
+
+            catalogPage.current = page;
+            setCatalog(prev => page === 1 ? result.data : [...prev, ...result.data]);
+            setHasMore(result.has_more);
+        } catch {
+            toast.error('Não foi possível carregar os produtos.');
+        } finally {
+            if (request === catalogRequest.current) {
+                setLoadingCatalog(false);
+            }
+        }
+    }, [search, activeCat, fetchProducts]);
+
+    useEffect(() => {
+        if (firstRun.current) {
+            firstRun.current = false;
+
+            return;
+        }
+
+        const t = setTimeout(() => loadCatalog(1), 250);
+
+        return () => clearTimeout(t);
+    }, [loadCatalog]);
 
     const addToCart = useCallback((p: Product) => setCart(prev => {
         const ex = prev.find(i => i.id === p.id);
@@ -106,97 +162,75 @@ return prev.map(i => i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i);
         searchRef.current?.focus();
     }, []);
 
-    // ── Captura global de teclado para leitor de código de barras ──
-    // Leitores de barras emitem caracteres muito rapidamente (< 50ms entre teclas)
-    // seguidos de Enter. Ao detectar esse padrão, o produto é adicionado ao carrinho.
+    // ── Leitor de código de barras ──
+    // O hook detecta a rajada rápida de teclas + Enter e remove o texto do campo de pesquisa.
+    const handleScan = async (code: string) => {
+        // Primeiro o que já está em memória (grelha/carrinho); senão pergunta ao servidor
+        let product: Product | undefined = [...catalog, ...cart].find((p: Product) => matchesCode(p, code));
+
+        if (!product) {
+            try {
+                product = (await fetchProducts({ code })).data[0];
+            } catch {
+                toast.error('Falha ao consultar o código. Verifique a ligação.');
+
+                return;
+            }
+        }
+
+        if (!product) {
+            beepError();
+            toast.error(`Código ${code} não encontrado.`);
+
+            return;
+        }
+
+        addToCart(product);
+        setSearch('');
+        beepSuccess();
+        toast.success(`${product.name} adicionado`, { duration: 1200 });
+    };
+
+    useBarcodeScanner({ enabled: !payOpen, onScan: handleScan });
+
+    // ── Atalhos e foco automático na pesquisa ──
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            const target = e.target as HTMLElement;
-
-            // Global shortcuts
             if (e.key === 'F2') {
                 e.preventDefault();
+
                 if (cart.length > 0) {
                     setPayOpen(true);
                 }
+
                 return;
             }
 
             if (e.key === 'Escape') {
                 e.preventDefault();
+
                 if (payOpen) {
                     setPayOpen(false);
                 } else if (cart.length > 0) {
                     setCart([]);
                 }
+
                 return;
             }
 
-            const isInOtherInput = (
-                (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') &&
-                target !== searchRef.current
-            );
+            // Escrita solta (ou 1.º carácter de uma leitura) vai para o campo de pesquisa
+            const target = e.target as HTMLElement;
+            const inField = ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable;
 
-            // Se o foco está noutro campo, não interfere
-            if (isInOtherInput) {
-return;
-}
-
-            // Se o foco não está no nosso campo, redirecionar
-            if (target !== searchRef.current) {
+            if (!payOpen && !inField && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
                 searchRef.current?.focus();
-
-                return;
-            }
-
-            const now = Date.now();
-            const timeDiff = now - lastKeyTime.current;
-            lastKeyTime.current = now;
-
-            if (e.key === 'Enter') {
-                const query = barcodeBuffer.current.trim();
-                barcodeBuffer.current = '';
-
-                if (!query) {
-return;
-}
-
-                // Verificar se foi input rápido (scanner) — < 100ms médio por tecla
-                if (timeDiff < 100) {
-                    // Tentar encontrar correspondência exacta de barcode ou SKU
-                    const exactMatch = products.find((p: Product) =>
-                        p.barcode === query || p.sku === query
-                    );
-
-                    if (exactMatch) {
-                        addToCart(exactMatch);
-                        setSearch('');
-                        e.preventDefault();
-
-                        return;
-                    }
-                }
-
-                // Se há exactamente 1 resultado filtrado, adicionar ao carrinho
-                if (filtered.length === 1) {
-                    addToCart(filtered[0]);
-                    setSearch('');
-                    e.preventDefault();
-                }
-            } else if (e.key.length === 1) {
-                // Acumular buffer de barcode se input for rápido
-                if (timeDiff < 50) {
-                    barcodeBuffer.current += e.key;
-                } else {
-                    barcodeBuffer.current = e.key;
-                }
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
 
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [products, filtered, addToCart, cart.length, payOpen]);
+    }, [cart.length, payOpen]);
 
     // ── Classes condicionais por tema ──
     const d = dark; // alias curto
@@ -296,7 +330,8 @@ return;
                         d ? 'bg-[#1A2332] border-white/8' : 'bg-white border-slate-200'
                     }`}>
                         {/* Campo de pesquisa com ícone de barcode */}
-                        <div className="relative">
+                        <div className="flex gap-2">
+                        <div className="relative flex-1">
                             <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${d ? 'text-white/30' : 'text-slate-400'}`} />
                             <Input
                                 ref={searchRef}
@@ -307,8 +342,21 @@ return;
                                 }`}
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter' && catalog.length === 1) {
+                                        e.preventDefault();
+                                        addToCart(catalog[0]);
+                                        setSearch('');
+                                    }
+                                }}
                             />
                             <Barcode className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${d ? 'text-white/15' : 'text-slate-300'}`} />
+                        </div>
+                        <CameraScanButton
+                            continuous
+                            onScan={handleScan}
+                            className={`h-10 w-10 rounded-[4px] ${d ? 'bg-transparent border-white/10 text-white/70 hover:bg-white/10 hover:text-white' : ''}`}
+                        />
                         </div>
 
                         {/* Filtro de categorias */}
@@ -337,14 +385,14 @@ return;
 
                     {/* Grelha de produtos */}
                     <div className="flex-1 overflow-y-auto p-4">
-                        {filtered.length === 0 ? (
+                        {catalog.length === 0 ? (
                             <div className={`h-full flex flex-col items-center justify-center gap-3 ${d ? 'text-white/20' : 'text-slate-300'}`}>
                                 <Package className="w-12 h-12" />
-                                <p className="text-sm">Nenhum produto encontrado</p>
+                                <p className="text-sm">{loadingCatalog ? 'A pesquisar...' : 'Nenhum produto encontrado'}</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
-                                {filtered.map((p: Product) => {
+                                {catalog.map((p: Product) => {
                                     const price = parseFloat(String(p.sale_price)) || 0;
                                     const inCart = cart.find(i => i.id === p.id);
 
@@ -401,6 +449,19 @@ return;
                                         </button>
                                     );
                                 })}
+                            </div>
+                        )}
+
+                        {hasMore && catalog.length > 0 && (
+                            <div className="flex justify-center pt-4">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={loadingCatalog}
+                                    onClick={() => loadCatalog(catalogPage.current + 1)}
+                                >
+                                    {loadingCatalog ? 'A carregar...' : 'Carregar mais produtos'}
+                                </Button>
                             </div>
                         )}
                     </div>
@@ -563,6 +624,8 @@ return;
                     </div>
                 </div>
             </div>
+
+            <Toaster richColors position="top-center" />
 
             <PaymentModal
                 isOpen={payOpen}
