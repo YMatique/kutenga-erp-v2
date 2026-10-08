@@ -2,6 +2,7 @@
 
 namespace App\Services\Inventory;
 
+use App\Exceptions\InsufficientStockException;
 use App\Models\Catalog\Product;
 use App\Models\Inventory\ProductStock;
 use App\Models\Inventory\StockMovement;
@@ -93,14 +94,8 @@ class StockService
         ?string $notes = null
     ): StockMovement {
 
-        $currentStock = $this->getStock($product, $warehouse);
-
-        if ($currentStock < $quantity) {
-            throw new \Exception(
-                "Stock insuficiente. Disponível: {$currentStock}"
-            );
-        }
-
+        // O saldo é verificado dentro da transação, com a linha de stock bloqueada,
+        // para que duas saídas simultâneas não passem ambas pela mesma verificação.
         return $this->recordMovement(
             $product,
             $warehouse,
@@ -154,6 +149,10 @@ class StockService
         ?string $notes = null
     ): StockMovement {
 
+        if (in_array($type, ['in', 'out'], true) && $quantity <= 0) {
+            throw new \InvalidArgumentException('A quantidade do movimento tem de ser positiva.');
+        }
+
         return DB::transaction(function () use (
             $product,
             $warehouse,
@@ -163,6 +162,13 @@ class StockService
             $sourceId,
             $notes
         ) {
+
+            // 0. Bloquear a linha de stock (criando-a se for a primeira vez) até ao fim da transação
+            $stock = $this->lockedStockRow($product, $warehouse);
+
+            if ($type === 'out' && (float) $stock->quantity < $quantity) {
+                throw new InsufficientStockException((float) $stock->quantity);
+            }
 
             // 1. Criar movimento (fonte da verdade)
             $movement = StockMovement::create([
@@ -190,14 +196,26 @@ class StockService
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * Linha de stock produto/armazém bloqueada para escrita (SELECT ... FOR UPDATE).
+     * Tem de ser chamada dentro de uma transação. `createOrFirst` apoia-se no índice único
+     * (produto, armazém, empresa), por isso duas criações simultâneas não duplicam a linha.
+     */
+    private function lockedStockRow(Product $product, Warehouse $warehouse): ProductStock
+    {
+        $keys = [
+            'company_id' => $product->company_id,
+            'product_id' => $product->id,
+            'warehouse_id' => $warehouse->id,
+        ];
+
+        $row = ProductStock::withoutGlobalScopes()->createOrFirst($keys, ['quantity' => 0]);
+
+        return ProductStock::withoutGlobalScopes()->whereKey($row->id)->lockForUpdate()->firstOrFail();
+    }
+
     private function updateProductStock(StockMovement $movement): void
     {
-        $stock = ProductStock::firstOrCreate([
-            'company_id' => $movement->company_id,
-            'product_id' => $movement->product_id,
-            'warehouse_id' => $movement->warehouse_id,
-        ]);
-
         $delta = match ($movement->type) {
             'in' => $movement->quantity,
             'out' => -$movement->quantity,
@@ -206,8 +224,12 @@ class StockService
             default => 0,
         };
 
-        $stock->quantity += $delta;
-        $stock->save();
+        // Incremento feito pela base de dados (quantity = quantity + delta), nunca ler-e-gravar em PHP
+        ProductStock::withoutGlobalScopes()->where([
+            'company_id' => $movement->company_id,
+            'product_id' => $movement->product_id,
+            'warehouse_id' => $movement->warehouse_id,
+        ])->increment('quantity', (float) $delta);
 
         // Immediate verification of limits (low stock & out of stock)
         $product = Product::find($movement->product_id);

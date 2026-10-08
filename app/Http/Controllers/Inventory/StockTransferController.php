@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\Catalog\Product;
 use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\Warehouse;
 use App\Services\Inventory\StockTransferService;
+use App\Support\Tenant;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class StockTransferController extends Controller
@@ -76,26 +79,39 @@ class StockTransferController extends Controller
 
     public function store(Request $request)
     {
-        $transfer = StockTransfer::create([
-            'company_id' => auth()->user()->company_id,
-            'from_warehouse_id' => $request->from_warehouse_id,
-            'to_warehouse_id' => $request->to_warehouse_id,
-            'status' => 'pending',
+        $data = $request->validate([
+            'from_warehouse_id' => ['required', 'integer', Tenant::exists('warehouses')],
+            'to_warehouse_id' => ['required', 'integer', 'different:from_warehouse_id', Tenant::exists('warehouses')],
+            'notes' => ['nullable', 'string', 'max:255'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'integer', 'distinct', Tenant::exists('products')],
+            'items.*.quantity' => ['required', 'numeric', 'gt:0'],
         ]);
 
-        // items (simplificado)
-        foreach ($request->items as $item) {
-            $transfer->items()->create($item);
-        }
+        DB::transaction(function () use ($data) {
+            $transfer = StockTransfer::create([
+                'company_id' => auth()->user()->company_id,
+                'from_warehouse_id' => $data['from_warehouse_id'],
+                'to_warehouse_id' => $data['to_warehouse_id'],
+                'notes' => $data['notes'] ?? null,
+                'status' => 'pending',
+                'created_by' => auth()->id(),
+            ]);
 
-        return redirect()->route('inventory.transfers.index');
+            foreach ($data['items'] as $item) {
+                $transfer->items()->create([
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                ]);
+            }
+        });
+
+        return redirect()->route('inventory.transfers.index')->with('success', 'Transferência criada com sucesso.');
     }
 
     public function complete(StockTransfer $transfer)
     {
-        $this->service->complete($transfer);
-
-        return back();
+        return $this->run(fn () => $this->service->complete($transfer), 'Transferência concluída.');
     }
 
     public function show(StockTransfer $transfer)
@@ -109,23 +125,23 @@ class StockTransferController extends Controller
 
     public function cancel(StockTransfer $transfer)
     {
-        if ($transfer->status === 'completed') {
-            throw new \Exception('Não é possível cancelar uma transferência concluída.');
-        }
-
-        $transfer->update([
-            'status' => 'cancelled',
-        ]);
+        return $this->run(fn () => $this->service->cancel($transfer), 'Transferência cancelada.');
     }
+
     public function approve(StockTransfer $transfer)
     {
-        if ($transfer->status !== 'pending') {
-            throw new \Exception('Apenas transferências pendentes podem ser aprovadas.');
+        return $this->run(fn () => $this->service->approve($transfer), 'Transferência aprovada.');
+    }
+
+    /** Executa a ação e mostra as recusas de regra de negócio como aviso, não como erro 500. */
+    private function run(callable $action, string $success): RedirectResponse
+    {
+        try {
+            $action();
+        } catch (ValidationException $e) {
+            return back()->with('error', collect($e->errors())->flatten()->first());
         }
 
-        $transfer->update([
-            'status' => 'approved',
-        ]);
-        return back();
+        return back()->with('success', $success);
     }
 }

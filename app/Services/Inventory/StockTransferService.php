@@ -2,6 +2,7 @@
 
 namespace App\Services\Inventory;
 
+use App\Exceptions\InsufficientStockException;
 use App\Models\Inventory\StockTransfer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -12,58 +13,81 @@ class StockTransferService
         private StockService $stockService
     ) {}
 
-  public function complete(StockTransfer $transfer): void
+    public function approve(StockTransfer $transfer): void
     {
-        if ($transfer->status === 'completed') {
-            throw new \Exception("Transferência já foi concluída.");
-        }
+        $this->transition($transfer, from: ['pending'], to: 'approved', error: 'Apenas transferências pendentes podem ser aprovadas.');
+    }
 
-        $transfer->load(['items.product', 'fromWarehouse', 'toWarehouse']);
+    public function cancel(StockTransfer $transfer): void
+    {
+        $this->transition($transfer, from: ['pending', 'approved'], to: 'cancelled', error: 'Só é possível cancelar transferências pendentes ou aprovadas.');
+    }
 
+    /**
+     * Conclui uma transferência aprovada: saída na origem e entrada no destino, tudo ou nada.
+     *
+     * O estado é relido com a linha bloqueada, pelo que dois pedidos simultâneos (ou um duplo clique)
+     * nunca movem o stock duas vezes, mesmo que tenham carregado a transferência antes de ela ser concluída.
+     */
+    public function complete(StockTransfer $transfer): void
+    {
         DB::transaction(function () use ($transfer) {
+            $locked = StockTransfer::lockForUpdate()->findOrFail($transfer->id);
 
-            foreach ($transfer->items as $item) {
+            if ($locked->status !== 'approved') {
+                throw ValidationException::withMessages([
+                    'status' => $locked->status === 'completed'
+                        ? 'Transferência já foi concluída.'
+                        : 'Só é possível concluir transferências aprovadas.',
+                ]);
+            }
 
-                // 🔒 LOCK do stock origem
-                $stockRow = $this->stockService->lockStock(
-                    $item->product,
-                    $transfer->fromWarehouse
-                );
+            $locked->load(['items.product', 'fromWarehouse', 'toWarehouse']);
 
-                $currentStock = $stockRow?->quantity ?? 0;
+            $note = "Transferência #{$locked->id} de {$locked->fromWarehouse->name} para {$locked->toWarehouse->name}";
 
-                // ❌ validação imediata por item
-                if ($currentStock < $item->quantity) {
+            // Ordem estável de produtos: duas transferências em sentidos opostos não se bloqueiam mutuamente
+            foreach ($locked->items->sortBy('product_id') as $item) {
+                try {
+                    $this->stockService->out(
+                        product: $item->product,
+                        warehouse: $locked->fromWarehouse,
+                        quantity: (float) $item->quantity,
+                        sourceType: StockTransfer::class,
+                        sourceId: $locked->id,
+                        notes: $note
+                    );
+                } catch (InsufficientStockException $e) {
                     throw ValidationException::withMessages([
-                        'stock' => "Stock insuficiente para {$item->product->name}. Disponível: {$currentStock}"
+                        'stock' => "Stock insuficiente para {$item->product->name}. Disponível: {$e->available}",
                     ]);
                 }
 
-                // 🚚 SAÍDA (origem)
-                $this->stockService->out(
-                    product: $item->product,
-                    warehouse: $transfer->fromWarehouse,
-                    quantity: $item->quantity,
-                    sourceType: StockTransfer::class,
-                    sourceId: $transfer->id,
-                    notes: "Transferência #{$transfer->id} de {$transfer->fromWarehouse->name} para {$transfer->toWarehouse->name}"
-                );
-
-                // 📥 ENTRADA (destino)
                 $this->stockService->in(
                     product: $item->product,
-                    warehouse: $transfer->toWarehouse,
-                    quantity: $item->quantity,
+                    warehouse: $locked->toWarehouse,
+                    quantity: (float) $item->quantity,
                     sourceType: StockTransfer::class,
-                    sourceId: $transfer->id,
-                    notes: "Transferência #{$transfer->id} de {$transfer->fromWarehouse->name} para {$transfer->toWarehouse->name}"
+                    sourceId: $locked->id,
+                    notes: $note
                 );
             }
 
-            // ✔ finalizar apenas se tudo correr bem
-            $transfer->update([
-                'status' => 'completed'
-            ]);
+            $locked->update(['status' => 'completed']);
         });
-    } 
+    }
+
+    /** Muda o estado só se, com a linha bloqueada, ainda estiver num dos estados de partida. */
+    private function transition(StockTransfer $transfer, array $from, string $to, string $error): void
+    {
+        DB::transaction(function () use ($transfer, $from, $to, $error) {
+            $locked = StockTransfer::lockForUpdate()->findOrFail($transfer->id);
+
+            if (! in_array($locked->status, $from, true)) {
+                throw ValidationException::withMessages(['status' => $error]);
+            }
+
+            $locked->update(['status' => $to]);
+        });
+    }
 }

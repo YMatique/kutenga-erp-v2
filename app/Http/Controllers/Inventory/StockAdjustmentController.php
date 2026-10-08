@@ -13,6 +13,7 @@ use App\Services\Inventory\StockAdjustmentService;
 use App\Services\Inventory\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class StockAdjustmentController extends Controller
@@ -154,7 +155,11 @@ class StockAdjustmentController extends Controller
         StockAdjustment $adjustment,
         StockAdjustmentService $service
     ) {
-        $service->complete($adjustment);
+        try {
+            $service->complete($adjustment);
+        } catch (ValidationException $e) {
+            return back()->with('error', collect($e->errors())->flatten()->first());
+        }
 
         return back()->with(
             'success',
@@ -163,19 +168,14 @@ class StockAdjustmentController extends Controller
     }
 
     public function cancel(
-        StockAdjustment $adjustment
+        StockAdjustment $adjustment,
+        StockAdjustmentService $service
     ) {
-        if ($adjustment->status === 'completed') {
-            return back()->withErrors([
-                'error' => 'Não é possível cancelar um ajuste concluído.',
-            ]);
+        try {
+            $service->cancel($adjustment);
+        } catch (ValidationException $e) {
+            return back()->with('error', collect($e->errors())->flatten()->first());
         }
-
-        $adjustment->update([
-            'status' => 'cancelled',
-            'cancelled_by' => Auth::id(),
-            'cancelled_at' => now(),
-        ]);
 
         return back()->with(
             'success',
