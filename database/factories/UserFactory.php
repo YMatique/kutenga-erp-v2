@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Company;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -25,6 +26,9 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            // Todo utilizador de empresa pertence a uma empresa já configurada; sem isto o
+            // CheckOnboarding redireciona qualquer pedido para /onboarding.
+            'company_id' => Company::factory(),
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
@@ -34,6 +38,18 @@ class UserFactory extends Factory
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
         ];
+    }
+
+    /** Utilizador acabado de registar, que ainda não criou a sua empresa (vai para o onboarding). */
+    public function withoutCompany(): static
+    {
+        return $this->state(fn (array $attributes) => ['company_id' => null]);
+    }
+
+    /** Utilizador cuja empresa ainda não concluiu o onboarding. */
+    public function withIncompleteCompany(): static
+    {
+        return $this->state(fn (array $attributes) => ['company_id' => Company::factory()->incomplete()]);
     }
 
     /**

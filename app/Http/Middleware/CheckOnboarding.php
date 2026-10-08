@@ -8,45 +8,35 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckOnboarding
 {
-    /*
-<?php
-
-namespace App\Http\Middleware;
-
-use Closure;
-use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-
-class CheckOnboarding
-{
-*/
     /**
-     * Handle an incoming request.
+     * Obriga quem ainda não tem empresa (ou cuja empresa está incompleta) a passar pelo onboarding.
      *
      * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user()) {
-            $user = $request->user();
-            $needsOnboarding = false;
+        $user = $request->user();
 
-            if (!$user->company_id) {
+        // O super admin gere a plataforma e não pertence a nenhuma empresa
+        if (! $user || $user->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        $needsOnboarding = false;
+
+        if (! $user->company_id) {
+            $needsOnboarding = true;
+        } else {
+            // Se a empresa existir mas estiver incompleta
+            $company = $user->company;
+            if ($company && (empty($company->nuit) || empty($company->address) || empty($company->phone))) {
                 $needsOnboarding = true;
-            } else {
-                // Se a empresa existir mas estiver incompleta
-                $company = $user->company;
-                if ($company && (empty($company->nuit) || empty($company->address) || empty($company->phone))) {
-                    $needsOnboarding = true;
-                }
             }
+        }
 
-            if ($needsOnboarding) {
-                // Avoid redirect loops if they are already on the onboarding routes
-                if (!$request->is('onboarding*') && !$request->is('logout')) {
-                    return redirect()->route('onboarding.index');
-                }
-            }
+        // Evita ciclos de redirecionamento se já estiver nas rotas do onboarding
+        if ($needsOnboarding && ! $request->is('onboarding*') && ! $request->is('logout')) {
+            return redirect()->route('onboarding.index');
         }
 
         return $next($request);
