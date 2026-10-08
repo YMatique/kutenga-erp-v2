@@ -27,11 +27,7 @@ use App\Http\Controllers\Catalog\UnitController;
 use App\Http\Controllers\Inventory\WarehouseController;
 use App\Http\Middleware\SetCompanyContext;
 use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Features;
 
-// Route::inertia('/', 'welcome', [
-//     'canRegister' => Features::enabled(Features::registration()),
-// ])->name('home');
 Route::inertia('/', 'index')->name('home');
 Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(function () {
     Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
@@ -77,13 +73,6 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
         Route::get('brands/{brand}', [BrandController::class, 'show'])->name('brands.show');
     });
 
-    // Settings
-    Route::prefix('settings')->group(function () {
-        Route::get('profile', [ProfileController::class, 'edit'])->name('settings.profile.edit');
-        Route::patch('profile', [ProfileController::class, 'update'])->name('settings.profile.update');
-        Route::delete('profile', [ProfileController::class, 'destroy'])->name('settings.profile.destroy');
-    });
-
     // Auditoria (acesso principal)
     Route::get('activity', [\App\Http\Controllers\AuditLogController::class, 'index'])
         ->name('activity.index')
@@ -104,7 +93,9 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     Route::prefix('/inventory')->group(function () {
         // Inventory View
         Route::middleware('can:inventory.view')->group(function () {
-            Route::resource('warehouses', WarehouseController::class); //->only(['index', 'show']);
+            // Só consulta: criar, editar e apagar armazéns exige inventory.adjust (mais abaixo).
+            // O id numérico evita que /warehouses/create seja lido como um armazém.
+            Route::resource('warehouses', WarehouseController::class)->only(['index', 'show'])->where(['warehouse' => '[0-9]+']);
             Route::get('movements', [StockMovementController::class, 'index'])->name('inventory.movements.index');
             Route::get('/', [InventoryDashboardController::class, 'index'])->name('inventory.dashboard');
             Route::get('/opening', [InventoryOpeningController::class, 'index'])->name('inventory.opening.index');

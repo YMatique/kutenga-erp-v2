@@ -89,6 +89,7 @@ class DashboardController extends Controller
                 return [
                     'id' => $doc->id,
                     'document_number' => $doc->document_number,
+                    'url' => $doc->showUrl(),
                     'customer_name' => $doc->customer_name,
                     'grand_total' => (float) $doc->grand_total,
                     'status' => $doc->status,

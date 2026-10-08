@@ -27,7 +27,7 @@ export default function ReportsIndex() {
         setLoading(true);
         try {
             const params = new URLSearchParams({ category, start_date: startDate, end_date: endDate });
-            const response = await fetch(`${route('reports.data')}?${params.toString()}`);
+            const response = await fetch(`/reports/data?${params.toString()}`);
 
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -52,7 +52,7 @@ export default function ReportsIndex() {
         if (type === 'excel') setIsExportingExcel(true);
 
         const params = new URLSearchParams({ category, start_date: startDate, end_date: endDate });
-        const url = type === 'pdf' ? route('reports.export.pdf') : route('reports.export.excel');
+        const url = type === 'pdf' ? '/reports/export/pdf' : '/reports/export/excel';
 
         window.location.href = `${url}?${params.toString()}`;
 

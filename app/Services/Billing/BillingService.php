@@ -472,7 +472,7 @@ class BillingService
                 'type' => 'document_cancelled',
                 'title' => 'Documento Cancelado',
                 'message' => "O documento {$document->document_number} ({$document->document_type}) foi cancelado.",
-                'link' => "/billing/documents/{$document->id}",
+                'link' => $document->showUrl(),
                 'is_read' => false,
             ]);
 

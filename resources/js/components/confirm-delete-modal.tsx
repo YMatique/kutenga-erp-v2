@@ -35,8 +35,7 @@ export function ConfirmDeleteModal({
     const [processing, setProcessing] = useState(false);
 
     const handleDelete = () => {
-        const routeMethod = method === 'post' ? router.post : router.delete;
-        routeMethod(deleteUrl, {
+        const options = {
             onStart: () => setProcessing(true),
             onFinish: () => {
                 setProcessing(false);
@@ -44,10 +43,19 @@ export function ConfirmDeleteModal({
             },
             onSuccess: () => {
                 if (onSuccess) {
-onSuccess();
-}
+                    onSuccess();
+                }
             },
-        });
+        };
+
+        // router.post recebe (url, dados, opções); router.delete recebe (url, opções).
+        // Passar as opções como 2.º argumento do post fazia com que fossem enviadas como dados
+        // e os callbacks (onStart/onFinish/onSuccess) nunca corressem.
+        if (method === 'post') {
+            router.post(deleteUrl, {}, options);
+        } else {
+            router.delete(deleteUrl, options);
+        }
     };
 
     return (

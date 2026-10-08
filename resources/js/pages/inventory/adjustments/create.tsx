@@ -30,7 +30,7 @@ export default function Create({
         warehouse_id: '',
         reason: '',
         notes: '',
-        items: [],
+        items: [] as { product_id: string; old_quantity: number; new_quantity: number }[],
     })
 
     const addItem = () => {

@@ -80,7 +80,7 @@ export default function Show({ customer }: Props) {
                             Editar
                         </Button>
                     </Link>
-                    <Link href={`/billing/documents/create?customer_id=${customer.id}`}>
+                    <Link href="/billing/invoices/create">
                         <Button className="gap-1.5">
                             <ReceiptText size={14} />
                             Nova Fatura

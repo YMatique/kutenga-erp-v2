@@ -21,7 +21,7 @@ const { warehouses = [], products = [] }: any = usePage().props
     const { data, setData, post, processing } = useForm({
         from_warehouse_id: '',
         to_warehouse_id: '',
-        items: [],
+        items: [] as { product_id: any; name: string; quantity: number }[],
         notes: '',
     })
 

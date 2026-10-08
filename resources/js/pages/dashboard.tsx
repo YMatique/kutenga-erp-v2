@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 interface Sale {
     id: number;
     document_number: string;
+    url: string;
     customer_name: string;
     grand_total: number;
     status: string;
@@ -76,7 +77,7 @@ const quickLinks = [
         iconColor: 'text-[#E8A020]',
     },
     {
-        href: '/billing/documents',
+        href: '/billing/invoices',
         title: 'Faturação',
         description: 'Emita e acompanhe faturas e recibos.',
         icon: FileText,
@@ -367,7 +368,7 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                                 <ShoppingCart className="h-4 w-4 text-[#2DB8A0]" />
                                 <h2 className="text-[14px] font-semibold text-foreground">Últimas Faturas e Vendas</h2>
                             </div>
-                            <Link href="/billing/documents" className="text-xs text-[#2DB8A0] hover:text-[#239B86] font-medium flex items-center gap-1">
+                            <Link href="/billing/invoices" className="text-xs text-[#2DB8A0] hover:text-[#239B86] font-medium flex items-center gap-1">
                                 Ver todas <ArrowRight className="h-3 w-3" />
                             </Link>
                         </div>
@@ -392,7 +393,7 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                                         recent_sales.map((sale) => (
                                             <tr key={sale.id} className="hover:bg-muted/50 transition-colors">
                                                 <td className="px-5 py-3 font-semibold text-foreground text-xs">
-                                                    <Link href={`/billing/documents/${sale.id}`} className="hover:underline text-[#2DB8A0]">
+                                                    <Link href={sale.url} className="hover:underline text-[#2DB8A0]">
                                                         {sale.document_number}
                                                     </Link>
                                                 </td>

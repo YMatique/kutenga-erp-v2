@@ -386,7 +386,7 @@ Show.layout = (page: any) => (
     <AppLayout breadcrumbs={[
         { title: 'Inventário', href: '#' },
         { title: 'Ajustes de Stock', href: '/inventory/adjustments' },
-        { title: `Ajuste #${page.props?.adjustment?.id ?? ''}` },
+        { title: `Ajuste #${page.props?.adjustment?.id ?? ''}`, href: '#' },
     ]}>
         {page}
     </AppLayout>

@@ -42,7 +42,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
                                 return (
                                     <Link
-                                        key={`${toUrl(item.href)}-${index}`}
+                                        key={`${item.href ? toUrl(item.href) : ''}-${index}`}
                                         href={item.href ?? ''}
                                         className={cn(
                                             'flex items-center gap-3 px-4 py-3 text-sm transition-colors',

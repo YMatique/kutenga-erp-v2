@@ -119,6 +119,21 @@ class Document extends Model
         'exchange_rate' => 'decimal:6'
     ];
 
+    /** Página de detalhe do documento, conforme o tipo (cada tipo tem o seu módulo). */
+    public function showUrl(): string
+    {
+        $section = match ($this->document_type) {
+            'FR' => 'receipts',
+            'CT' => 'quotes',
+            'NC' => 'credit-notes',
+            'ND' => 'debit-notes',
+            'RC' => 'payment-receipts',
+            default => 'invoices',
+        };
+
+        return "/billing/{$section}/{$this->id}";
+    }
+
     public function getHasPhysicalProductsAttribute(): bool
     {
         return $this->items()->whereHas('product', function ($query) {
