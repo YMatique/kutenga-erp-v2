@@ -196,7 +196,8 @@
 
 
         <p class="message">
-            Seguem abaixo as suas credenciais temporárias para o primeiro acesso:
+            A sua conta foi criada com o e-mail abaixo. Por segurança, a palavra-passe não é enviada por e-mail:
+            defina a sua própria através do botão no fim desta mensagem.
         </p>
 
 
@@ -214,30 +215,21 @@
                     </td>
                 </tr>
 
-
-                <tr>
-                    <td class="details-label">
-                        Palavra-passe
-                    </td>
-
-                    <td class="details-value">
-                        <code>{{ $password }}</code>
-                    </td>
-                </tr>
-
             </table>
 
         </div>
 
 
         <p class="message" style="margin-top:25px;">
-            Por favor, clique no botão abaixo para iniciar sessão. Recomendamos que altere a sua palavra-passe nas definições de perfil após o primeiro acesso por motivos de segurança.
+            Clique no botão abaixo para definir a sua palavra-passe e aceder ao sistema. A ligação é pessoal e expira em
+            {{ config('auth.passwords.'.config('auth.defaults.passwords').'.expire') }} minutos; depois disso pode pedir uma nova em
+            "Esqueci a palavra-passe" no ecrã de início de sessão.
         </p>
 
 
         <div class="btn-container">
-            <a href="{{ route('login') }}" class="button">
-                Iniciar Sessão
+            <a href="{{ $setPasswordUrl }}" class="button">
+                Definir palavra-passe
             </a>
         </div>
 

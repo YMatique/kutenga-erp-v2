@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -97,7 +98,12 @@ class UserController extends Controller
 
         // Send welcome/credentials email
         try {
-            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\UserCreatedMail($user, $validated['password']));
+            $setPasswordUrl = route('password.reset', [
+                'token' => Password::broker()->createToken($user),
+                'email' => $user->email,
+            ]);
+
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\UserCreatedMail($user, $setPasswordUrl));
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Erro ao enviar email de credenciais para {$user->email}: " . $e->getMessage());
         }

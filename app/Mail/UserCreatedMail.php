@@ -16,15 +16,16 @@ class UserCreatedMail extends Mailable implements ShouldQueue
     use Queueable, SerializesModels;
 
     public User $user;
-    public string $password;
+    public string $setPasswordUrl;
 
     /**
-     * Create a new message instance.
+     * A palavra-passe nunca viaja por e-mail (nem fica no payload da fila):
+     * o utilizador define a sua através de uma ligação de recuperação.
      */
-    public function __construct(User $user, string $password)
+    public function __construct(User $user, string $setPasswordUrl)
     {
         $this->user = $user->loadMissing('company');
-        $this->password = $password;
+        $this->setPasswordUrl = $setPasswordUrl;
     }
 
     /**
