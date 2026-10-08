@@ -23,6 +23,9 @@ class CompanySettingsController extends Controller
             'bank_accounts', 'thermal_paper_width', 'receipt_footer',
         ]);
 
+        // A palavra-passe nunca sai do servidor; a página só precisa de saber se existe uma guardada
+        $company->setAttribute('has_smtp_password', filled($company->smtp_password));
+
         return Inertia::render('settings/company', [
             'company' => $company
         ]);
@@ -80,6 +83,11 @@ class CompanySettingsController extends Controller
         unset($validated['logo']);
         unset($validated['stamp']);
 
+        // Campo em branco = manter a palavra-passe guardada (ela nunca é devolvida ao formulário)
+        if (blank($validated['smtp_password'] ?? null)) {
+            unset($validated['smtp_password']);
+        }
+
         $company->update($validated);
 
         return back()->with('success', 'Configurações da empresa atualizadas com sucesso.');
@@ -91,15 +99,21 @@ class CompanySettingsController extends Controller
             'smtp_host' => 'required|string',
             'smtp_port' => 'required|integer',
             'smtp_username' => 'required|string',
-            'smtp_password' => 'required|string',
+            'smtp_password' => 'nullable|string',
             'smtp_encryption' => 'nullable|string',
         ]);
+
+        $smtpPassword = $request->smtp_password ?: $request->user()->company?->smtp_password;
+
+        if (blank($smtpPassword)) {
+            return back()->withErrors(['smtp' => 'Indique a palavra-passe SMTP para testar a ligação.']);
+        }
 
         try {
             $dsn = sprintf(
                 'smtp://%s:%s@%s:%s',
                 urlencode($request->smtp_username),
-                urlencode($request->smtp_password),
+                urlencode($smtpPassword),
                 $request->smtp_host,
                 $request->smtp_port
             );

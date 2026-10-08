@@ -47,7 +47,11 @@ class Company extends Model
         'limits_override',
     ];
 
+    /** Nunca serializar a palavra-passe SMTP (as props Inertia levam a empresa a todos os utilizadores). */
+    protected $hidden = ['smtp_password'];
+
     protected $casts = [
+        'smtp_password' => 'encrypted',
         'bank_accounts' => 'array',
         'default_tax_rate' => 'decimal:2',
         'default_due_days' => 'integer',

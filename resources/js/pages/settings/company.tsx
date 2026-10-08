@@ -33,7 +33,7 @@ export default function CompanySettings({ company }: { company: any }) {
         smtp_host: company.smtp_host || '',
         smtp_port: company.smtp_port || '',
         smtp_username: company.smtp_username || '',
-        smtp_password: company.smtp_password || '',
+        smtp_password: '',
         smtp_encryption: company.smtp_encryption || '',
         logo: null as File | null,
         stamp: null as File | null,
@@ -51,15 +51,17 @@ export default function CompanySettings({ company }: { company: any }) {
         });
     };
 
-    const { post: postSmtp, processing: testingSmtp } = useForm({
-        smtp_host: data.smtp_host,
-        smtp_port: data.smtp_port,
-        smtp_username: data.smtp_username,
-        smtp_password: data.smtp_password,
-        smtp_encryption: data.smtp_encryption,
-    });
+    const { post: postSmtp, processing: testingSmtp, transform: transformSmtp } = useForm({});
 
     const handleTestSmtp = () => {
+        // Envia o que está no formulário agora (não os valores iniciais da página)
+        transformSmtp(() => ({
+            smtp_host: data.smtp_host,
+            smtp_port: data.smtp_port,
+            smtp_username: data.smtp_username,
+            smtp_password: data.smtp_password,
+            smtp_encryption: data.smtp_encryption,
+        }));
         postSmtp('/settings/company/test-smtp', {
             preserveScroll: true,
         });
@@ -466,6 +468,8 @@ export default function CompanySettings({ company }: { company: any }) {
                                         id="smtp_password"
                                         type="password"
                                         value={data.smtp_password}
+                                        placeholder={company.has_smtp_password ? '•••••••• (guardada; deixe em branco para manter)' : ''}
+                                        autoComplete="new-password"
                                         onChange={(e) => setData('smtp_password', e.target.value)}
                                     />
                                     <InputError message={errors.smtp_password} />
