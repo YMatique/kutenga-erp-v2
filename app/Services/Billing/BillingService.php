@@ -3,6 +3,7 @@
 namespace App\Services\Billing;
 
 use App\Models\Billing\Customer;
+use App\Models\Company;
 use App\Models\Billing\Document;
 use App\Models\Billing\DocumentItem;
 use App\Models\Billing\DocumentSeries;
@@ -186,17 +187,19 @@ class BillingService
                 throw new BusinessRuleException("Este documento já se encontra emitido ou cancelado.");
             }
 
-            $company = $document->company;
+            // Bloqueia a empresa para que duas emissões simultâneas não ultrapassem o limite do plano
+            $company = Company::withoutGlobalScopes()->lockForUpdate()->find($document->company_id);
             if ($company) {
                 if ($company->isSubscriptionExpired()) {
                     throw new BusinessRuleException("A subscrição da sua empresa expirou. Por favor, regularize a sua conta para poder emitir documentos comerciais.");
                 }
 
-                $limits = $company->getSubscriptionLimits();
-                if ($limits['documents_month'] !== null) {
-                    if ($company->getCurrentMonthDocumentsCount() >= $limits['documents_month']) {
-                        throw new Exception("Limite de faturamento atingido! O seu plano atual (Inicial) permite emitir no máximo " . $limits['documents_month'] . " documentos por mês. Faça o upgrade do seu plano para faturamento ilimitado.");
-                    }
+                // O rascunho ainda não conta (só contam os documentos já numerados) e o recibo
+                // automático de um pagamento (RC) nunca é travado pelo limite.
+                $limit = $company->limit('documents_month');
+                if ($limit !== null && $document->document_type !== 'RC' && $company->getCurrentMonthDocumentsCount() >= $limit) {
+                    $planName = $company->plan()?->name ?? 'atual';
+                    throw new BusinessRuleException("Limite de faturamento atingido! O seu plano ({$planName}) permite emitir no máximo {$limit} documentos por mês. Faça o upgrade do seu plano para emitir mais.");
                 }
             }
 

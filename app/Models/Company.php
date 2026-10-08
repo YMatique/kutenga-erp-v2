@@ -63,9 +63,19 @@ class Company extends Model
         'limits_override' => 'array',
     ];
 
+    /**
+     * Documentos emitidos no mês corrente, para o limite do plano.
+     *
+     * Contam os documentos que já têm numeração (tudo menos rascunhos), incluindo os cancelados,
+     * que consumiram um número. Os recibos de pagamento (RC) são consequência automática de um
+     * pagamento e não contam: o limite nunca pode impedir o registo de um pagamento recebido.
+     */
     public function getCurrentMonthDocumentsCount(): int
     {
-        return \App\Models\Billing\Document::where('company_id', $this->id)
+        return \App\Models\Billing\Document::withoutGlobalScope('company')
+            ->where('company_id', $this->id)
+            ->where('status', '!=', 'draft')
+            ->where('document_type', '!=', 'RC')
             ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->count();
     }
