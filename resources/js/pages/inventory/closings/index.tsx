@@ -8,9 +8,15 @@ import {
     Plus,
     Warehouse,
 } from 'lucide-react';
-import KutengaLayout from '@/layouts/kutenga-layout';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -19,13 +25,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import KutengaLayout from '@/layouts/kutenga-layout';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -146,6 +146,7 @@ export default function InventoryClosingsIndex({ closings, stats, warehouses, fi
                             ) : (
                                 closings.data.map((c: any) => {
                                     const status = statusMap[c.status] ?? { label: c.status, variant: 'outline' as const };
+
                                     return (
                                         <TableRow key={c.id} className="hover:bg-muted/30 transition-colors">
                                             <TableCell className="font-medium">

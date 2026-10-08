@@ -59,6 +59,7 @@ export default function InventoryClosingsShow({ closing, items, summary }: any) 
                 map[item.id] = String(item.quantity_counted);
             }
         });
+
         return map;
     });
 
@@ -98,13 +99,22 @@ export default function InventoryClosingsShow({ closing, items, summary }: any) 
     };
 
     const handleComplete = () => {
-        if (!confirm('Concluir este fechamento? Esta ação é irreversível e bloqueará a edição.')) return;
+        if (!confirm('Concluir este fechamento? Esta ação é irreversível e bloqueará a edição.')) {
+return;
+}
+
         router.post(`/inventory/closings/${closing.id}/complete`);
     };
 
     const varianceIcon = (cls: string) => {
-        if (cls === 'positive') return <ChevronUp className="h-3.5 w-3.5 text-emerald-500" />;
-        if (cls === 'negative') return <ChevronDown className="h-3.5 w-3.5 text-red-500" />;
+        if (cls === 'positive') {
+return <ChevronUp className="h-3.5 w-3.5 text-emerald-500" />;
+}
+
+        if (cls === 'negative') {
+return <ChevronDown className="h-3.5 w-3.5 text-red-500" />;
+}
+
         return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
     };
 

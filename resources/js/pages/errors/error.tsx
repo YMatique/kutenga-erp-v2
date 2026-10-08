@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
-import React from 'react';
 import { ShieldAlert, ArrowLeft, Home } from 'lucide-react';
+import React from 'react';
 import { PageHeader, PrimaryButton, OutlineButton } from '@/components/ui/brand';
 import AppLayout from '@/layouts/app-layout';
 

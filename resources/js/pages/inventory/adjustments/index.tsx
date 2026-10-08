@@ -152,8 +152,13 @@ return
         const s = overrides.newStatus !== undefined ? overrides.newStatus : status
         const q = overrides.newSearch !== undefined ? overrides.newSearch : search
 
-        if (s && s !== 'all') query.status = s
-        if (q) query.search = q
+        if (s && s !== 'all') {
+query.status = s
+}
+
+        if (q) {
+query.search = q
+}
 
         router.get('/inventory/adjustments', query, { preserveState: true, replace: true })
     }

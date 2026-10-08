@@ -95,8 +95,12 @@ export default function MovementsIndex() {
     }, [type, warehouseId])
 
     useEffect(() => {
-        if (search === (filters?.search || '')) return
+        if (search === (filters?.search || '')) {
+return
+}
+
         const t = setTimeout(() => applyFilters({ newSearch: search }), 400)
+
         return () => clearTimeout(t)
     }, [search])
 

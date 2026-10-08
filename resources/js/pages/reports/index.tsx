@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
+import { FileText, FileSpreadsheet, Loader2, TrendingUp, Users, Package, MonitorPlay, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { PageHeader, KpiCard, TableCard, OutlineButton } from '@/components/ui/brand';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, FileSpreadsheet, Loader2, TrendingUp, Users, Package, MonitorPlay, AlertCircle } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
-import { toast } from 'sonner';
 
 export default function ReportsIndex() {
     const [category, setCategory] = useState('sales');
@@ -25,6 +25,7 @@ export default function ReportsIndex() {
 
     const fetchData = async () => {
         setLoading(true);
+
         try {
             const params = new URLSearchParams({ category, start_date: startDate, end_date: endDate });
             const response = await fetch(`/reports/data?${params.toString()}`);
@@ -48,8 +49,13 @@ export default function ReportsIndex() {
     }, [category, startDate, endDate]);
 
     const handleExport = (type: 'pdf' | 'excel') => {
-        if (type === 'pdf') setIsExportingPdf(true);
-        if (type === 'excel') setIsExportingExcel(true);
+        if (type === 'pdf') {
+setIsExportingPdf(true);
+}
+
+        if (type === 'excel') {
+setIsExportingExcel(true);
+}
 
         const params = new URLSearchParams({ category, start_date: startDate, end_date: endDate });
         const url = type === 'pdf' ? '/reports/export/pdf' : '/reports/export/excel';
@@ -183,6 +189,7 @@ export default function ReportsIndex() {
                                             {[0, 0.25, 0.5, 0.75, 1.0].map((ratio, idx) => {
                                                 const val = maxChartValue * ratio;
                                                 const y = 140 - ratio * 110;
+
                                                 return (
                                                     <g key={idx}>
                                                         <line x1="85" y1={y} x2="960" y2={y} className="stroke-border/40" strokeDasharray="4 4" strokeWidth="1" />
@@ -199,10 +206,13 @@ export default function ReportsIndex() {
                                                         x: 85 + (idx * spacing),
                                                         y: 140 - (item.value / maxChartValue) * 110
                                                     }));
+
                                                     if (points.length === 1) {
                                                         return `M 85 140 L ${points[0].x} ${points[0].y} L 960 140 Z`;
                                                     }
+
                                                     let d = `M ${points[0].x} ${points[0].y}`;
+
                                                     for (let i = 0; i < points.length - 1; i++) {
                                                         const p0 = points[i];
                                                         const p1 = points[i + 1];
@@ -212,6 +222,7 @@ export default function ReportsIndex() {
                                                         const cp2y = p0.y + (p1.y - p0.y) * 0.95;
                                                         d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
                                                     }
+
                                                     return `${d} L ${points[points.length - 1].x} 140 L 85 140 Z`;
                                                 })()}
                                                 fill="url(#areaGradient)"
@@ -223,10 +234,13 @@ export default function ReportsIndex() {
                                                         x: 85 + (idx * spacing),
                                                         y: 140 - (item.value / maxChartValue) * 110
                                                     }));
+
                                                     if (points.length === 1) {
                                                         return `M ${points[0].x} ${points[0].y} L 960 ${points[0].y}`;
                                                     }
+
                                                     let d = `M ${points[0].x} ${points[0].y}`;
+
                                                     for (let i = 0; i < points.length - 1; i++) {
                                                         const p0 = points[i];
                                                         const p1 = points[i + 1];
@@ -236,6 +250,7 @@ export default function ReportsIndex() {
                                                         const cp2y = p0.y + (p1.y - p0.y) * 0.95;
                                                         d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
                                                     }
+
                                                     return d;
                                                 })()}
                                                 fill="none" stroke="#2DB8A0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
@@ -244,6 +259,7 @@ export default function ReportsIndex() {
                                                 const spacing = 875 / Math.max(data.chart_data.length - 1, 1);
                                                 const x = 85 + (idx * spacing);
                                                 const y = 140 - (item.value / maxChartValue) * 110;
+
                                                 return (
                                                     <g key={idx} className="group/point cursor-pointer">
                                                         <circle cx={x} cy={y} r="12" fill="transparent" />

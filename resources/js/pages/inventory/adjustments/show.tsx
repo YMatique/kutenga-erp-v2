@@ -204,6 +204,7 @@ export default function Show({ adjustment }: ShowProps) {
                                                 correction: 'Correção',
                                                 other: 'Outro',
                                             }
+
                                             return cfg[adjustment.reason] || adjustment.reason || 'Nenhum motivo especificado.'
                                         })()}
                                     </p>

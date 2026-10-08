@@ -5,8 +5,9 @@ import { toast } from 'sonner';
 import { AppHeader } from '@/components/app-header';
 import { AppSidebar } from '@/components/app-sidebar';
 import { InactivityLock } from '@/components/inactivity-lock';
-import { TooltipProvider } from '@/components/ui/tooltip';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
+import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 function KutengaLayoutContent({
     children,
@@ -78,7 +79,6 @@ function KutengaLayoutContent({
 import { ConfirmDeleteProvider } from '@/contexts/confirm-delete-context';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
-import { Toaster } from '@/components/ui/sonner';
 
 export default function KutengaLayout({
     children,

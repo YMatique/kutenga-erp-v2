@@ -1,10 +1,10 @@
 import { usePage, useForm, Link } from '@inertiajs/react';
 import { Lock, Loader2, User, LogOut } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { KutengaLogo } from '@/components/kutenga-logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { KutengaLogo } from '@/components/kutenga-logo';
 
 export function InactivityLock() {
     const { auth } = usePage<any>().props;

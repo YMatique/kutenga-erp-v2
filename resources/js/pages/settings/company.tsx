@@ -1,15 +1,15 @@
 import { Head, useForm } from '@inertiajs/react';
 import { Loader2, Plus, Trash2, ImagePlus } from 'lucide-react';
+import { BellRing } from 'lucide-react';
 import { useState } from 'react';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { BellRing } from 'lucide-react';
 
 export default function CompanySettings({ company }: { company: any }) {
     const [logoPreview, setLogoPreview] = useState<string | null>(company.logo_path ? `/storage/${company.logo_path}` : null);

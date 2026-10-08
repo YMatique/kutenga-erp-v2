@@ -1,6 +1,7 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { Plus, Pencil, Trash2, Search, X, Hash, Calendar, CheckCircle2, XCircle, Settings2 } from 'lucide-react';
 import React, { useState } from 'react';
+import { PageHeader, TableCard, PrimaryButton, OutlineButton } from '@/components/ui/brand';
 import {
     Dialog, DialogContent, DialogDescription, DialogFooter,
     DialogHeader, DialogTitle, DialogTrigger,
@@ -9,10 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useConfirmDelete } from '@/contexts/confirm-delete-context';
-import type { BreadcrumbItem } from '@/types';
-import { PageHeader, TableCard, PrimaryButton, OutlineButton } from '@/components/ui/brand';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
+import type { BreadcrumbItem } from '@/types';
 
 interface Series {
     id: number;
@@ -93,7 +93,9 @@ export default function SeriesIndex({ series, filters }: Props) {
     };
 
     const handleUpdate = () => {
-        if (!editingSeries) return;
+        if (!editingSeries) {
+return;
+}
 
         editForm.put(`/billing/series/${editingSeries.id}`, {
             onSuccess: () => {

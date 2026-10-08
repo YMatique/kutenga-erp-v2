@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Loader2, Building2, CheckCircle2, Store, Briefcase, FileText, BarChart3, ChevronRight, ChevronLeft } from 'lucide-react';
+import { useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,10 +32,15 @@ export default function Onboarding({ existingCompany }: { existingCompany?: any 
     const nextStep = () => {
         // Validate current step before proceeding
         if (currentStep === 1) {
-            if (!data.company_name || !data.nuit) return;
+            if (!data.company_name || !data.nuit) {
+return;
+}
         } else if (currentStep === 2) {
-            if (!data.email || !data.phone || !data.address) return;
+            if (!data.email || !data.phone || !data.address) {
+return;
+}
         }
+
         setCurrentStep((prev) => Math.min(prev + 1, 3));
     };
 

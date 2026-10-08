@@ -20,11 +20,11 @@ import {
     Percent
 } from 'lucide-react';
 import { useState } from 'react';
-import { useAppearance } from '@/hooks/use-appearance';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useAppearance } from '@/hooks/use-appearance';
 
 // --- MOCK DATA FOR SIMULATORS ---
 const initialPOSProducts = [

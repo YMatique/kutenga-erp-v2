@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { Head } from "@inertiajs/react";
 import {
     BookOpen, LayoutGrid, Package, Warehouse, Receipt,
@@ -9,6 +8,7 @@ import {
     ShoppingBag, DollarSign, UserCheck, Truck,
     ClipboardList, Hammer, Clock3,
 } from "lucide-react";
+import React, { useState } from "react";
 import { PageHeader } from "@/components/ui/brand";
 import { cn } from "@/lib/utils";
 
@@ -722,6 +722,7 @@ export default function DocsUserManual() {
             g.title.toLowerCase().includes(q) ||
             g.summary.toLowerCase().includes(q) ||
             g.sections.some(s => s.heading.toLowerCase().includes(q));
+
         return matchesCat && matchesSearch;
     });
 
@@ -810,6 +811,7 @@ export default function DocsUserManual() {
                     <div className="flex flex-col gap-3">
                         {filteredGuides.map(guide => {
                             const isOpen = openGuide === guide.id;
+
                             return (
                                 <div
                                     key={guide.id}
@@ -853,6 +855,7 @@ export default function DocsUserManual() {
                                                 {guide.sections.map((section, si) => {
                                                     const key = `${guide.id}-${si}`;
                                                     const isSecClosed = closedSections[key] === true;
+
                                                     return (
                                                         <div key={si}>
                                                             <button

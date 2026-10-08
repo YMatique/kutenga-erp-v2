@@ -1,11 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Eye, Filter, Plus, ReceiptText, Search, X } from 'lucide-react';
+import { FileText, DollarSign, CheckCircle, Clock } from 'lucide-react';
 import React, { useCallback } from 'react';
+import { PageHeader, TableCard, PrimaryButton, KpiCard } from '@/components/ui/brand';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { PageHeader, TableCard, PrimaryButton, KpiCard } from '@/components/ui/brand';
-import { FileText, DollarSign, CheckCircle, Clock } from 'lucide-react';
 
 interface Document {
     id: number;
@@ -74,6 +74,7 @@ function formatDate(dateStr: string | null | undefined): string {
 
         if (parts.length === 3) {
             const [year, month, day] = parts;
+
             return `${day}/${month}/${year}`;
         }
 

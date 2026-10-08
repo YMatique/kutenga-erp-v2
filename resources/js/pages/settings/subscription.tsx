@@ -1,9 +1,9 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { CreditCard, Check, Sparkles, Building, CheckCircle2, ShieldAlert } from 'lucide-react';
 import Heading from '@/components/heading';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 
 export default function SubscriptionSettings() {
     const { subscription, auth, plans = [], limitLabels = {}, featureLabels = {} } = usePage<any>().props;
@@ -30,8 +30,12 @@ export default function SubscriptionSettings() {
     };
 
     const formatDate = (dateStr: string) => {
-        if (!dateStr) return '';
+        if (!dateStr) {
+return '';
+}
+
         const d = new Date(dateStr);
+
         return d.toLocaleDateString('pt-MZ', { day: '2-digit', month: 'long', year: 'numeric' });
     };
 

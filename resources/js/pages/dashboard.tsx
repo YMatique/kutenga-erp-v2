@@ -175,6 +175,7 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {quickLinks.map((item) => {
                         const Icon = item.icon;
+
                         return (
                             <Link
                                 key={item.href}
@@ -218,6 +219,7 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                             {[0, 0.25, 0.5, 0.75, 1.0].map((ratio, idx) => {
                                 const val = maxChartValue * ratio;
                                 const y = 140 - ratio * 110;
+
                                 return (
                                     <g key={idx}>
                                         <line
@@ -251,6 +253,7 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                                             y: 140 - (item.value / Math.max(maxChartValue, 1)) * 110
                                         }));
                                         let d = `M ${points[0].x} ${points[0].y}`;
+
                                         for (let i = 0; i < points.length - 1; i++) {
                                             const p0 = points[i];
                                             const p1 = points[i + 1];
@@ -260,6 +263,7 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                                             const cp2y = p0.y + (p1.y - p0.y) * 0.95;
                                             d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
                                         }
+
                                         return `${d} L ${points[points.length - 1].x} 140 L 85 140 Z`;
                                     })()}
                                     fill="url(#areaGradient)"
@@ -275,6 +279,7 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                                             y: 140 - (item.value / Math.max(maxChartValue, 1)) * 110
                                         }));
                                         let d = `M ${points[0].x} ${points[0].y}`;
+
                                         for (let i = 0; i < points.length - 1; i++) {
                                             const p0 = points[i];
                                             const p1 = points[i + 1];
@@ -284,6 +289,7 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                                             const cp2y = p0.y + (p1.y - p0.y) * 0.95;
                                             d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
                                         }
+
                                         return d;
                                     })()}
                                     fill="none"
@@ -298,6 +304,7 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                             {chart_data.map((item, idx) => {
                                 const x = 85 + (idx * 175);
                                 const y = 140 - (item.value / Math.max(maxChartValue, 1)) * 110;
+
                                 return (
                                     <g key={idx} className="group/point cursor-pointer">
                                         <circle
@@ -454,6 +461,7 @@ export default function Dashboard({ metrics, recent_sales, recent_activity, char
                                     ) : (
                                         recent_activity.map((act) => {
                                             const cfg = movementTypeConfig[act.type] ?? movementTypeConfig.adjustment;
+
                                             return (
                                                 <tr key={act.id} className="hover:bg-muted/50 transition-colors">
                                                     <td className="px-5 py-3 font-semibold text-foreground text-xs truncate max-w-[150px]">

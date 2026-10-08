@@ -1,10 +1,8 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, Calendar, Info, Loader2, PackageSearch, Warehouse } from 'lucide-react';
-import KutengaLayout from '@/layouts/kutenga-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
     Select,
     SelectContent,
@@ -12,6 +10,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import {
     Table,
     TableBody,
@@ -20,7 +19,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import KutengaLayout from '@/layouts/kutenga-layout';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [

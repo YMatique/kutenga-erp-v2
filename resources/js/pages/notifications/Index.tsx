@@ -1,11 +1,11 @@
-import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import {
     Bell, Check, Clock, PackageOpen, Receipt, User,
     PlusCircle, ArrowDownCircle, Ban, CheckSquare, Inbox, ExternalLink
 } from 'lucide-react';
-import { PageHeader, PrimaryButton, OutlineButton } from '@/components/ui/brand';
+import React from 'react';
 import { toast } from 'sonner';
+import { PageHeader, PrimaryButton, OutlineButton } from '@/components/ui/brand';
 
 interface Notification {
     id: number;
@@ -229,6 +229,7 @@ export default function NotificationsIndex({ systemNotifications, filter }: Prop
                                     />
                                 );
                             }
+
                             return (
                                 <Link
                                     key={idx}

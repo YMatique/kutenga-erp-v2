@@ -2,15 +2,15 @@ import { Head, router } from '@inertiajs/react';
 import { Search, X, ShieldAlert, Eye, Calendar, Settings2, Shield } from 'lucide-react';
 import React, { useState } from 'react';
 import { PageHeader, TableCard, OutlineButton } from '@/components/ui/brand';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import KutengaLayout from '@/layouts/kutenga-layout';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import KutengaLayout from '@/layouts/kutenga-layout';
 
 export interface PaginatedData<T> {
     data: T[];
@@ -60,10 +60,23 @@ export default function SystemAudits({ activities, filters }: Props) {
 
     const handleFilter = () => {
         const params: any = {};
-        if (search) params.search = search;
-        if (action && action !== 'all') params.action = action;
-        if (dateStart) params.date_start = dateStart;
-        if (dateEnd) params.date_end = dateEnd;
+
+        if (search) {
+params.search = search;
+}
+
+        if (action && action !== 'all') {
+params.action = action;
+}
+
+        if (dateStart) {
+params.date_start = dateStart;
+}
+
+        if (dateEnd) {
+params.date_end = dateEnd;
+}
+
         router.get('/system/audits', params, { preserveState: true });
     };
 
@@ -126,9 +139,18 @@ export default function SystemAudits({ activities, filters }: Props) {
     };
 
     const formatValue = (val: any) => {
-        if (val === null || val === undefined) return '—';
-        if (typeof val === 'boolean') return val ? 'Sim' : 'Não';
-        if (typeof val === 'object') return JSON.stringify(val);
+        if (val === null || val === undefined) {
+return '—';
+}
+
+        if (typeof val === 'boolean') {
+return val ? 'Sim' : 'Não';
+}
+
+        if (typeof val === 'object') {
+return JSON.stringify(val);
+}
+
         return String(val);
     };
 
@@ -389,6 +411,7 @@ export default function SystemAudits({ activities, filters }: Props) {
                                                 {Object.keys(selectedLog.properties.attributes).map((key) => {
                                                     const oldVal = selectedLog.properties.old[key];
                                                     const newVal = selectedLog.properties.attributes[key];
+
                                                     return (
                                                         <TableRow key={key} className="hover:bg-transparent border-b border-border">
                                                             <TableCell className="font-mono text-xs font-semibold text-foreground bg-muted/20 py-2">
@@ -418,6 +441,7 @@ export default function SystemAudits({ activities, filters }: Props) {
                                             <TableBody className="divide-y divide-border">
                                                 {Object.keys(selectedLog.properties.attributes).map((key) => {
                                                     const newVal = selectedLog.properties.attributes[key];
+
                                                     return (
                                                         <TableRow key={key} className="hover:bg-transparent border-b border-border">
                                                             <TableCell className="font-mono text-xs font-semibold text-foreground bg-muted/20 py-2">
@@ -444,6 +468,7 @@ export default function SystemAudits({ activities, filters }: Props) {
                                             <TableBody className="divide-y divide-border">
                                                 {Object.keys(selectedLog.properties.old).map((key) => {
                                                     const oldVal = selectedLog.properties.old[key];
+
                                                     return (
                                                         <TableRow key={key} className="hover:bg-transparent border-b border-border">
                                                             <TableCell className="font-mono text-xs font-semibold text-foreground bg-muted/20 py-2">

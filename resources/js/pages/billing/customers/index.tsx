@@ -5,9 +5,9 @@ import { PageHeader, TableCard, PrimaryButton, OutlineButton } from '@/component
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useConfirmDelete } from '@/contexts/confirm-delete-context';
+import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
-import AppLayout from '@/layouts/app-layout';
 
 interface Customer {
     id: number;
