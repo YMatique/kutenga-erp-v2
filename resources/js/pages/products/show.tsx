@@ -167,6 +167,13 @@ export default function ProductShow() {
                                 </Link>
                             </OutlineButton>
 
+                            <OutlineButton asChild>
+                                <Link href={`/products/labels?ids=${product.id}`}>
+                                    <Barcode className="h-4 w-4 mr-1" />
+                                    Etiqueta
+                                </Link>
+                            </OutlineButton>
+
                             <PrimaryButton asChild>
                                 <Link href={`/products/${product.id}/edit`}>
                                     <Pencil className="h-4 w-4 mr-1" />

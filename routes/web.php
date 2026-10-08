@@ -16,6 +16,7 @@ use App\Http\Controllers\Billing\DebitNoteController;
 use App\Http\Controllers\Inventory\InventoryDashboardController;
 use App\Http\Controllers\Inventory\InventoryOpeningController;
 use App\Http\Controllers\Catalog\ProductController;
+use App\Http\Controllers\Catalog\ProductLabelController;
 use App\Http\Controllers\Catalog\ProductLookupController;
 use App\Http\Controllers\Inventory\ProductStockController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
@@ -46,6 +47,12 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
     // Leitura de código de barras/SKU (catálogo, POS e inventário); a permissão é validada no controller
     Route::get('products/lookup', ProductLookupController::class)->name('products.lookup');
 
+    // Etiquetas (têm de vir antes de products/{product})
+    Route::middleware('can:catalog.view')->group(function () {
+        Route::get('products/labels', [ProductLabelController::class, 'index'])->name('products.labels');
+        Route::get('products/search', [ProductLabelController::class, 'search'])->name('products.search');
+    });
+    Route::get('products/barcode/next', [ProductLabelController::class, 'nextBarcode'])->middleware('can:catalog.edit')->name('products.barcode.next');
 
     // Catalog Edit
     Route::middleware('can:catalog.edit')->group(function () {

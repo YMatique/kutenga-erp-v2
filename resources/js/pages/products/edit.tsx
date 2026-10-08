@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { BarcodeField } from '@/components/barcode-field';
 import { PrimaryButton, OutlineButton } from '@/components/ui/brand';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -254,19 +255,7 @@ fileInput.value = '';
                                         />
                                         {errors.sku && <p className="text-xs font-medium text-red-500">{errors.sku}</p>}
                                     </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="barcode" className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                                            Código de Barras (EAN / UPC)
-                                        </Label>
-                                        <Input 
-                                            id="barcode" 
-                                            value={data.barcode} 
-                                            onChange={e => setData('barcode', e.target.value)} 
-                                            placeholder="Ex: 5601234567890"
-                                            className="h-10 font-mono"
-                                        />
-                                        {errors.barcode && <p className="text-xs font-medium text-red-500">{errors.barcode}</p>}
-                                    </div>
+                                    <BarcodeField value={data.barcode} onChange={v => setData('barcode', v)} error={errors.barcode} currentProductId={product.id} />
                                 </div>
 
                                 <div className="grid gap-2">

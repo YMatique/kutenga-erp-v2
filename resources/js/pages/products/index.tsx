@@ -13,9 +13,11 @@ import {
     PackageOpen,
     AlertCircle,
     ShoppingBag,
+    Barcode,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { CameraScanButton } from '@/components/camera-scanner';
 import { PageHeader, TableCard, PrimaryButton, StockBadge, KpiCard } from '@/components/ui/brand';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,6 +38,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useConfirmDelete } from '@/contexts/confirm-delete-context';
+import { useBarcodeScanner } from '@/hooks/use-barcode-scanner';
 import { cn } from '@/lib/utils';
 
 interface Category {
@@ -81,6 +84,8 @@ interface PaginatedProducts {
 export default function ProductsIndex() {
     const { products, stats, filters } = usePage<{ products: PaginatedProducts; stats: any; filters: any }>().props;
     const [search, setSearch] = useState(filters?.search || '');
+    // Ler um código de barras preenche a pesquisa
+    useBarcodeScanner({ onScan: setSearch })
 
     // Debounced search to query backend
     useEffect(() => {
@@ -174,12 +179,21 @@ return;
                     <div className="relative flex-1 max-w-sm">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <Input
-                            placeholder="Pesquisar por nome ou SKU..."
+                            placeholder="Pesquisar por nome, SKU ou código de barras..."
                             className="pl-9 bg-white border-slate-200 rounded-[4px] h-9 text-sm focus-visible:ring-[#2DB8A0]/30"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
+                    <CameraScanButton onScan={setSearch} className="h-9 w-9" />
+                    {products.data.length > 0 && (
+                        <Button asChild variant="outline" size="sm" className="h-9 gap-1.5 rounded-[4px]">
+                            <Link href={`/products/labels?ids=${products.data.map((p: { id: number }) => p.id).join(',')}`}>
+                                <Barcode className="h-4 w-4" />
+                                Etiquetas da página
+                            </Link>
+                        </Button>
+                    )}
                     <span className="text-xs text-slate-400 font-medium">
                         {products.total} ite{products.total !== 1 ? 'ns' : 'm'}
                     </span>
@@ -357,6 +371,16 @@ return;
                                                         >
                                                             <Edit className="h-3.5 w-3.5 text-slate-400" />
                                                             Editar Item
+                                                        </Link>
+                                                    </DropdownMenuItem>
+
+                                                    <DropdownMenuItem asChild>
+                                                        <Link
+                                                            href={`/products/labels?ids=${product.id}`}
+                                                            className="flex items-center gap-2 cursor-pointer w-full text-sm"
+                                                        >
+                                                            <Barcode className="h-3.5 w-3.5 text-slate-400" />
+                                                            Imprimir Etiqueta
                                                         </Link>
                                                     </DropdownMenuItem>
 
