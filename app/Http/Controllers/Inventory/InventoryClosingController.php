@@ -7,10 +7,12 @@ use App\Models\Inventory\InventoryClosing;
 use App\Models\Inventory\InventoryClosingItem;
 use App\Models\Inventory\ProductStock;
 use App\Models\Inventory\Warehouse;
+use App\Services\Inventory\InventoryClosingService;
 use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class InventoryClosingController extends Controller
@@ -264,22 +266,19 @@ class InventoryClosingController extends Controller
     /**
      * Conclui o fechamento (torna-o imutável).
      */
-    public function complete(Request $request, InventoryClosing $closing)
+    public function complete(Request $request, InventoryClosing $closing, InventoryClosingService $service)
     {
         $this->authorizeClosing($closing);
 
-        if ($closing->isCompleted()) {
-            return back()->withErrors(['error' => 'Este fechamento já foi concluído.']);
+        try {
+            $adjusted = $service->complete($closing);
+        } catch (ValidationException $e) {
+            return back()->withErrors(['error' => collect($e->errors())->flatten()->first()]);
         }
-
-        $closing->update([
-            'status' => 'completed',
-            'completed_at' => now(),
-        ]);
 
         return redirect()
             ->route('inventory.closings.show', $closing->id)
-            ->with('success', 'Fechamento de inventário concluído e bloqueado para edição.');
+            ->with('success', "Fechamento de inventário concluído: {$adjusted} ajuste(s) de stock aplicado(s).");
     }
 
     /**

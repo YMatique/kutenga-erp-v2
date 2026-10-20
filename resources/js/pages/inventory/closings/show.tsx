@@ -99,7 +99,7 @@ export default function InventoryClosingsShow({ closing, items, summary }: any) 
     };
 
     const handleComplete = () => {
-        if (!confirm('Concluir este fechamento? Esta ação é irreversível e bloqueará a edição.')) {
+        if (!confirm('Concluir este fechamento? As diferenças contadas serão aplicadas ao stock. Esta ação é irreversível e bloqueará a edição.')) {
 return;
 }
 

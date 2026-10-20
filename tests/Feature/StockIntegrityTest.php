@@ -6,11 +6,14 @@ use App\Exceptions\InsufficientStockException;
 use App\Models\Catalog\Branch;
 use App\Models\Catalog\Product;
 use App\Models\Company;
+use App\Models\Inventory\InventoryClosing;
+use App\Models\Inventory\ProductStock;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\Warehouse;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Inventory\InventoryClosingService;
 use App\Services\Inventory\StockAdjustmentService;
 use App\Services\Inventory\StockService;
 use App\Services\Inventory\StockTransferService;
@@ -348,5 +351,77 @@ class StockIntegrityTest extends TestCase
         $item->refresh();
         $this->assertEquals(7, $item->old_quantity);
         $this->assertEquals(1, $item->difference);
+    }
+
+    // ── Fecho de inventário ─────────────────────────────────────────────────
+
+    private function closing(bool $blocks = false, ?Warehouse $warehouse = null): InventoryClosing
+    {
+        $closing = InventoryClosing::create([
+            'company_id' => $this->company->id,
+            'warehouse_id' => $warehouse?->id,
+            'created_by' => $this->admin->id,
+            'reference_date' => now()->toDateString(),
+            'status' => 'draft',
+            'blocks_movements' => $blocks,
+        ]);
+
+        foreach (ProductStock::withoutGlobalScopes()->where('company_id', $this->company->id)->when($warehouse, fn ($q) => $q->where('warehouse_id', $warehouse->id))->get() as $row) {
+            $closing->items()->create([
+                'product_id' => $row->product_id,
+                'warehouse_id' => $row->warehouse_id,
+                'quantity_expected' => $row->quantity,
+            ]);
+        }
+
+        return $closing;
+    }
+
+    public function test_completing_a_closing_applies_the_counted_differences_once(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 10);
+        $this->stock->in($this->ink, $this->w1, 4);
+
+        $closing = $this->closing();
+        $closing->items()->where('product_id', $this->pen->id)->update(['quantity_counted' => 8]);
+        // Tinta sem contagem: não é alterada
+
+        // Venda depois do snapshot: a diferença (-2) aplica-se sobre o saldo atual
+        $this->stock->out($this->pen, $this->w1, 1);
+
+        $service = app(InventoryClosingService::class);
+        $this->assertSame(1, $service->complete($closing));
+
+        $this->assertSame(7.0, $this->qty($this->pen, $this->w1));
+        $this->assertSame(4.0, $this->qty($this->ink, $this->w1));
+        $this->assertSame('completed', $closing->fresh()->status);
+
+        try {
+            $service->complete(InventoryClosing::find($closing->id));
+            $this->fail('O segundo fecho devia ser recusado.');
+        } catch (ValidationException) {
+            // esperado
+        }
+
+        $this->assertSame(7.0, $this->qty($this->pen, $this->w1));
+    }
+
+    public function test_closing_difference_cannot_push_the_balance_below_zero(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 5);
+        $closing = $this->closing();
+        $closing->items()->update(['quantity_counted' => 0]);
+
+        $this->stock->out($this->pen, $this->w1, 4);
+
+        try {
+            app(InventoryClosingService::class)->complete($closing);
+            $this->fail('A diferença devia ser recusada.');
+        } catch (ValidationException) {
+            // esperado
+        }
+
+        $this->assertSame(1.0, $this->qty($this->pen, $this->w1));
+        $this->assertSame('draft', $closing->fresh()->status);
     }
 }
