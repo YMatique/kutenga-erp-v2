@@ -389,19 +389,29 @@ class StockService
         ?string $notes = null
     ): StockMovement {
 
-        if ($this->openingExists($product, $warehouse)) {
-            throw new \Exception('Stock inicial já foi definido para este produto neste armazém.');
+        if ($quantity <= 0) {
+            throw new BusinessRuleException('O stock inicial tem de ser superior a zero.');
         }
 
-        return $this->recordMovement(
-            $product,
-            $warehouse,
-            'opening',
-            $quantity,
-            'opening_stock',
-            null,
-            $notes
-        );
+        // A verificação é feita com a linha de stock bloqueada, para que dois pedidos
+        // simultâneos não definam o stock inicial duas vezes.
+        return DB::transaction(function () use ($product, $warehouse, $quantity, $notes) {
+            $this->lockedStockRow($product, $warehouse);
+
+            if ($this->openingExists($product, $warehouse)) {
+                throw new BusinessRuleException('O stock inicial já foi definido para este produto neste armazém.');
+            }
+
+            return $this->recordMovement(
+                $product,
+                $warehouse,
+                'opening',
+                $quantity,
+                'opening_stock',
+                null,
+                $notes
+            );
+        });
     }
 
     public function openingExists(Product $product, Warehouse $warehouse): bool

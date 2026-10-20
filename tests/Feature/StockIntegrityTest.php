@@ -503,4 +503,40 @@ class StockIntegrityTest extends TestCase
         $this->delete("/inventory/warehouses/{$this->w1->id}")->assertSessionHas('success');
         $this->assertNotNull(Warehouse::withoutGlobalScopes()->withTrashed()->find($this->w1->id)->deleted_at);
     }
+
+    // ── Stock inicial ───────────────────────────────────────────────────────
+
+    public function test_opening_stock_is_defined_once_and_must_be_positive(): void
+    {
+        $payload = ['product_id' => $this->pen->id, 'warehouse_id' => $this->w1->id, 'quantity' => 6];
+
+        $this->actingAs($this->admin)->post('/inventory/opening', $payload)->assertSessionHas('success');
+        $this->assertSame(6.0, $this->qty($this->pen, $this->w1));
+
+        // Segunda definição: aviso ao utilizador, saldo intacto
+        $this->post('/inventory/opening', $payload)->assertSessionHas('error');
+        $this->assertSame(6.0, $this->qty($this->pen, $this->w1));
+
+        // Zero não gasta a única oportunidade de definir o stock inicial
+        $this->post('/inventory/opening', ['product_id' => $this->ink->id, 'warehouse_id' => $this->w1->id, 'quantity' => 0])
+            ->assertSessionHasErrors('quantity');
+        $this->assertFalse($this->stock->openingExists($this->ink, $this->w1));
+    }
+
+    public function test_opening_stock_is_refused_for_inactive_warehouses_and_untracked_products(): void
+    {
+        $inactive = Warehouse::create(['company_id' => $this->company->id, 'name' => 'Inativo', 'code' => 'X', 'is_active' => false]);
+        $service = Product::create([
+            'company_id' => $this->company->id, 'name' => 'Serviço', 'slug' => 'servico', 'sku' => 'SRV',
+            'price' => '10.00', 'tax_rate' => '16.00', 'type' => 'service', 'track_stock' => false, 'status' => 'active',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post('/inventory/opening', ['product_id' => $this->pen->id, 'warehouse_id' => $inactive->id, 'quantity' => 1])
+            ->assertSessionHasErrors('warehouse_id');
+        $this->post('/inventory/opening', ['product_id' => $service->id, 'warehouse_id' => $this->w1->id, 'quantity' => 1])
+            ->assertSessionHasErrors('product_id');
+
+        $this->assertSame(0, DB::table('stock_movements')->count());
+    }
 }

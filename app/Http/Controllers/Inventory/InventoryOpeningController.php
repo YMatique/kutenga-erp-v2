@@ -31,9 +31,9 @@ class InventoryOpeningController extends Controller
     public function store(Request $request, StockService $stockService)
     {
         $request->validate([
-            'product_id' => ['required', Tenant::exists('products')],
-            'warehouse_id' => ['required', Tenant::exists('warehouses')],
-            'quantity' => 'required|numeric|min:0',
+            'product_id' => ['required', Tenant::exists('products')->where('track_stock', true)->whereNull('deleted_at')],
+            'warehouse_id' => ['required', Tenant::exists('warehouses')->where('is_active', true)->whereNull('deleted_at')],
+            'quantity' => 'required|numeric|gt:0',
             'notes' => 'nullable|string',
         ]);
 
