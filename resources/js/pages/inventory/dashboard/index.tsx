@@ -31,36 +31,13 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
+import { formatQty, movementDelta, movementLabels } from '@/lib/stock-movements';
 import ActivityChart from './activity-chart';
-
-const movementLabels: Record<string, { label: string; color: string }> = {
-    opening: { label: 'Stock Inicial', color: 'bg-muted text-muted-foreground' },
-    in: { label: 'Entrada', color: 'bg-[#2DB8A0]/10 text-[#2DB8A0]' },
-    out: { label: 'Saída', color: 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400' },
-    adjustment: { label: 'Ajuste', color: 'bg-[#E8A020]/10 text-[#E8A020]' },
-};
 
 const headClass = 'text-[10px] font-semibold uppercase tracking-wider text-muted-foreground h-9';
 
-const formatQty = (n: number | string) => Number(n).toLocaleString('pt-MZ', { maximumFractionDigits: 3 });
-
 const formatCurrency = (val: number | string) =>
     new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(Number(val));
-
-/** Sinal do efeito de um movimento no stock: entradas e stock inicial somam, saídas subtraem, ajustes têm o sinal da quantidade. */
-function movementDelta(movement: { type: string; quantity: number | string }): number {
-    const quantity = Number(movement.quantity);
-
-    if (movement.type === 'out') {
-        return -Math.abs(quantity);
-    }
-
-    if (movement.type === 'adjustment') {
-        return quantity;
-    }
-
-    return Math.abs(quantity);
-}
 
 export default function InventoryDashboard() {
     const { stats, attentionProducts, warehouseSummary, recentMovements, queue, activity, can } = usePage<any>().props;
