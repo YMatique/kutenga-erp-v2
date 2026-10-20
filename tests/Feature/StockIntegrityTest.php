@@ -21,6 +21,7 @@ use App\Services\Inventory\StockTransferService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -566,5 +567,31 @@ class StockIntegrityTest extends TestCase
 
         $this->post('/inventory/adjustments', $valid)->assertSessionHasNoErrors();
         $this->assertSame(1, StockAdjustment::withoutGlobalScopes()->count());
+    }
+
+    // ── Movimentos ──────────────────────────────────────────────────────────
+
+    public function test_movements_list_keeps_deleted_products_and_counts_adjustments_in_the_totals(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 10);
+        $this->stock->out($this->pen, $this->w1, 2);
+        $this->stock->adjust($this->pen, $this->w1, 3);
+        $this->stock->adjust($this->pen, $this->w1, -1);
+        $this->stock->in($this->ink, $this->w1, 4);
+
+        $this->ink->delete();
+
+        $this->actingAs($this->admin)->get('/inventory/movements')->assertInertia(fn (Assert $page) => $page
+            ->component('inventory/movements/index')
+            ->where('kpis.total', 5)
+            ->where('kpis.in', 17) // 10 + 4 de entradas + 3 de ajuste positivo
+            ->where('kpis.out', 3) // 2 de saída + 1 de ajuste negativo
+            ->has('movements.data', 5)
+        );
+
+        $this->get('/inventory/movements?search=Tinta')->assertInertia(fn (Assert $page) => $page
+            ->has('movements.data', 1)
+            ->where('movements.data.0.product.name', 'Tinta')
+        );
     }
 }

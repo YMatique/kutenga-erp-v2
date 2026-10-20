@@ -35,7 +35,7 @@ class WarehouseController extends Controller
             ->where('warehouse_id', $warehouse->id)
             ->get();
 
-        $movements = StockMovement::with(['product', 'user'])
+        $movements = StockMovement::with(['product' => fn ($q) => $q->withTrashed(), 'user'])
             ->where('warehouse_id', $warehouse->id)
             ->latest()
             ->take(10)

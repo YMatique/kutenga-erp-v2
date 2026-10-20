@@ -14,12 +14,13 @@ class StockMovementController extends Controller
     {
         $companyId = auth()->user()->company_id;
 
-        $query = StockMovement::with(['product', 'warehouse', 'user'])
-            ->whereHas('product', fn ($q) => $q->where('company_id', $companyId));
+        // Produtos apagados mantêm o histórico de movimentos
+        $query = StockMovement::with(['product' => fn ($q) => $q->withTrashed(), 'warehouse', 'user'])
+            ->where('company_id', $companyId);
 
         if ($request->filled('search')) {
             $query->whereHas('product', function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%")
+                $q->withTrashed()->where('name', 'like', "%{$request->search}%")
                     ->orWhere('sku', 'like', "%{$request->search}%")
                     ->orWhere('barcode', 'like', "%{$request->search}%");
             });
@@ -35,8 +36,11 @@ class StockMovementController extends Controller
 
         $kpis = [
             'total' => (clone $query)->count(),
-            'in' => (clone $query)->whereIn('type', ['in', 'opening'])->sum('quantity'),
-            'out' => (clone $query)->where('type', 'out')->sum('quantity'),
+            // Os ajustes são movimentos com sinal: positivos contam como entrada, negativos como saída
+            'in' => (clone $query)->whereIn('type', ['in', 'opening'])->sum('quantity')
+                + (clone $query)->where('type', 'adjustment')->where('quantity', '>', 0)->sum('quantity'),
+            'out' => (clone $query)->where('type', 'out')->sum('quantity')
+                + abs((clone $query)->where('type', 'adjustment')->where('quantity', '<', 0)->sum('quantity')),
         ];
 
         $movements = $query->latest()->paginate(20)->withQueryString();
