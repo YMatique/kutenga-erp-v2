@@ -24,6 +24,8 @@ interface Product {
     tax_rate: number;
     sku?: string;
     barcode?: string;
+    track_stock?: boolean;
+    stock?: number | null; // disponível para vender (null: não controla stock)
 }
 
 interface Category { id: number; name: string; }
@@ -128,19 +130,59 @@ export default function PosIndex({ shift, categories, products: initialProducts,
         return () => clearTimeout(t);
     }, [loadCatalog]);
 
-    const addToCart = useCallback((p: Product) => setCart(prev => {
-        const ex = prev.find(i => i.id === p.id);
+    // Cópia do carrinho para validar o stock antes de alterar o estado (sem efeitos dentro do setCart)
+    const cartRef = useRef<CartItem[]>(cart);
 
-        if (ex) {
-return prev.map(i => i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i);
-}
+    useEffect(() => {
+        cartRef.current = cart;
+    }, [cart]);
 
-        return [...prev, { ...p, cart_id: genId(), quantity: 1 }];
-    }), []);
+    const formatStock = (n: number) => n.toLocaleString('pt-MZ', { maximumFractionDigits: 3 });
 
-    const updateQty = (id: string, d: number) => setCart(prev =>
-        prev.map(i => i.cart_id === id ? { ...i, quantity: Math.max(1, i.quantity + d) } : i)
-    );
+    // O servidor volta a validar na venda; aqui evita-se pôr no carrinho mais do que há disponível
+    const exceedsStock = (p: Product, wanted: number): boolean => {
+        if (!p.track_stock || p.stock == null || wanted <= p.stock) {
+            return false;
+        }
+
+        beepError();
+        toast.error(p.stock <= 0 ? `${p.name}: sem stock disponível.` : `${p.name}: só há ${formatStock(p.stock)} disponível.`);
+
+        return true;
+    };
+
+    const addToCart = useCallback((p: Product): boolean => {
+        const current = cartRef.current.find(i => i.id === p.id)?.quantity ?? 0;
+
+        if (exceedsStock(p, current + 1)) {
+            return false;
+        }
+
+        setCart(prev => {
+            const ex = prev.find(i => i.id === p.id);
+
+            if (ex) {
+                return prev.map(i => i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i);
+            }
+
+            return [...prev, { ...p, cart_id: genId(), quantity: 1 }];
+        });
+
+        return true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const updateQty = (id: string, d: number) => {
+        const item = cartRef.current.find(i => i.cart_id === id);
+
+        if (item && d > 0 && exceedsStock(item, item.quantity + d)) {
+            return;
+        }
+
+        setCart(prev =>
+            prev.map(i => i.cart_id === id ? { ...i, quantity: Math.max(1, i.quantity + d) } : i)
+        );
+    };
 
     const remove = (id: string) => setCart(prev => prev.filter(i => i.cart_id !== id));
 
@@ -185,7 +227,10 @@ return prev.map(i => i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i);
             return;
         }
 
-        addToCart(product);
+        if (!addToCart(product)) {
+            return;
+        }
+
         setSearch('');
         beepSuccess();
         toast.success(`${product.name} adicionado`, { duration: 1200 });
@@ -345,8 +390,10 @@ return prev.map(i => i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i);
                                 onKeyDown={e => {
                                     if (e.key === 'Enter' && catalog.length === 1) {
                                         e.preventDefault();
-                                        addToCart(catalog[0]);
-                                        setSearch('');
+
+                                        if (addToCart(catalog[0])) {
+                                            setSearch('');
+                                        }
                                     }
                                 }}
                             />
@@ -395,12 +442,16 @@ return prev.map(i => i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i);
                                 {catalog.map((p: Product) => {
                                     const price = parseFloat(String(p.sale_price)) || 0;
                                     const inCart = cart.find(i => i.id === p.id);
+                                    const tracked = !!p.track_stock && p.stock != null;
+                                    const soldOut = tracked && (p.stock as number) <= 0;
 
                                     return (
                                         <button
                                             key={p.id}
                                             onClick={() => addToCart(p)}
                                             className={`relative group rounded-[4px] overflow-hidden text-left transition-all duration-150 border ${
+                                                soldOut ? 'opacity-60' : ''
+                                            } ${
                                                 d
                                                     ? inCart
                                                         ? 'border-[#2DB8A0] shadow-md ring-1 ring-[#2DB8A0]/30 bg-[#1A2332]'
@@ -438,6 +489,13 @@ return prev.map(i => i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i);
                                                     {p.name}
                                                 </p>
                                                 <p className="text-sm font-bold text-[#2DB8A0] mt-1.5">{fmt(price)} MT</p>
+                                                {tracked && (
+                                                    <p className={`text-[11px] mt-0.5 ${
+                                                        soldOut ? 'text-red-500 font-semibold' : d ? 'text-white/40' : 'text-slate-400'
+                                                    }`}>
+                                                        {soldOut ? 'Sem stock' : `Stock: ${formatStock(p.stock as number)}${p.unit ? ` ${p.unit}` : ''}`}
+                                                    </p>
+                                                )}
                                             </div>
 
                                             {/* Quantidade no carrinho */}
@@ -633,7 +691,7 @@ return prev.map(i => i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i);
                 total={totals.total}
                 cart={cart}
                 onSuccess={() => {
- setCart([]); setPayOpen(false); 
+ setCart([]); setPayOpen(false); loadCatalog(1);
 }}
             />
         </div>

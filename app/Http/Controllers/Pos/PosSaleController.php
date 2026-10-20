@@ -9,7 +9,6 @@ use App\Models\Billing\Customer;
 use App\Models\Billing\Document;
 use App\Models\Billing\Payment;
 use App\Models\Billing\PaymentAllocation;
-use App\Models\Inventory\Warehouse;
 use App\Models\Pos\CashRegister;
 use App\Models\Pos\PosShift;
 use App\Services\Billing\BillingService;
@@ -120,11 +119,7 @@ class PosSaleController extends Controller
             }
 
             // 2. Confirm and Emit — armazém da caixa, senão o predefinido da empresa
-            $warehouse = ($register->warehouse_id
-                    ? Warehouse::where('company_id', $companyId)->find($register->warehouse_id)
-                    : null)
-                ?? Warehouse::where('company_id', $companyId)->orderByDesc('is_default')->orderBy('id')->first();
-            $this->billingService->confirmAndEmit($document->id, $warehouse);
+            $this->billingService->confirmAndEmit($document->id, $register->saleWarehouse());
 
             // 3. Register Payment
             $change = $validated['payment_method'] === 'cash'

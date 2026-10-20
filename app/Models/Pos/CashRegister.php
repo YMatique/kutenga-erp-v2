@@ -57,6 +57,15 @@ class CashRegister extends Model
         return $this->belongsTo(Warehouse::class);
     }
 
+    /** Armazém de onde saem as vendas desta caixa: o da caixa, senão o predefinido da empresa. */
+    public function saleWarehouse(): ?Warehouse
+    {
+        return ($this->warehouse_id
+                ? Warehouse::where('company_id', $this->company_id)->find($this->warehouse_id)
+                : null)
+            ?? Warehouse::where('company_id', $this->company_id)->orderByDesc('is_default')->orderBy('id')->first();
+    }
+
     public function series(): BelongsTo
     {
         return $this->belongsTo(DocumentSeries::class, 'series_id');
