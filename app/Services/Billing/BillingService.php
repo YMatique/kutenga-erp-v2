@@ -25,6 +25,12 @@ class BillingService
 
     protected StockService $stockService;
 
+    /** O dia de hoje no fuso do negócio (a aplicação corre em UTC e à noite já seria "amanhã"). */
+    private function businessToday(): string
+    {
+        return now(config('app.business_timezone'))->toDateString();
+    }
+
     /**
      * Injeção de dependência do StockService existente para baixa automática.
      */
@@ -71,8 +77,8 @@ class BillingService
                 'document_type' => $payload['document_type'] ?? 'FR',
                 'source_module' => $payload['source_module'] ?? 'billing',
                 'status' => 'draft',
-                'issue_date' => $payload['issue_date'] ?? date('Y-m-d'),
-                'due_date' => $payload['due_date'] ?? date('Y-m-d'),
+                'issue_date' => $payload['issue_date'] ?? $this->businessToday(),
+                'due_date' => $payload['due_date'] ?? $this->businessToday(),
                 'notes' => $payload['notes'] ?? null,
                 'referenced_document_id' => $payload['referenced_document_id'] ?? null,
                 'created_by' => Auth::id(),
@@ -296,7 +302,7 @@ class BillingService
                 'customer_id' => $customer->id,
                 'payment_method' => $method,
                 'amount' => $amount,
-                'payment_date' => date('Y-m-d'),
+                'payment_date' => $this->businessToday(),
                 'reference' => $reference,
                 'created_by' => Auth::id(),
             ]);
@@ -376,8 +382,8 @@ class BillingService
                     'customer_address' => $customer->address,
                     'document_type' => 'RC',
                     'status' => 'draft',
-                    'issue_date' => date('Y-m-d'),
-                    'due_date' => date('Y-m-d'),
+                    'issue_date' => $this->businessToday(),
+                    'due_date' => $this->businessToday(),
                     'created_by' => Auth::id() ?? $payment->created_by,
                 ];
 

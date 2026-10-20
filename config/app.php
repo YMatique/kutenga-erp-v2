@@ -69,6 +69,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Business Timezone
+    |--------------------------------------------------------------------------
+    |
+    | The timezone the business works in. The application timezone stays in UTC
+    | (it is how the stored timestamps are read), so "today" and the month a
+    | document belongs to are worked out in this one: a sale made at 23:00 in
+    | Maputo is still that day's, even though it is already tomorrow in UTC.
+    |
+    */
+
+    'business_timezone' => env('APP_BUSINESS_TIMEZONE', 'Africa/Maputo'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

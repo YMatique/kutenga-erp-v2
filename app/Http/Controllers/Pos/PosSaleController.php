@@ -98,8 +98,9 @@ class PosSaleController extends Controller
             'customer_nuit' => $customer->nuit,
             'series_id' => $series->id,
             'branch_id' => $register->branch_id,
-            'issue_date' => now()->toDateString(),
-            'due_date' => now()->toDateString(),
+            // O dia da venda é o do negócio (Maputo), não o de UTC: à noite já seria "amanhã"
+            'issue_date' => now(config('app.business_timezone'))->toDateString(),
+            'due_date' => now(config('app.business_timezone'))->toDateString(),
             'document_type' => 'FR',
             'source_module' => 'pos',
             'items' => $validated['items'],
