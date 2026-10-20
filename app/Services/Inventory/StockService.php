@@ -10,6 +10,7 @@ use App\Models\Company;
 use App\Models\Inventory\InventoryClosing;
 use App\Models\Inventory\ProductStock;
 use App\Models\Inventory\StockMovement;
+use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\Warehouse;
 use App\Models\SystemNotification;
 use Illuminate\Support\Facades\Auth;
@@ -31,6 +32,47 @@ class StockService
             ->where('product_id', $product->id)
             ->where('warehouse_id', $warehouse->id)
             ->value('quantity') ?? 0;
+    }
+
+    /**
+     * Quantidade prometida a transferências aprovadas que saem deste armazém.
+     * `$ignoreTransferId` deixa de fora a reserva da própria transferência que está a ser concluída.
+     * Com `$lock`, lê o estado mais recente (FOR UPDATE), como é preciso dentro de uma transação
+     * que vai decidir com base nele.
+     */
+    public function getReserved(Product $product, Warehouse $warehouse, ?int $ignoreTransferId = null, bool $lock = false): float
+    {
+        $query = DB::table('stock_transfer_items')
+            ->join('stock_transfers', 'stock_transfers.id', '=', 'stock_transfer_items.stock_transfer_id')
+            ->where('stock_transfers.company_id', $product->company_id)
+            ->where('stock_transfers.status', 'approved')
+            ->where('stock_transfers.from_warehouse_id', $warehouse->id)
+            ->where('stock_transfer_items.product_id', $product->id)
+            ->when($ignoreTransferId, fn ($q) => $q->where('stock_transfers.id', '!=', $ignoreTransferId));
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        return (float) $query->sum('stock_transfer_items.quantity');
+    }
+
+    /** Stock que ainda pode ser vendido ou movido: saldo físico menos o reservado (nunca negativo). */
+    public function getAvailable(Product $product, Warehouse $warehouse, ?int $ignoreTransferId = null): float
+    {
+        return max(0, round($this->getStock($product, $warehouse) - $this->getReserved($product, $warehouse, $ignoreTransferId), 3));
+    }
+
+    /**
+     * Disponível com a linha de stock bloqueada. Tem de ser chamado dentro de uma transação:
+     * quem decide com base neste valor (aprovar uma transferência, dar saída) fica serializado
+     * com os outros que mexem no mesmo produto e armazém.
+     */
+    public function availableForUpdate(Product $product, Warehouse $warehouse, ?int $ignoreTransferId = null): float
+    {
+        $stock = $this->lockedStockRow($product, $warehouse);
+
+        return max(0, round((float) $stock->quantity - $this->getReserved($product, $warehouse, $ignoreTransferId, lock: true), 3));
     }
 
     public function getTotalStock(Product $product): float
@@ -198,8 +240,16 @@ class StockService
 
             $this->assertNotBlockedByClosing($product, $warehouse);
 
-            if ($type === 'out' && (float) $stock->quantity < $quantity) {
-                throw new InsufficientStockException((float) $stock->quantity);
+            // A saída só pode usar o disponível: o que está reservado por transferências aprovadas
+            // não se vende. A própria transferência, ao ser concluída, usa a sua reserva.
+            if ($type === 'out') {
+                $ignoreTransferId = $sourceType === StockTransfer::class ? $sourceId : null;
+                $reserved = $this->getReserved($product, $warehouse, $ignoreTransferId, lock: true);
+                $available = max(0, round((float) $stock->quantity - $reserved, 3));
+
+                if ($available < $quantity) {
+                    throw new InsufficientStockException($available);
+                }
             }
 
             // Um ajuste negativo também não pode deixar o saldo abaixo de zero

@@ -13,9 +13,35 @@ class StockTransferService
         private StockService $stockService
     ) {}
 
+    /**
+     * Aprova uma transferência pendente e reserva o stock na origem: só passa se, para cada produto,
+     * o disponível (saldo menos o reservado por outras transferências aprovadas) chegar. Enquanto
+     * estiver aprovada, essa quantidade não pode ser vendida nem movida por outros.
+     */
     public function approve(StockTransfer $transfer): void
     {
-        $this->transition($transfer, from: ['pending'], to: 'approved', error: 'Apenas transferências pendentes podem ser aprovadas.');
+        DB::transaction(function () use ($transfer) {
+            $locked = StockTransfer::lockForUpdate()->findOrFail($transfer->id);
+
+            if ($locked->status !== 'pending') {
+                throw ValidationException::withMessages(['status' => 'Apenas transferências pendentes podem ser aprovadas.']);
+            }
+
+            $locked->load(['items.product', 'fromWarehouse']);
+
+            // Mesma ordem de produtos que ao concluir: aprovações simultâneas não se bloqueiam mutuamente
+            foreach ($locked->items->sortBy('product_id') as $item) {
+                $available = $this->stockService->availableForUpdate($item->product, $locked->fromWarehouse);
+
+                if ($available < (float) $item->quantity) {
+                    throw ValidationException::withMessages([
+                        'stock' => "Stock disponível insuficiente para {$item->product->name} em {$locked->fromWarehouse->name}. Disponível: {$available}, pedido: ".(float) $item->quantity.'.',
+                    ]);
+                }
+            }
+
+            $locked->update(['status' => 'approved']);
+        });
     }
 
     public function cancel(StockTransfer $transfer): void

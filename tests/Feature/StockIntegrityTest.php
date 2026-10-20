@@ -657,4 +657,112 @@ class StockIntegrityTest extends TestCase
 
         $this->assertEqualsWithDelta(1.999, $this->qty($this->ink, $this->w1), 0.00001);
     }
+
+    // ── Reserva de stock em transferências ──────────────────────────────────
+
+    public function test_an_approved_transfer_reserves_stock_and_only_the_available_can_be_used(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 10);
+        $transfer = $this->transfer('pending', [$this->pen->id => 8]);
+
+        // Pendente ainda não reserva
+        $this->assertSame(10.0, $this->stock->getAvailable($this->pen, $this->w1));
+
+        app(StockTransferService::class)->approve($transfer);
+
+        $this->assertSame(10.0, $this->stock->getStock($this->pen, $this->w1));
+        $this->assertSame(8.0, $this->stock->getReserved($this->pen, $this->w1));
+        $this->assertSame(2.0, $this->stock->getAvailable($this->pen, $this->w1));
+        // O armazém de destino não é afetado
+        $this->assertSame(0.0, $this->stock->getReserved($this->pen, $this->w2));
+
+        try {
+            $this->stock->out($this->pen, $this->w1, 3);
+            $this->fail('O que está reservado não se pode vender.');
+        } catch (InsufficientStockException $e) {
+            $this->assertSame(2.0, $e->available);
+        }
+
+        $this->stock->out($this->pen, $this->w1, 2);
+        $this->assertSame(8.0, $this->qty($this->pen, $this->w1));
+    }
+
+    public function test_a_transfer_cannot_be_approved_beyond_the_available_stock(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 10);
+        $first = $this->transfer('pending', [$this->pen->id => 8]);
+        $second = $this->transfer('pending', [$this->pen->id => 5]);
+
+        $service = app(StockTransferService::class);
+        $service->approve($first);
+
+        try {
+            $service->approve($second);
+            $this->fail('A segunda aprovação excede o disponível.');
+        } catch (ValidationException $e) {
+            $this->assertStringContainsString('Disponível: 2', $e->errors()['stock'][0]);
+        }
+
+        $this->assertSame('pending', $second->fresh()->status);
+
+        // Cancelar a primeira liberta a reserva e a segunda já passa
+        $service->cancel($first);
+        $this->assertSame(10.0, $this->stock->getAvailable($this->pen, $this->w1));
+        $service->approve($second);
+        $this->assertSame('approved', $second->fresh()->status);
+    }
+
+    public function test_approval_is_refused_through_the_http_flow_with_a_warning(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 3);
+        $transfer = $this->transfer('pending', [$this->pen->id => 5]);
+
+        $this->actingAs($this->admin)->post("/inventory/transfers/{$transfer->id}/approve")->assertSessionHas('error');
+        $this->assertSame('pending', $transfer->fresh()->status);
+    }
+
+    public function test_completing_a_transfer_uses_its_own_reservation_and_releases_it(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 10);
+        $service = app(StockTransferService::class);
+
+        $first = $this->transfer('pending', [$this->pen->id => 8]);
+        $second = $this->transfer('pending', [$this->pen->id => 2]);
+        $service->approve($first);
+        $service->approve($second);
+        $this->assertSame(0.0, $this->stock->getAvailable($this->pen, $this->w1));
+
+        // O stock todo está reservado e, mesmo assim, cada transferência consegue concluir-se
+        $service->complete($first);
+        $this->assertSame(2.0, $this->qty($this->pen, $this->w1));
+        $this->assertSame(8.0, $this->qty($this->pen, $this->w2));
+        $this->assertSame(0.0, $this->stock->getAvailable($this->pen, $this->w1));
+
+        $service->complete($second);
+        $this->assertSame(0.0, $this->qty($this->pen, $this->w1));
+        $this->assertSame(10.0, $this->qty($this->pen, $this->w2));
+        $this->assertSame(0.0, $this->stock->getReserved($this->pen, $this->w1));
+    }
+
+    public function test_a_physical_loss_below_the_reserved_quantity_makes_the_transfer_fail_cleanly(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 10);
+        $service = app(StockTransferService::class);
+        $transfer = $this->transfer('pending', [$this->pen->id => 8]);
+        $service->approve($transfer);
+
+        // Perda física (ajuste) deixa o saldo abaixo do reservado
+        $this->stock->adjust($this->pen, $this->w1, -5);
+
+        try {
+            $service->complete($transfer);
+            $this->fail('Não há stock físico para concluir.');
+        } catch (ValidationException) {
+            // esperado
+        }
+
+        $this->assertSame(5.0, $this->qty($this->pen, $this->w1));
+        $this->assertSame(0.0, $this->qty($this->pen, $this->w2));
+        $this->assertSame('approved', $transfer->fresh()->status);
+    }
 }
