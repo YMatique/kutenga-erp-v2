@@ -34,19 +34,25 @@ class InventoryDashboardController extends Controller
     /** Dias do gráfico de atividade (hoje incluído). */
     private const ACTIVITY_DAYS = 30;
 
-    public function index()
+    public function index(Request $request)
     {
         $companyId = auth()->user()->company_id;
 
-        // Saldo total de cada produto (todos os armazéns), somado na base de dados; a mesma
-        // definição de alerta que o dashboard principal usa
-        $tracked = fn () => StockAlerts::tracked($companyId);
+        // Filtro por armazém: um id que não é desta empresa ignora-se (mostra tudo), não dá erro
+        $selected = $request->filled('warehouse_id')
+            ? Warehouse::where('company_id', $companyId)->find($request->integer('warehouse_id'))
+            : null;
+        $warehouseId = $selected?->id;
+
+        // Saldo de cada produto (de todos os armazéns, ou do selecionado), somado na base de dados;
+        // a mesma definição de alerta que o dashboard principal usa
+        $tracked = fn () => StockAlerts::tracked($companyId, $warehouseId);
 
         $total = StockAlerts::TOTAL;
         $outOfStock = StockAlerts::OUT_OF_STOCK;
         $lowStock = StockAlerts::LOW_STOCK;
 
-        $alerts = StockAlerts::counts($companyId);
+        $alerts = StockAlerts::counts($companyId, $warehouseId);
         $outOfStockCount = $alerts['out'];
         $lowStockCount = $alerts['low'];
 
@@ -79,6 +85,7 @@ class InventoryDashboardController extends Controller
             ->whereNull('products.deleted_at');
 
         $figures = $stocked()
+            ->when($warehouseId, fn ($q) => $q->where('product_stocks.warehouse_id', $warehouseId))
             ->selectRaw('COALESCE(SUM(product_stocks.quantity), 0) as quantity, COALESCE(SUM(product_stocks.quantity * COALESCE(products.cost, 0)), 0) as value')
             ->first();
 
@@ -88,7 +95,8 @@ class InventoryDashboardController extends Controller
             ->get()
             ->keyBy('warehouse_id');
 
-        $inventoryValue = (float) $figures->value;
+        // O peso de cada armazém é sobre o valor de todos, mesmo com um armazém selecionado
+        $inventoryValue = (float) $perWarehouse->sum('value');
 
         // Só armazéns ativos; somar unidades de produtos diferentes (kg, peças…) não diz nada, por isso mostra-se o valor
         $warehouseSummary = Warehouse::query()
@@ -119,18 +127,24 @@ class InventoryDashboardController extends Controller
                 'user:id,name',
             ])
             ->where('company_id', $companyId)
+            ->when($warehouseId, fn ($q) => $q->where('warehouse_id', $warehouseId))
             ->latest()
             ->limit(10)
             ->get();
 
         $user = auth()->user();
 
+        // O trabalho por tratar também se filtra: transferências que saem ou chegam ao armazém,
+        // ajustes dele e fechos dele ou de todos os armazéns
+        $transfers = fn (string $status) => StockTransfer::where('company_id', $companyId)->where('status', $status)
+            ->when($warehouseId, fn ($q) => $q->where(fn ($q) => $q->where('from_warehouse_id', $warehouseId)->orWhere('to_warehouse_id', $warehouseId)));
+
         return Inertia::render('inventory/dashboard/index', [
             'stats' => [
                 'products' => $tracked()->count(),
                 'warehouses' => $warehouseSummary->count(),
                 'total_stock' => (float) $figures->quantity,
-                'inventory_value' => $inventoryValue,
+                'inventory_value' => (float) $figures->value,
                 'low_stock' => $lowStockCount,
                 'out_of_stock' => $outOfStockCount,
             ],
@@ -138,12 +152,15 @@ class InventoryDashboardController extends Controller
             'warehouseSummary' => $warehouseSummary,
             'recentMovements' => $recentMovements,
             'queue' => [
-                'transfers_pending' => StockTransfer::where('company_id', $companyId)->where('status', 'pending')->count(),
-                'transfers_approved' => StockTransfer::where('company_id', $companyId)->where('status', 'approved')->count(),
-                'adjustments_draft' => StockAdjustment::where('company_id', $companyId)->where('status', 'draft')->count(),
-                'closings_open' => InventoryClosing::where('company_id', $companyId)->where('status', 'draft')->count(),
+                'transfers_pending' => $transfers('pending')->count(),
+                'transfers_approved' => $transfers('approved')->count(),
+                'adjustments_draft' => StockAdjustment::where('company_id', $companyId)->where('status', 'draft')
+                    ->when($warehouseId, fn ($q) => $q->where('warehouse_id', $warehouseId))->count(),
+                'closings_open' => InventoryClosing::where('company_id', $companyId)->where('status', 'draft')
+                    ->when($warehouseId, fn ($q) => $q->where(fn ($q) => $q->where('warehouse_id', $warehouseId)->orWhereNull('warehouse_id')))->count(),
             ],
-            'activity' => $this->activity($companyId),
+            'activity' => $this->activity($companyId, $warehouseId),
+            'filters' => ['warehouse_id' => $warehouseId, 'warehouse_name' => $selected?->name],
             // Só as ações que o utilizador pode mesmo fazer (as outras dariam 403)
             'can' => [
                 'adjust' => $user->can('inventory.adjust'),
@@ -160,7 +177,7 @@ class InventoryDashboardController extends Controller
      *
      * @return array<int, array{date: string, entries: float, exits: float, movements: int}>
      */
-    private function activity(int $companyId): array
+    private function activity(int $companyId, ?int $warehouseId = null): array
     {
         // Os dias contam-se no fuso do negócio, mas os instantes estão gravados em UTC: um movimento
         // das 23:30 UTC é já do dia seguinte em Maputo. A janela começa à meia-noite local (em UTC)
@@ -183,6 +200,7 @@ class InventoryDashboardController extends Controller
             ->join('products', 'products.id', '=', 'stock_movements.product_id')
             ->where('stock_movements.company_id', $companyId)
             ->where('stock_movements.type', '!=', 'opening')
+            ->when($warehouseId, fn ($q) => $q->where('stock_movements.warehouse_id', $warehouseId))
             ->where('stock_movements.created_at', '>=', $first->utc()->toDateTimeString())
             ->groupByRaw("DATE(stock_movements.created_at), {$shift}")
             ->selectRaw("DATE(stock_movements.created_at) as day, {$shift} as shifted, SUM(CASE WHEN {$entry} THEN {$value} ELSE 0 END) as entries, SUM(CASE WHEN {$exit} THEN {$value} ELSE 0 END) as exits, COUNT(*) as movements")

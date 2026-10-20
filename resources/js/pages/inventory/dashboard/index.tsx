@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     ArrowLeftRight,
@@ -23,6 +23,13 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
     Table,
     TableBody,
     TableCell,
@@ -40,7 +47,16 @@ const formatCurrency = (val: number | string) =>
     new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(Number(val));
 
 export default function InventoryDashboard() {
-    const { stats, attentionProducts, warehouseSummary, recentMovements, queue, activity, can } = usePage<any>().props;
+    const { stats, attentionProducts, warehouseSummary, recentMovements, queue, activity, can, filters } = usePage<any>().props;
+
+    // Filtro por armazém: escopa os números, a lista de atenção, os movimentos, a atividade e o trabalho por tratar
+    const selectedId = filters?.warehouse_id ? String(filters.warehouse_id) : 'all';
+    const scope = filters?.warehouse_id ? '&warehouse_id=' + filters.warehouse_id : '';
+    const inList = warehouseSummary.some((w: any) => String(w.id) === selectedId);
+
+    const chooseWarehouse = (value: string) => {
+        router.get('/inventory', value === 'all' ? {} : { warehouse_id: value }, { preserveScroll: true, preserveState: true });
+    };
 
     const alerts = Number(stats.low_stock) + Number(stats.out_of_stock);
     const hidden = alerts - attentionProducts.length;
@@ -117,6 +133,31 @@ export default function InventoryDashboard() {
                     }
                 />
 
+                {/* Filtro: uma linha por cima de tudo o que escopa */}
+                {warehouseSummary.length > 1 && (
+                    <div className="flex flex-wrap items-center gap-3">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Armazém</span>
+                        <Select value={selectedId} onValueChange={chooseWarehouse}>
+                            <SelectTrigger className="h-9 w-64 rounded-[4px] bg-card">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos os armazéns</SelectItem>
+                                {warehouseSummary.map((w: any) => (
+                                    <SelectItem key={w.id} value={String(w.id)}>{w.name}</SelectItem>
+                                ))}
+                                {/* Um armazém inativo ainda se pode estar a ver (por ligação direta) */}
+                                {selectedId !== 'all' && !inList && (
+                                    <SelectItem value={selectedId}>{filters.warehouse_name}</SelectItem>
+                                )}
+                            </SelectContent>
+                        </Select>
+                        {selectedId !== 'all' && (
+                            <span className="text-xs text-muted-foreground">Os números, alertas, atividade e trabalho por tratar são deste armazém.</span>
+                        )}
+                    </div>
+                )}
+
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                     <KpiCard
@@ -124,7 +165,7 @@ export default function InventoryDashboard() {
                         value={stats.products}
                         icon={<Package className="h-4 w-4" />}
                         accent="teal"
-                        description="com controlo de stock"
+                        description={selectedId === 'all' ? 'com controlo de stock' : 'com stock neste armazém'}
                     />
                     <KpiCard
                         label="Armazéns"
@@ -135,10 +176,10 @@ export default function InventoryDashboard() {
                     />
                     <KpiCard
                         label="Valor do Inventário"
-                        value={formatCurrency(stats.inventory_value)}
+                        value={formatCurrency(Math.round(Number(stats.inventory_value))).replace(/[,.]00(?=\s)/, '')}
                         icon={<Wallet className="h-4 w-4" />}
                         accent="gold"
-                        description="custo × quantidade em stock"
+                        description={selectedId === 'all' ? 'custo × quantidade em stock' : 'custo × quantidade neste armazém'}
                     />
                     <KpiCard
                         label="Alertas de Stock"
@@ -254,12 +295,12 @@ export default function InventoryDashboard() {
                                     </span>
                                     <span className="flex items-center gap-4">
                                         {Number(stats.out_of_stock) > 0 && (
-                                            <Link href="/inventory/stocks?status=out_of_stock" className="text-[#2DB8A0] font-medium hover:underline">
+                                            <Link href={'/inventory/stocks?status=out_of_stock' + scope} className="text-[#2DB8A0] font-medium hover:underline">
                                                 Ver esgotados ({stats.out_of_stock})
                                             </Link>
                                         )}
                                         {Number(stats.low_stock) > 0 && (
-                                            <Link href="/inventory/stocks?status=low" className="text-[#2DB8A0] font-medium hover:underline">
+                                            <Link href={'/inventory/stocks?status=low' + scope} className="text-[#2DB8A0] font-medium hover:underline">
                                                 Ver stock baixo ({stats.low_stock})
                                             </Link>
                                         )}

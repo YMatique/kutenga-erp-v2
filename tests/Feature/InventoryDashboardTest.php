@@ -108,6 +108,100 @@ class InventoryDashboardTest extends TestCase
         );
     }
 
+    public function test_a_selected_warehouse_scopes_the_numbers_to_that_warehouse(): void
+    {
+        $bean = $this->product('Feijão', min: 5, cost: 10);
+        $this->stockAt($bean, $this->main, 2);
+        $this->stockAt($bean, $this->store, 1);
+        $rice = $this->product('Arroz', min: 5, cost: 2);
+        $this->stockAt($rice, $this->main, 100);
+        $soup = $this->product('Sopa', min: 5, cost: 3);
+        $this->stockAt($soup, $this->store, 10);
+        $this->product('Óleo'); // sem linhas de stock em nenhum armazém
+
+        // Sem filtro: tudo, com o total de todos os armazéns
+        $this->get('/inventory')->assertInertia(fn (Assert $page) => $page
+            ->where('filters.warehouse_id', null)
+            ->where('stats.products', 4)
+            ->where('stats.out_of_stock', 1) // o Óleo
+            ->where('stats.low_stock', 1) // o Feijão, com 3 no total
+        );
+
+        // A Loja: só os produtos que lá têm linha; o Óleo não "esgotou" na Loja, não existe lá
+        $this->get("/inventory?warehouse_id={$this->store->id}")->assertInertia(fn (Assert $page) => $page
+            ->where('filters.warehouse_id', $this->store->id)
+            ->where('stats.products', 2)
+            ->where('stats.out_of_stock', 0)
+            ->where('stats.low_stock', 1) // o Feijão tem 1 na Loja
+            ->where('stats.total_stock', 11)
+            ->where('stats.inventory_value', 40) // 1 × 10 + 10 × 3
+            ->has('attentionProducts', 1)
+            ->where('attentionProducts.0.name', 'Feijão')
+            ->where('attentionProducts.0.total_stock', 1)
+            ->has('warehouseSummary', 2) // a lista de armazéns, e o seu peso, não muda
+            ->where('warehouseSummary.0.share', 84.6) // Central: 220 de 260
+        );
+
+        $this->get("/inventory?warehouse_id={$this->main->id}")->assertInertia(fn (Assert $page) => $page
+            ->where('stats.products', 2)
+            ->where('stats.low_stock', 1) // o Feijão tem 2 na Central
+            ->where('stats.inventory_value', 220)
+        );
+    }
+
+    public function test_a_warehouse_of_another_company_or_that_does_not_exist_is_ignored(): void
+    {
+        $other = Company::create(['name' => 'Outra', 'nuit' => '999999999', 'address' => 'Beira', 'phone' => '820000000']);
+        $foreign = Warehouse::create(['company_id' => $other->id, 'name' => 'Deles', 'code' => 'D', 'is_active' => true]);
+        $this->stockAt($this->product('Arroz', cost: 2), $this->main, 10);
+
+        foreach ([$foreign->id, 99999] as $id) {
+            $this->get("/inventory?warehouse_id={$id}")->assertInertia(fn (Assert $page) => $page
+                ->where('filters.warehouse_id', null)
+                ->where('stats.inventory_value', 20)
+            );
+        }
+    }
+
+    public function test_the_warehouse_filter_also_scopes_movements_activity_and_the_work_queue(): void
+    {
+        $product = $this->product('Arroz', cost: 10);
+        $stock = app(StockService::class);
+        $stock->in($product, $this->main, 3);
+        $stock->in($product, $this->store, 2);
+
+        $transfer = fn (int $from, int $to) => StockTransfer::create(['company_id' => $this->company->id, 'from_warehouse_id' => $from, 'to_warehouse_id' => $to, 'status' => 'pending']);
+        $third = Warehouse::create(['company_id' => $this->company->id, 'name' => 'Terceiro', 'code' => 'T', 'is_active' => true]);
+        $transfer($this->main->id, $this->store->id);
+        $transfer($this->store->id, $third->id);
+        $transfer($this->main->id, $third->id);
+
+        $adjustment = fn (int $warehouse) => StockAdjustment::create(['company_id' => $this->company->id, 'warehouse_id' => $warehouse, 'reason' => 'correction', 'status' => 'draft']);
+        $adjustment($this->main->id);
+        $adjustment($this->store->id);
+
+        $closing = fn (?int $warehouse) => InventoryClosing::create(['company_id' => $this->company->id, 'warehouse_id' => $warehouse, 'reference_date' => now()->toDateString(), 'status' => 'draft']);
+        $closing(null); // de todos os armazéns: conta em qualquer um
+        $closing($this->store->id);
+
+        $this->get("/inventory?warehouse_id={$this->store->id}")->assertInertia(fn (Assert $page) => $page
+            ->has('recentMovements', 1)
+            ->where('recentMovements.0.warehouse.name', 'Loja')
+            ->where('activity.29.entries', 20) // só a entrada da Loja: 2 × 10
+            ->where('queue.transfers_pending', 2) // main→store e store→third
+            ->where('queue.adjustments_draft', 1)
+            ->where('queue.closings_open', 2) // o geral e o da Loja
+        );
+
+        $this->get('/inventory')->assertInertia(fn (Assert $page) => $page
+            ->has('recentMovements', 2)
+            ->where('activity.29.entries', 50)
+            ->where('queue.transfers_pending', 3)
+            ->where('queue.adjustments_draft', 2)
+            ->where('queue.closings_open', 2)
+        );
+    }
+
     public function test_attention_list_shows_the_most_urgent_first_and_is_limited(): void
     {
         // 10 produtos em alerta: 2 esgotados e 8 abaixo do mínimo, uns mais graves que outros
