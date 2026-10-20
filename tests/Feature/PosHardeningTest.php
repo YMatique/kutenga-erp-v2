@@ -7,6 +7,7 @@ use App\Models\Billing\Payment;
 use App\Models\Catalog\Branch;
 use App\Models\Catalog\Product;
 use App\Models\Company;
+use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\Warehouse;
 use App\Models\Pos\CashRegister;
 use App\Models\Pos\PosShift;
@@ -178,6 +179,33 @@ class PosHardeningTest extends TestCase
 
         $this->assertSame(0, Document::count());
         $this->assertSame(10.0, $this->stockLeft());
+    }
+
+    public function test_stock_reserved_by_an_approved_transfer_cannot_be_sold(): void
+    {
+        $this->openShift();
+
+        $other = Warehouse::create(['company_id' => $this->company->id, 'name' => 'Loja', 'code' => 'W2', 'is_active' => true]);
+        $transfer = StockTransfer::create([
+            'company_id' => $this->company->id, 'from_warehouse_id' => $this->warehouse->id,
+            'to_warehouse_id' => $other->id, 'status' => 'approved',
+        ]);
+        $transfer->items()->create(['product_id' => $this->product->id, 'quantity' => 8]);
+
+        $items = $this->sale()['items'];
+        $items[0]['quantity'] = 3;
+
+        $this->postJson(route('pos.sales.store'), $this->sale(['items' => $items, 'amount_paid' => 99999]))
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'Stock insuficiente. Disponível: 2');
+
+        $this->assertSame(0, Document::count());
+        $this->assertSame(10.0, $this->stockLeft());
+
+        // O disponível (10 − 8 reservados) ainda se vende
+        $items[0]['quantity'] = 2;
+        $this->postJson(route('pos.sales.store'), $this->sale(['items' => $items, 'amount_paid' => 99999]))->assertSuccessful();
+        $this->assertSame(8.0, $this->stockLeft());
     }
 
     public function test_business_rule_errors_are_422(): void
