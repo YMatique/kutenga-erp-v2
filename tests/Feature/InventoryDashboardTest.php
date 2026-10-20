@@ -4,7 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\Catalog\Product;
 use App\Models\Company;
+use App\Models\Inventory\InventoryClosing;
 use App\Models\Inventory\ProductStock;
+use App\Models\Inventory\StockAdjustment;
+use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\Warehouse;
 use App\Models\User;
 use App\Services\Inventory\StockService;
@@ -133,6 +136,94 @@ class InventoryDashboardTest extends TestCase
             ->where('recentMovements.0.product.name', 'Arroz')
             ->where('recentMovements.0.notes', 'Compra ao fornecedor')
             ->where('recentMovements.0.user.name', 'Operador')
+        );
+    }
+
+    public function test_activity_values_entries_and_exits_per_day_at_the_current_cost(): void
+    {
+        $product = $this->product('Arroz', cost: 10);
+        $stock = app(StockService::class);
+
+        $stock->opening($product, $this->main, 100); // carga inicial: não é atividade
+        $stock->in($product, $this->main, 4); // entrada de 40
+        $stock->out($product, $this->main, 3); // saída de 30
+        $stock->adjust($product, $this->main, 2); // ajuste positivo: entrada de 20
+        $stock->adjust($product, $this->main, -1); // ajuste negativo: saída de 10
+
+        // Fora da janela de 30 dias e no primeiro dia dela
+        $stock->in($product, $this->main, 50)->forceFill(['created_at' => now()->subDays(40)])->save();
+        $stock->in($product, $this->main, 1)->forceFill(['created_at' => now()->subDays(29)])->save();
+
+        // De outra empresa: não conta
+        $other = Company::create(['name' => 'Outra', 'nuit' => '999999999', 'address' => 'Beira', 'phone' => '820000000']);
+        $foreign = $this->product('Alheio', 5, 100, [], $other);
+        $otherWarehouse = Warehouse::create(['company_id' => $other->id, 'name' => 'Deles', 'code' => 'D', 'is_active' => true]);
+        $stock->in($foreign, $otherWarehouse, 9);
+
+        $this->get('/inventory')->assertInertia(fn (Assert $page) => $page
+            ->has('activity', 30)
+            ->where('activity.0.date', now()->subDays(29)->toDateString())
+            ->where('activity.0.entries', 10)
+            ->where('activity.0.exits', 0)
+            ->where('activity.0.movements', 1)
+            ->where('activity.29.date', now()->toDateString())
+            ->where('activity.29.entries', 60)
+            ->where('activity.29.exits', 40)
+            ->where('activity.29.movements', 4)
+            ->where('activity.15.movements', 0) // os dias sem movimentos também vêm, a zero
+        );
+    }
+
+    public function test_work_queue_counts_what_is_waiting_to_be_handled(): void
+    {
+        $transfer = fn (string $status) => StockTransfer::create([
+            'company_id' => $this->company->id, 'from_warehouse_id' => $this->main->id,
+            'to_warehouse_id' => $this->store->id, 'status' => $status,
+        ]);
+        $transfer('pending');
+        $transfer('pending');
+        $transfer('approved');
+        $transfer('completed');
+        $transfer('cancelled');
+
+        $adjustment = fn (string $status) => StockAdjustment::create([
+            'company_id' => $this->company->id, 'warehouse_id' => $this->main->id, 'reason' => 'correction', 'status' => $status,
+        ]);
+        $adjustment('draft');
+        $adjustment('completed');
+
+        $closing = fn (string $status) => InventoryClosing::create([
+            'company_id' => $this->company->id, 'reference_date' => now()->toDateString(), 'status' => $status,
+        ]);
+        $closing('draft');
+        $closing('draft');
+        $closing('completed');
+
+        $this->get('/inventory')->assertInertia(fn (Assert $page) => $page
+            ->where('queue.transfers_pending', 2)
+            ->where('queue.transfers_approved', 1)
+            ->where('queue.adjustments_draft', 1)
+            ->where('queue.closings_open', 2)
+        );
+    }
+
+    public function test_quick_actions_follow_the_permissions_of_the_user(): void
+    {
+        $this->get('/inventory')->assertInertia(fn (Assert $page) => $page
+            ->where('can.adjust', false)
+            ->where('can.transfer', false)
+            ->where('can.catalog', false)
+        );
+
+        foreach (['inventory.transfer', 'catalog.edit'] as $permission) {
+            Permission::findOrCreate($permission, 'web');
+            auth()->user()->givePermissionTo($permission);
+        }
+
+        $this->get('/inventory')->assertInertia(fn (Assert $page) => $page
+            ->where('can.adjust', false)
+            ->where('can.transfer', true)
+            ->where('can.catalog', true)
         );
     }
 

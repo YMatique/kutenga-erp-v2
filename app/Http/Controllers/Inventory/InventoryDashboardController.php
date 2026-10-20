@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Models\Catalog\Product;
+use App\Models\Inventory\InventoryClosing;
 use App\Models\Inventory\ProductStock;
+use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockMovement;
+use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\Warehouse;
 use App\Services\Inventory\StockExporter;
 use Illuminate\Http\Request;
@@ -25,6 +28,9 @@ class InventoryDashboardController extends Controller
 
     /** Quantos produtos mostrar na tabela de atenção; o resto fica a um clique, na lista de stock. */
     private const ATTENTION_LIMIT = 8;
+
+    /** Dias do gráfico de atividade (hoje incluído). */
+    private const ACTIVITY_DAYS = 30;
 
     public function index()
     {
@@ -121,6 +127,8 @@ class InventoryDashboardController extends Controller
             ->limit(10)
             ->get();
 
+        $user = auth()->user();
+
         return Inertia::render('inventory/dashboard/index', [
             'stats' => [
                 'products' => $tracked()->count(),
@@ -133,6 +141,60 @@ class InventoryDashboardController extends Controller
             'attentionProducts' => $attentionProducts,
             'warehouseSummary' => $warehouseSummary,
             'recentMovements' => $recentMovements,
+            'queue' => [
+                'transfers_pending' => StockTransfer::where('company_id', $companyId)->where('status', 'pending')->count(),
+                'transfers_approved' => StockTransfer::where('company_id', $companyId)->where('status', 'approved')->count(),
+                'adjustments_draft' => StockAdjustment::where('company_id', $companyId)->where('status', 'draft')->count(),
+                'closings_open' => InventoryClosing::where('company_id', $companyId)->where('status', 'draft')->count(),
+            ],
+            'activity' => $this->activity($companyId),
+            // Só as ações que o utilizador pode mesmo fazer (as outras dariam 403)
+            'can' => [
+                'adjust' => $user->can('inventory.adjust'),
+                'transfer' => $user->can('inventory.transfer'),
+                'catalog' => $user->can('catalog.edit'),
+            ],
         ]);
+    }
+
+    /**
+     * Valor das entradas e saídas de cada um dos últimos dias, ao custo atual dos produtos
+     * (os movimentos não guardam o custo). O stock inicial fica de fora: é carga de dados,
+     * não atividade. Os ajustes contam como entrada ou saída conforme o sinal.
+     *
+     * @return array<int, array{date: string, entries: float, exits: float, movements: int}>
+     */
+    private function activity(int $companyId): array
+    {
+        $first = now()->subDays(self::ACTIVITY_DAYS - 1)->startOfDay();
+
+        $entry = "stock_movements.type = 'in' OR (stock_movements.type = 'adjustment' AND stock_movements.quantity > 0)";
+        $exit = "stock_movements.type = 'out' OR (stock_movements.type = 'adjustment' AND stock_movements.quantity < 0)";
+        $value = 'ABS(stock_movements.quantity) * COALESCE(products.cost, 0)';
+
+        $perDay = StockMovement::query()
+            ->join('products', 'products.id', '=', 'stock_movements.product_id')
+            ->where('stock_movements.company_id', $companyId)
+            ->where('stock_movements.type', '!=', 'opening')
+            ->where('stock_movements.created_at', '>=', $first)
+            ->groupByRaw('DATE(stock_movements.created_at)')
+            ->selectRaw("DATE(stock_movements.created_at) as day, SUM(CASE WHEN {$entry} THEN {$value} ELSE 0 END) as entries, SUM(CASE WHEN {$exit} THEN {$value} ELSE 0 END) as exits, COUNT(*) as movements")
+            ->get()
+            ->keyBy('day');
+
+        // Todos os dias aparecem, mesmo os sem movimentos, para o eixo ser contínuo
+        return collect(range(0, self::ACTIVITY_DAYS - 1))
+            ->map(function (int $offset) use ($first, $perDay) {
+                $date = $first->copy()->addDays($offset)->toDateString();
+                $row = $perDay->get($date);
+
+                return [
+                    'date' => $date,
+                    'entries' => round((float) ($row->entries ?? 0), 2),
+                    'exits' => round((float) ($row->exits ?? 0), 2),
+                    'movements' => (int) ($row->movements ?? 0),
+                ];
+            })
+            ->all();
     }
 }
