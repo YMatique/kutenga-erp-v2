@@ -92,6 +92,13 @@ class StockAdjustmentController extends Controller
             $data['warehouse_id']
         );
 
+        // Recusa logo, antes de criar o rascunho, uma quantidade que a unidade do produto não aceita
+        $products = Product::with('unit')->whereIn('id', collect($data['items'])->pluck('product_id'))->get()->keyBy('id');
+
+        foreach ($data['items'] as $item) {
+            $stockService->assertQuantityAllowed($products[$item['product_id']], (float) $item['new_quantity']);
+        }
+
         $adjustment = StockAdjustment::create([
             'company_id' => Auth::user()->company_id,
             'warehouse_id' => $warehouse->id,

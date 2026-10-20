@@ -39,6 +39,12 @@ class DemoCatalogSeeder extends Seeder
         ];
     }
 
+    /** Unidades que aceitam quantidades fracionadas (medidas); as restantes são contáveis. */
+    public static function fractionalUnits(): array
+    {
+        return ['KG', 'L', 'M', 'H'];
+    }
+
     /** Categoria => subcategorias. */
     public static function categories(): array
     {
@@ -115,7 +121,7 @@ class DemoCatalogSeeder extends Seeder
             $units[$short] = $this->upsert(
                 Unit::class,
                 ['company_id' => $company->id, 'short_name' => $short],
-                ['name' => $name, 'status' => 'active']
+                ['name' => $name, 'status' => 'active', 'allow_decimals' => in_array($short, self::fractionalUnits(), true)]
             );
         }
 

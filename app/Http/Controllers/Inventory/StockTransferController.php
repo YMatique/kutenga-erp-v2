@@ -78,7 +78,7 @@ class StockTransferController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, StockService $stockService)
     {
         $data = $request->validate([
             'from_warehouse_id' => ['required', 'integer', Tenant::exists('warehouses')],
@@ -88,6 +88,13 @@ class StockTransferController extends Controller
             'items.*.product_id' => ['required', 'integer', 'distinct', Tenant::exists('products')],
             'items.*.quantity' => ['required', 'numeric', 'gt:0'],
         ]);
+
+        // Recusa logo uma quantidade que a unidade do produto não aceita (2,5 caixas não existem)
+        $products = Product::with('unit')->whereIn('id', collect($data['items'])->pluck('product_id'))->get()->keyBy('id');
+
+        foreach ($data['items'] as $item) {
+            $stockService->assertQuantityAllowed($products[$item['product_id']], (float) $item['quantity']);
+        }
 
         DB::transaction(function () use ($data) {
             $transfer = StockTransfer::create([

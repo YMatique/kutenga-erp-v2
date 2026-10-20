@@ -16,7 +16,12 @@ class Unit extends Model
         'company_id',
         'name',
         'short_name',
+        'allow_decimals',
         'status',
+    ];
+
+    protected $casts = [
+        'allow_decimals' => 'boolean',
     ];
 
     public function products(): HasMany

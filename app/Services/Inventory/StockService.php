@@ -75,6 +75,24 @@ class StockService
         return max(0, round((float) $stock->quantity - $this->getReserved($product, $warehouse, $ignoreTransferId, lock: true), 3));
     }
 
+    /**
+     * Uma unidade que não aceita decimais (unidade, caixa, dúzia...) só pode movimentar quantidades
+     * inteiras. Produtos sem unidade, ou com uma que aceita decimais, não têm restrição.
+     */
+    public function assertQuantityAllowed(Product $product, float $quantity): void
+    {
+        $unit = $product->unit;
+
+        if (! $unit || $unit->allow_decimals) {
+            return;
+        }
+
+        // O stock tem 3 casas: abaixo disso é só ruído de vírgula flutuante
+        if (abs($quantity - round($quantity)) > 0.0005) {
+            throw new BusinessRuleException("{$product->name}: a unidade {$unit->name} ({$unit->short_name}) só aceita quantidades inteiras.");
+        }
+    }
+
     public function getTotalStock(Product $product): float
     {
         return (float) ProductStock::where('company_id', $product->company_id)
@@ -192,6 +210,8 @@ class StockService
         ?int $sourceId = null,
         ?string $notes = null
     ): ?StockMovement {
+        $this->assertQuantityAllowed($product, $targetQuantity);
+
         return DB::transaction(function () use ($product, $warehouse, $targetQuantity, $sourceType, $sourceId, $notes) {
             $stock = $this->lockedStockRow($product, $warehouse);
 
@@ -223,6 +243,12 @@ class StockService
 
         if (in_array($type, ['in', 'out'], true) && $quantity <= 0) {
             throw new \InvalidArgumentException('A quantidade do movimento tem de ser positiva.');
+        }
+
+        // Num ajuste a diferença pode ser fracionada mesmo com o alvo inteiro (se o saldo antigo o era),
+        // por isso os ajustes validam-se pela quantidade-alvo, em adjustTo()
+        if ($type !== 'adjustment') {
+            $this->assertQuantityAllowed($product, $quantity);
         }
 
         return DB::transaction(function () use (

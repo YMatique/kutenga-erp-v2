@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
     Table,
     TableBody,
@@ -30,6 +31,7 @@ interface Unit {
     id: number;
     name: string;
     short_name: string;
+    allow_decimals: boolean;
 }
 
 export default function UnitsIndex() {
@@ -41,6 +43,7 @@ export default function UnitsIndex() {
     const { data, setData, post, put, processing, reset, errors } = useForm({
         name: '',
         short_name: '',
+        allow_decimals: true,
     });
 
     const filteredUnits = units.filter(u =>
@@ -75,6 +78,7 @@ export default function UnitsIndex() {
         setData({
             name: unit.name,
             short_name: unit.short_name,
+            allow_decimals: unit.allow_decimals,
         });
         setOpen(true);
     };
@@ -140,8 +144,8 @@ export default function UnitsIndex() {
                                 <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold w-[140px]">
                                     Abreviatura
                                 </TableHead>
-                                <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold w-[140px]">
-                                    Tipo
+                                <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold w-[160px]">
+                                    Quantidades
                                 </TableHead>
                                 <TableHead className="uppercase text-[10px] tracking-wider text-slate-400 font-semibold text-right w-[100px]">
                                     Acções
@@ -189,16 +193,13 @@ export default function UnitsIndex() {
                                             </span>
                                         </TableCell>
 
-                                        {/* TIPO (derivado da sigla) */}
+                                        {/* QUANTIDADES: inteiras (unidade, caixa...) ou fracionadas (kg, litro...) */}
                                         <TableCell>
-                                            <span className="text-xs text-slate-400">
-                                                {/^(kg|g|mg|ton)/i.test(unit.short_name)
-                                                    ? 'Massa'
-                                                    : /^(m|cm|mm|km)/i.test(unit.short_name)
-                                                        ? 'Comprimento'
-                                                        : /^(l|ml|cl)/i.test(unit.short_name)
-                                                            ? 'Volume'
-                                                            : 'Quantidade'}
+                                            <span className={cn(
+                                                'inline-flex items-center px-2 py-1 rounded-[4px] text-xs font-medium',
+                                                unit.allow_decimals ? 'bg-[#2DB8A0]/10 text-[#2DB8A0]' : 'bg-slate-100 text-slate-600',
+                                            )}>
+                                                {unit.allow_decimals ? 'Fracionadas' : 'Só inteiras'}
                                             </span>
                                         </TableCell>
 
@@ -279,6 +280,21 @@ export default function UnitsIndex() {
                                 {errors.short_name && (
                                     <p className="text-xs text-red-500 mt-0.5">{errors.short_name}</p>
                                 )}
+                            </div>
+                            <div className="flex items-center justify-between gap-4 rounded-[4px] border border-slate-200 p-3">
+                                <div className="space-y-0.5">
+                                    <Label htmlFor="allow_decimals" className="text-sm font-medium cursor-pointer">
+                                        Aceita quantidades fracionadas
+                                    </Label>
+                                    <p className="text-xs text-slate-500">
+                                        Ligue para quilos, litros ou metros (2,5 kg). Desligue para unidades, caixas ou dúzias: o stock e as vendas só aceitam números inteiros.
+                                    </p>
+                                </div>
+                                <Switch
+                                    id="allow_decimals"
+                                    checked={data.allow_decimals}
+                                    onCheckedChange={(value) => setData('allow_decimals', value)}
+                                />
                             </div>
                         </div>
                         <DialogFooter className="gap-2 border-t border-slate-100 pt-4">

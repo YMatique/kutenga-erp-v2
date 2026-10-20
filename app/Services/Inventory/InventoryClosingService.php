@@ -39,6 +39,9 @@ class InventoryClosingService
                     continue;
                 }
 
+                // A contagem também respeita a unidade: 2,5 caixas não existem
+                $this->stockService->assertQuantityAllowed($item->product, (float) $item->quantity_counted);
+
                 $difference = round($item->variance_value, 3);
 
                 if (abs($difference) < 0.001) {

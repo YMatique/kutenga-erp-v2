@@ -21,6 +21,7 @@ class UnitController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'short_name' => 'required|string|max:10',
+            'allow_decimals' => 'sometimes|boolean',
         ]);
 
         Unit::create($validated);
@@ -33,6 +34,7 @@ class UnitController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'short_name' => 'required|string|max:10',
+            'allow_decimals' => 'sometimes|boolean',
         ]);
 
         $unit->update($validated);
