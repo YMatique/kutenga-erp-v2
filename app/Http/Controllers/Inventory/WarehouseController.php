@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Models\Catalog\Product;
 use App\Models\Inventory\ProductStock;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockMovement;
@@ -29,11 +30,26 @@ class WarehouseController extends Controller
         ]);
     }
 
-    public function show(Warehouse $warehouse)
+    public function show(Request $request, Warehouse $warehouse)
     {
-        $stocks = ProductStock::with(['product.category', 'product.brand', 'product.unit'])
+        $search = trim((string) $request->query('search', ''));
+
+        // Linhas de produtos que existem (as de produtos apagados ficam de fora)
+        $lines = fn () => ProductStock::query()
             ->where('warehouse_id', $warehouse->id)
-            ->get();
+            ->whereHas('product', fn ($q) => $q->when($search !== '', fn ($q) => $q->search($search)));
+
+        // Os totais são de todo o armazém (ou da pesquisa), não só da página que se vê
+        $totals = $lines()
+            ->selectRaw('COUNT(*) as products, COALESCE(SUM(quantity), 0) as quantity')
+            ->first();
+
+        $stocks = $lines()
+            ->with(['product.category', 'product.brand', 'product.unit'])
+            ->orderBy(Product::select('name')->whereColumn('products.id', 'product_stocks.product_id'))
+            ->orderBy('product_stocks.id')
+            ->paginate(15)
+            ->withQueryString();
 
         $movements = StockMovement::with(['product' => fn ($q) => $q->withTrashed(), 'user'])
             ->where('warehouse_id', $warehouse->id)
@@ -44,6 +60,8 @@ class WarehouseController extends Controller
         return Inertia::render('inventory/warehouses/show', [
             'warehouse' => $warehouse,
             'stocks' => $stocks,
+            'totals' => ['products' => (int) $totals->products, 'quantity' => (float) $totals->quantity],
+            'filters' => ['search' => $search],
             'movements' => $movements,
         ]);
     }

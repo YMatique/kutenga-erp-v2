@@ -200,6 +200,45 @@ class InventoryStockIndexTest extends TestCase
         $this->assertSame(['15', '4', '11'], array_slice($summary[1], 5, 3));
     }
 
+    public function test_warehouse_page_paginates_and_searches_on_the_server_with_totals_for_the_whole_warehouse(): void
+    {
+        foreach (range(1, 20) as $i) {
+            $this->stock(sprintf('Produto %02d', $i), 10);
+        }
+        $this->stock('Noutro armazém', 5, 5, $this->store);
+
+        $this->get("/inventory/warehouses/{$this->main->id}")->assertInertia(fn (Assert $page) => $page
+            ->has('stocks.data', 15)
+            ->where('stocks.total', 20)
+            ->where('stocks.last_page', 2)
+            ->where('stocks.data.0.product.name', 'Produto 01') // ordenado por nome
+            ->where('totals.products', 20) // os totais são do armazém, não da página
+            ->where('totals.quantity', 200)
+        );
+
+        $this->get("/inventory/warehouses/{$this->main->id}?page=2")->assertInertia(fn (Assert $page) => $page->has('stocks.data', 5));
+
+        $this->get("/inventory/warehouses/{$this->main->id}?search=Produto 07")->assertInertia(fn (Assert $page) => $page
+            ->has('stocks.data', 1)
+            ->where('stocks.data.0.product.name', 'Produto 07')
+            ->where('totals.products', 1)
+            ->where('totals.quantity', 10)
+            ->where('filters.search', 'Produto 07')
+        );
+    }
+
+    public function test_warehouse_page_ignores_stock_lines_of_deleted_products(): void
+    {
+        $this->stock('Ativo', 4);
+        $this->stock('Apagado', 0)->product->delete();
+
+        $this->get("/inventory/warehouses/{$this->main->id}")->assertInertia(fn (Assert $page) => $page
+            ->has('stocks.data', 1)
+            ->where('stocks.data.0.product.name', 'Ativo')
+            ->where('totals.products', 1)
+        );
+    }
+
     public function test_export_requires_inventory_permission(): void
     {
         $user = User::create(['company_id' => $this->company->id, 'name' => 'Sem', 'email' => 'sem@x.test', 'password' => bcrypt('password')]);

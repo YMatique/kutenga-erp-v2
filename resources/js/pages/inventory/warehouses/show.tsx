@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react'
+import { Head, Link, router } from '@inertiajs/react'
 import {
     ArrowLeft,
     Pencil,
@@ -13,14 +13,17 @@ import {
     History,
     FileText,
     CheckCircle,
-    XCircle
+    XCircle,
+    Search
 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import {
     PageHeader,
     TableCard,
     OutlineButton,
     KpiCard,
 } from '@/components/ui/brand'
+import { Input } from '@/components/ui/input'
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils'
 
@@ -64,15 +67,48 @@ interface Warehouse {
     is_active: boolean
 }
 
+interface Paginated<T> {
+    data: T[]
+    current_page: number
+    last_page: number
+    total: number
+    links: { url: string | null; label: string; active: boolean }[]
+}
+
 interface Props {
     warehouse: Warehouse
-    stocks: Stock[]
+    stocks: Paginated<Stock>
+    totals: { products: number; quantity: number }
+    filters: { search?: string }
     movements: Movement[]
 }
 
-export default function Show({ warehouse, stocks, movements }: Props) {
-    const totalQty = stocks.reduce((sum, s) => sum + Number(s.quantity), 0)
-    const totalProducts = stocks.length
+export default function Show({ warehouse, stocks, totals, filters, movements }: Props) {
+    const totalQty = totals.quantity
+    const totalProducts = totals.products
+
+    // Pesquisa no servidor: a lista de produtos de um armazém pode ter milhares de linhas
+    const [search, setSearch] = useState(filters?.search ?? '')
+    const firstRun = useRef(true)
+
+    useEffect(() => {
+        if (firstRun.current) {
+            firstRun.current = false
+
+            return
+        }
+
+        const timer = setTimeout(() => {
+            router.get('/inventory/warehouses/' + warehouse.id, search ? { search } : {}, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+                only: ['stocks', 'totals', 'filters'],
+            })
+        }, 300)
+
+        return () => clearTimeout(timer)
+    }, [search, warehouse.id])
 
     const formatDate = (dateStr: string) => {
         try {
@@ -237,9 +273,20 @@ export default function Show({ warehouse, stocks, movements }: Props) {
 
                         {/* PRODUCTS IN STOCK TABLE */}
                         <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                                <WarehouseIcon className="h-5 w-5 text-slate-700" />
-                                <h2 className="text-base font-semibold text-slate-800">Produtos no Armazém</h2>
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div className="flex items-center gap-2">
+                                    <WarehouseIcon className="h-5 w-5 text-slate-700" />
+                                    <h2 className="text-base font-semibold text-slate-800">Produtos no Armazém</h2>
+                                </div>
+                                <div className="relative w-full sm:w-72">
+                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                    <Input
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        placeholder="Pesquisar por nome, SKU ou código..."
+                                        className="h-9 rounded-[4px] border-slate-200 pl-9 text-sm"
+                                    />
+                                </div>
                             </div>
 
                             <TableCard>
@@ -264,17 +311,19 @@ export default function Show({ warehouse, stocks, movements }: Props) {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {stocks.length === 0 ? (
+                                        {stocks.data.length === 0 ? (
                                             <tr>
                                                 <td colSpan={5}>
                                                     <div className="flex flex-col items-center justify-center gap-2 py-12 text-slate-400">
                                                         <Package className="h-8 w-8 text-slate-300" />
-                                                        <p className="text-sm font-medium">Nenhum produto com stock registado neste armazém.</p>
+                                                        <p className="text-sm font-medium">
+                                                            {search ? 'Nenhum produto corresponde à pesquisa.' : 'Nenhum produto com stock registado neste armazém.'}
+                                                        </p>
                                                     </div>
                                                 </td>
                                             </tr>
                                         ) : (
-                                            stocks.map((stock) => (
+                                            stocks.data.map((stock) => (
                                                 <tr
                                                     key={stock.id}
                                                     className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
@@ -310,6 +359,33 @@ export default function Show({ warehouse, stocks, movements }: Props) {
                                         )}
                                     </tbody>
                                 </table>
+
+                                {/* PAGINATION */}
+                                {stocks.last_page > 1 && (
+                                    <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-white">
+                                        <p className="text-xs text-slate-500">
+                                            Página {stocks.current_page} de {stocks.last_page} · {stocks.total} registos
+                                        </p>
+                                        <div className="flex gap-1">
+                                            {stocks.links.map((link, i) => (
+                                                <button
+                                                    key={i}
+                                                    disabled={!link.url}
+                                                    onClick={() => link.url && router.get(link.url, {}, { preserveState: true, preserveScroll: true, only: ['stocks', 'totals', 'filters'] })}
+                                                    className={cn(
+                                                        'px-3 py-1.5 text-xs rounded-[4px] border transition-colors',
+                                                        link.active
+                                                            ? 'bg-[#2DB8A0] text-white border-transparent font-medium'
+                                                            : !link.url
+                                                            ? 'text-slate-300 border-transparent cursor-not-allowed'
+                                                            : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                                                    )}
+                                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </TableCard>
                         </div>
 
