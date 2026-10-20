@@ -2,10 +2,12 @@
 
 namespace App\Services\Inventory;
 
+use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InsufficientStockException;
 use App\Mail\LowStockAlertMail;
 use App\Models\Catalog\Product;
 use App\Models\Company;
+use App\Models\Inventory\InventoryClosing;
 use App\Models\Inventory\ProductStock;
 use App\Models\Inventory\StockMovement;
 use App\Models\Inventory\Warehouse;
@@ -194,6 +196,8 @@ class StockService
             // 0. Bloquear a linha de stock (criando-a se for a primeira vez) até ao fim da transação
             $stock = $this->lockedStockRow($product, $warehouse);
 
+            $this->assertNotBlockedByClosing($product, $warehouse);
+
             if ($type === 'out' && (float) $stock->quantity < $quantity) {
                 throw new InsufficientStockException((float) $stock->quantity);
             }
@@ -245,6 +249,26 @@ class StockService
         $row = ProductStock::withoutGlobalScopes()->createOrFirst($keys, ['quantity' => 0]);
 
         return ProductStock::withoutGlobalScopes()->whereKey($row->id)->lockForUpdate()->firstOrFail();
+    }
+
+    /**
+     * Um fecho de inventário concluído com `blocks_movements` congela o stock do seu armazém
+     * (ou de todos, se não tiver armazém) até à data de referência. Os movimentos são sempre
+     * datados de agora, por isso só um fecho de hoje os bloqueia.
+     */
+    private function assertNotBlockedByClosing(Product $product, Warehouse $warehouse): void
+    {
+        $blocked = InventoryClosing::withoutGlobalScopes()
+            ->where('company_id', $product->company_id)
+            ->where('status', 'completed')
+            ->where('blocks_movements', true)
+            ->where(fn ($q) => $q->whereNull('warehouse_id')->orWhere('warehouse_id', $warehouse->id))
+            ->get()
+            ->contains(fn (InventoryClosing $closing) => $closing->blocksMovementOnDate(now()->startOfDay()));
+
+        if ($blocked) {
+            throw new BusinessRuleException('Os movimentos de stock estão bloqueados por um fecho de inventário concluído.');
+        }
     }
 
     private function updateProductStock(StockMovement $movement): void

@@ -5,7 +5,7 @@ namespace App\Models\Inventory;
 use App\Models\Company;
 use App\Models\User;
 use App\Traits\BelongsToCompany;
-use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -66,7 +66,7 @@ class InventoryClosing extends Model
      * Verifica se este fecho bloqueia um dado movimento de stock.
      * Usado quando blocks_movements = true para validar movimentos retroativos.
      */
-    public function blocksMovementOnDate(Carbon $date): bool
+    public function blocksMovementOnDate(CarbonInterface $date): bool
     {
         return $this->blocks_movements
             && $this->isCompleted()

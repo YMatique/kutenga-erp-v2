@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\BusinessRuleException;
 use App\Http\Middleware\CheckOnboarding;
 use App\Http\Middleware\CheckSubscription;
 use App\Http\Middleware\HandleAppearance;
@@ -9,6 +10,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
@@ -39,6 +41,13 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Regra de negócio recusada e não tratada pelo controller: aviso ao utilizador, nunca erro 500
+        $exceptions->render(function (BusinessRuleException $e, Request $request) {
+            return $request->expectsJson()
+                ? response()->json(['message' => $e->getMessage()], 422)
+                : back()->with('error', $e->getMessage());
+        });
+
         $exceptions->respond(function ($response, $exception, $request) {
             if ($response->getStatusCode() === 403 && $request->isMethod('GET')) {
                 return inertia('errors/error', [

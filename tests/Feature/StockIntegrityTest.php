@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InsufficientStockException;
 use App\Models\Catalog\Branch;
 use App\Models\Catalog\Product;
@@ -423,5 +424,42 @@ class StockIntegrityTest extends TestCase
 
         $this->assertSame(1.0, $this->qty($this->pen, $this->w1));
         $this->assertSame('draft', $closing->fresh()->status);
+    }
+
+    public function test_completed_blocking_closing_freezes_stock_movements_of_its_warehouse(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 10);
+        $this->stock->in($this->pen, $this->w2, 10);
+
+        $closing = $this->closing(blocks: true, warehouse: $this->w1);
+        $closing->items()->update(['quantity_counted' => 9]);
+
+        // Os ajustes do próprio fecho não são bloqueados por ele
+        app(InventoryClosingService::class)->complete($closing);
+        $this->assertSame(9.0, $this->qty($this->pen, $this->w1));
+
+        try {
+            $this->stock->out($this->pen, $this->w1, 1);
+            $this->fail('O movimento devia ser bloqueado.');
+        } catch (BusinessRuleException) {
+            // esperado
+        }
+
+        $this->assertSame(9.0, $this->qty($this->pen, $this->w1));
+
+        // Outro armazém não é afetado
+        $this->stock->out($this->pen, $this->w2, 1);
+        $this->assertSame(9.0, $this->qty($this->pen, $this->w2));
+    }
+
+    public function test_completed_closing_without_blocking_does_not_freeze_stock(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 10);
+        $closing = $this->closing();
+
+        app(InventoryClosingService::class)->complete($closing);
+
+        $this->stock->out($this->pen, $this->w1, 1);
+        $this->assertSame(9.0, $this->qty($this->pen, $this->w1));
     }
 }
