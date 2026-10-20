@@ -765,4 +765,37 @@ class StockIntegrityTest extends TestCase
         $this->assertSame(0.0, $this->qty($this->pen, $this->w2));
         $this->assertSame('approved', $transfer->fresh()->status);
     }
+
+    public function test_stock_list_shows_reserved_and_available_per_warehouse(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 10);
+        $this->stock->in($this->pen, $this->w2, 4);
+        app(StockTransferService::class)->approve($this->transfer('pending', [$this->pen->id => 6]));
+
+        $this->actingAs($this->admin)->get('/inventory/stocks')->assertInertia(fn (Assert $page) => $page
+            ->has('stocks.data', 2)
+            ->where('stocks.data.0.warehouse_id', $this->w1->id)
+            ->where('stocks.data.0.reserved', 6)
+            ->where('stocks.data.0.available', 4)
+            ->where('stocks.data.1.reserved', 0)
+            ->where('stocks.data.1.available', 4)
+        );
+    }
+
+    public function test_transfer_page_shows_the_stock_available_at_the_origin(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 10);
+        $service = app(StockTransferService::class);
+        $first = $this->transfer('pending', [$this->pen->id => 6]);
+        $second = $this->transfer('pending', [$this->pen->id => 3]);
+        $service->approve($first);
+
+        // Para a pendente, o disponível desconta a reserva da outra; para a aprovada, não desconta a sua
+        $this->actingAs($this->admin)->get("/inventory/transfers/{$second->id}")->assertInertia(fn (Assert $page) => $page
+            ->where('transfer.items.0.available', 4)
+        );
+        $this->get("/inventory/transfers/{$first->id}")->assertInertia(fn (Assert $page) => $page
+            ->where('transfer.items.0.available', 10)
+        );
+    }
 }

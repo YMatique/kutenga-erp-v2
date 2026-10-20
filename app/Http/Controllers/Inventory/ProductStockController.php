@@ -21,7 +21,8 @@ class ProductStockController extends Controller
 
         $stocks = $query
             ->paginate(20)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (ProductStock $stock) => $stock->append('available'));
 
         return Inertia::render('inventory/stocks/index', [
             'stocks' => $stocks,
@@ -40,9 +41,11 @@ class ProductStockController extends Controller
     {
         $product->load(['category', 'unit', 'brand']);
 
-        $stocks = ProductStock::with('warehouse')
+        $stocks = ProductStock::withReserved()
+            ->with('warehouse')
             ->where('product_id', $product->id)
-            ->get();
+            ->get()
+            ->each->append('available');
 
         $movements = StockMovement::with(['warehouse', 'user'])
             ->where('product_id', $product->id)

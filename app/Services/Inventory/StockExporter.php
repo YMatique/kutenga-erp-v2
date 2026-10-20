@@ -28,7 +28,8 @@ class StockExporter
     /** Filtros da listagem de stock (partilhados entre o ecrã e a exportação). */
     public static function filteredStocks(Request $request, int $companyId): Builder
     {
-        $query = ProductStock::with(['product.category', 'warehouse'])
+        $query = ProductStock::withReserved()
+            ->with(['product.category', 'warehouse'])
             ->where('company_id', $companyId);
 
         if ($request->filled('search')) {

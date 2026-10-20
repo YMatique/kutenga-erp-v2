@@ -35,6 +35,8 @@ interface Warehouse {
 interface Stock {
     id: number
     quantity: number
+    reserved?: number
+    available?: number
     warehouse: Warehouse
 }
 
@@ -280,6 +282,12 @@ export default function Show({ product, stocks, movements }: Props) {
                                             <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                                                 Quantidade em Stock
                                             </th>
+                                            <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                                Reservado
+                                            </th>
+                                            <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                                Disponível
+                                            </th>
                                             <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 w-[120px]">
                                                 Ação
                                             </th>
@@ -288,7 +296,7 @@ export default function Show({ product, stocks, movements }: Props) {
                                     <tbody>
                                         {stocks.length === 0 ? (
                                             <tr>
-                                                <td colSpan={4}>
+                                                <td colSpan={6}>
                                                     <div className="flex flex-col items-center justify-center gap-2 py-12 text-slate-400">
                                                         <WarehouseIcon className="h-8 w-8 text-slate-300" />
                                                         <p className="text-sm font-medium">Este produto não possui registo de stock em nenhum armazém.</p>
@@ -309,6 +317,12 @@ export default function Show({ product, stocks, movements }: Props) {
                                                     </td>
                                                     <td className="px-4 py-3 text-right font-mono font-semibold text-slate-900 text-base">
                                                         {Number(stock.quantity).toLocaleString('pt-MZ')} {product.unit?.name || 'un'}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right font-mono text-sm text-slate-500">
+                                                        {Number(stock.reserved ?? 0).toLocaleString('pt-MZ')}
+                                                    </td>
+                                                    <td className={`px-4 py-3 text-right font-mono text-sm font-semibold ${Number(stock.available ?? stock.quantity) > 0 ? 'text-[#2DB8A0]' : 'text-red-500'}`}>
+                                                        {Number(stock.available ?? stock.quantity).toLocaleString('pt-MZ')}
                                                     </td>
                                                     <td className="px-4 py-3 text-right">
                                                         <Link

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Catalog\Product;
 use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\Warehouse;
+use App\Services\Inventory\StockService;
 use App\Services\Inventory\StockTransferService;
 use App\Support\Tenant;
 use Illuminate\Http\RedirectResponse;
@@ -114,9 +115,18 @@ class StockTransferController extends Controller
         return $this->run(fn () => $this->service->complete($transfer), 'Transferência concluída.');
     }
 
-    public function show(StockTransfer $transfer)
+    public function show(StockTransfer $transfer, StockService $stockService)
     {
         $transfer->load(['items.product', 'fromWarehouse', 'toWarehouse']);
+
+        // Enquanto está em curso, mostra quanto há disponível na origem para cada produto
+        // (sem contar a reserva da própria transferência, que é dela)
+        if (in_array($transfer->status, ['pending', 'approved'], true)) {
+            $transfer->items->each(fn ($item) => $item->setAttribute(
+                'available',
+                $stockService->getAvailable($item->product, $transfer->fromWarehouse, $transfer->id)
+            ));
+        }
 
         return Inertia::render('inventory/transfers/show', [
             'transfer' => $transfer,

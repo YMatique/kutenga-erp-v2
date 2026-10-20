@@ -28,6 +28,7 @@ interface Product {
 interface TransferItem {
     id: number
     quantity: number
+    available?: number
     product: Product
 }
 
@@ -61,6 +62,7 @@ function StatusBadge({ status }: { status: Transfer['status'] }) {
 }
 
 export default function Show({ transfer }: ShowProps) {
+    const inProgress = ['pending', 'approved'].includes(transfer.status)
     const totalItems = transfer.items?.length || 0
     const totalQty = transfer.items?.reduce(
         (sum: number, i) => sum + Number(i.quantity),
@@ -145,6 +147,7 @@ export default function Show({ transfer }: ShowProps) {
                             <TableRow>
                                 <TableHead className="w-[80px]">#</TableHead>
                                 <TableHead>Produto</TableHead>
+                                {inProgress && <TableHead className="text-right w-[170px]">Disponível na origem</TableHead>}
                                 <TableHead className="text-right w-[150px]">Quantidade</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -152,7 +155,7 @@ export default function Show({ transfer }: ShowProps) {
                         <TableBody>
                             {transfer.items.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
+                                    <TableCell colSpan={inProgress ? 4 : 3} className="h-24 text-center text-muted-foreground">
                                         Nenhum produto adicionado nesta transferência.
                                     </TableCell>
                                 </TableRow>
@@ -165,6 +168,13 @@ export default function Show({ transfer }: ShowProps) {
                                         <TableCell className="font-medium text-foreground">
                                             {i.product.name}
                                         </TableCell>
+                                        {inProgress && (
+                                            <TableCell
+                                                className={`text-right font-mono ${Number(i.available ?? 0) >= Number(i.quantity) ? 'text-[#2DB8A0]' : 'text-red-500'}`}
+                                            >
+                                                {Number(i.available ?? 0).toLocaleString('pt-MZ')}
+                                            </TableCell>
+                                        )}
                                         <TableCell className="text-right font-semibold text-foreground">
                                             {i.quantity}
                                         </TableCell>
