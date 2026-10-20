@@ -328,4 +328,25 @@ class StockIntegrityTest extends TestCase
         $this->assertSame('completed', StockAdjustment::withoutGlobalScopes()->find($adjustment->id)->status);
         $this->assertSame(5.0, $this->qty($this->pen, $this->w1));
     }
+
+    public function test_adjustment_targets_the_balance_at_completion_not_at_draft_time(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 10);
+
+        $adjustment = StockAdjustment::create([
+            'company_id' => $this->company->id, 'warehouse_id' => $this->w1->id,
+            'reason' => 'physical_count', 'status' => 'draft', 'created_by' => $this->admin->id,
+        ]);
+        $item = $adjustment->items()->create(['product_id' => $this->pen->id, 'old_quantity' => 10, 'new_quantity' => 8, 'difference' => -2]);
+
+        // Venda feita depois de o rascunho ser criado
+        $this->stock->out($this->pen, $this->w1, 3);
+
+        app(StockAdjustmentService::class)->complete($adjustment);
+
+        $this->assertSame(8.0, $this->qty($this->pen, $this->w1));
+        $item->refresh();
+        $this->assertEquals(7, $item->old_quantity);
+        $this->assertEquals(1, $item->difference);
+    }
 }

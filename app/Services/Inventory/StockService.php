@@ -135,6 +135,32 @@ class StockService
         );
     }
 
+    /**
+     * Acerta o saldo para a quantidade indicada, calculando a diferença contra o saldo
+     * atual (lido com a linha bloqueada), nunca contra uma contagem antiga.
+     * Devolve null quando o saldo já é o pretendido.
+     */
+    public function adjustTo(
+        Product $product,
+        Warehouse $warehouse,
+        float $targetQuantity,
+        ?string $sourceType = null,
+        ?int $sourceId = null,
+        ?string $notes = null
+    ): ?StockMovement {
+        return DB::transaction(function () use ($product, $warehouse, $targetQuantity, $sourceType, $sourceId, $notes) {
+            $stock = $this->lockedStockRow($product, $warehouse);
+
+            $difference = round($targetQuantity - (float) $stock->quantity, 2);
+
+            if (abs($difference) < 0.01) {
+                return null;
+            }
+
+            return $this->adjust($product, $warehouse, $difference, $sourceType, $sourceId, $notes);
+        });
+    }
+
     /*
     |--------------------------------------------------------------------------
     | CORE DO SISTEMA (MOVIMENTO + ATUALIZAÇÃO DE STOCK)
@@ -169,6 +195,11 @@ class StockService
             $stock = $this->lockedStockRow($product, $warehouse);
 
             if ($type === 'out' && (float) $stock->quantity < $quantity) {
+                throw new InsufficientStockException((float) $stock->quantity);
+            }
+
+            // Um ajuste negativo também não pode deixar o saldo abaixo de zero
+            if ($type === 'adjustment' && (float) $stock->quantity + $quantity < 0) {
                 throw new InsufficientStockException((float) $stock->quantity);
             }
 

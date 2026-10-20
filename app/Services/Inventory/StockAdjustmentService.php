@@ -55,12 +55,6 @@ class StockAdjustmentService
 
             foreach ($adjustment->items as $item) {
 
-                $difference = (float) $item->new_quantity - (float) $item->old_quantity;
-
-                if (abs($difference) < 0.0001) {
-                    continue;
-                }
-
                 $reasonLabel = match ($adjustment->reason) {
                     'physical_count' => 'Contagem Física',
                     'damaged' => 'Produto Danificado',
@@ -69,14 +63,24 @@ class StockAdjustmentService
                     default => 'Outro',
                 };
 
-                $this->stockService->adjust(
+                // O saldo de partida é o de agora, não o do rascunho: vendas feitas entretanto
+                // não podem fazer o stock final divergir da quantidade indicada.
+                $movement = $this->stockService->adjustTo(
                     product: $item->product,
                     warehouse: $adjustment->warehouse,
-                    difference: $difference,
+                    targetQuantity: (float) $item->new_quantity,
                     sourceType: StockAdjustment::class,
                     sourceId: $adjustment->id,
                     notes: "Ajuste #{$adjustment->id} - {$reasonLabel}"
                 );
+
+                // Regista no item o que realmente foi aplicado
+                $difference = $movement ? (float) $movement->quantity : 0.0;
+
+                $item->update([
+                    'old_quantity' => (float) $item->new_quantity - $difference,
+                    'difference' => $difference,
+                ]);
             }
 
             $adjustment->update([
