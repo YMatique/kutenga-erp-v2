@@ -1,8 +1,13 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
+    ArrowLeftRight,
+    ChevronDown,
+    ClipboardCheck,
+    ClipboardList,
     Download,
     Package,
+    PackagePlus,
     PackageSearch,
     Plus,
     Wallet,
@@ -10,6 +15,13 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { KpiCard, OutlineButton, PageHeader, PrimaryButton, StockBadge, TableCard } from '@/components/ui/brand';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     Table,
     TableBody,
@@ -19,6 +31,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
+import ActivityChart from './activity-chart';
 
 const movementLabels: Record<string, { label: string; color: string }> = {
     opening: { label: 'Stock Inicial', color: 'bg-muted text-muted-foreground' },
@@ -50,10 +63,20 @@ function movementDelta(movement: { type: string; quantity: number | string }): n
 }
 
 export default function InventoryDashboard() {
-    const { stats, attentionProducts, warehouseSummary, recentMovements } = usePage<any>().props;
+    const { stats, attentionProducts, warehouseSummary, recentMovements, queue, activity, can } = usePage<any>().props;
 
     const alerts = Number(stats.low_stock) + Number(stats.out_of_stock);
     const hidden = alerts - attentionProducts.length;
+
+    // O que está à espera de ser tratado; só aparece o que tem alguma coisa
+    const workQueue = [
+        { count: queue.transfers_pending, label: 'Transferências por aprovar', hint: 'pendentes', href: '/inventory/transfers?status=pending' },
+        { count: queue.transfers_approved, label: 'Transferências por concluir', hint: 'com stock reservado', href: '/inventory/transfers?status=approved' },
+        { count: queue.adjustments_draft, label: 'Ajustes por concluir', hint: 'em rascunho', href: '/inventory/adjustments?status=draft' },
+        { count: queue.closings_open, label: 'Fechos em contagem', hint: 'inventário em curso', href: '/inventory/closings?status=draft' },
+    ].filter((item) => Number(item.count) > 0);
+
+    const canAct = can.adjust || can.transfer || can.catalog;
 
     return (
         <>
@@ -72,12 +95,47 @@ export default function InventoryDashboard() {
                                     Exportar Relatório
                                 </OutlineButton>
                             </a>
-                            <Link href="/products/create">
-                                <PrimaryButton>
-                                    <Plus className="h-3.5 w-3.5" />
-                                    Novo Produto
-                                </PrimaryButton>
-                            </Link>
+                            {canAct && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <PrimaryButton>
+                                            <Plus className="h-3.5 w-3.5" />
+                                            Ações rápidas
+                                            <ChevronDown className="h-3.5 w-3.5" />
+                                        </PrimaryButton>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-56">
+                                        {can.adjust && (
+                                            <DropdownMenuItem asChild>
+                                                <Link href="/inventory/adjustments/create"><ClipboardList /> Novo ajuste de stock</Link>
+                                            </DropdownMenuItem>
+                                        )}
+                                        {can.transfer && (
+                                            <DropdownMenuItem asChild>
+                                                <Link href="/inventory/transfers/create"><ArrowLeftRight /> Nova transferência</Link>
+                                            </DropdownMenuItem>
+                                        )}
+                                        {can.adjust && (
+                                            <>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href="/inventory/opening"><PackagePlus /> Definir stock inicial</Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href="/inventory/closings/create"><ClipboardCheck /> Novo fecho de inventário</Link>
+                                                </DropdownMenuItem>
+                                            </>
+                                        )}
+                                        {can.catalog && (
+                                            <>
+                                                {(can.adjust || can.transfer) && <DropdownMenuSeparator />}
+                                                <DropdownMenuItem asChild>
+                                                    <Link href="/products/create"><Package /> Novo produto</Link>
+                                                </DropdownMenuItem>
+                                            </>
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
                         </>
                     }
                 />
@@ -114,6 +172,28 @@ export default function InventoryDashboard() {
                     />
                 </div>
 
+                {/* Trabalho por tratar */}
+                {workQueue.length > 0 && (
+                    <div>
+                        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Por tratar</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                            {workQueue.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className="flex items-center gap-4 rounded-[4px] border border-border bg-card px-5 py-3 shadow-xs transition-colors hover:border-[#2DB8A0]/50"
+                                >
+                                    <span className="text-[26px] font-bold leading-none text-foreground">{item.count}</span>
+                                    <span className="min-w-0">
+                                        <span className="block text-sm font-medium text-foreground truncate">{item.label}</span>
+                                        <span className="block text-xs text-muted-foreground">{item.hint}</span>
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Attention Products + Warehouse Summary */}
                 <div className="grid xl:grid-cols-5 gap-4">
 
@@ -137,7 +217,7 @@ export default function InventoryDashboard() {
                                 <TableHeader>
                                     <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
                                         <TableHead className={headClass}>Produto</TableHead>
-                                        <TableHead className={headClass}>Categoria</TableHead>
+                                        <TableHead className={`${headClass} hidden sm:table-cell`}>Categoria</TableHead>
                                         <TableHead className={`${headClass} text-right`}>Stock / Mínimo</TableHead>
                                         <TableHead className={headClass}>Estado</TableHead>
                                         <TableHead className={`${headClass} text-right`}>Ações</TableHead>
@@ -162,7 +242,7 @@ export default function InventoryDashboard() {
                                                 <TableCell className="py-3 font-medium text-foreground text-sm">
                                                     {product.name}
                                                 </TableCell>
-                                                <TableCell className="py-3 text-muted-foreground text-sm">
+                                                <TableCell className="py-3 text-muted-foreground text-sm hidden sm:table-cell">
                                                     {product.category ?? '—'}
                                                 </TableCell>
                                                 <TableCell className="py-3 text-right font-mono text-sm">
@@ -270,6 +350,9 @@ export default function InventoryDashboard() {
                     </div>
                 </div>
 
+                {/* Atividade dos últimos 30 dias */}
+                <ActivityChart days={activity} />
+
                 {/* Movimentos Recentes */}
                 <TableCard>
                     <div className="flex items-center justify-between px-5 py-4 border-b border-border">
@@ -289,8 +372,8 @@ export default function InventoryDashboard() {
                         <TableHeader>
                             <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
                                 <TableHead className={headClass}>Produto</TableHead>
-                                <TableHead className={headClass}>Armazém</TableHead>
-                                <TableHead className={headClass}>Tipo</TableHead>
+                                <TableHead className={`${headClass} hidden sm:table-cell`}>Armazém</TableHead>
+                                <TableHead className={`${headClass} hidden sm:table-cell`}>Tipo</TableHead>
                                 <TableHead className={`${headClass} text-right`}>Quantidade</TableHead>
                                 <TableHead className={`${headClass} text-right`}>Quando</TableHead>
                             </TableRow>
@@ -315,19 +398,19 @@ export default function InventoryDashboard() {
                                             <TableCell className="py-3 text-sm">
                                                 <p className="font-medium text-foreground">{movement.product?.name ?? '—'}</p>
                                                 {movement.notes && (
-                                                    <p className="text-xs text-muted-foreground mt-0.5 max-w-[320px] truncate" title={movement.notes}>
+                                                    <p className="text-xs text-muted-foreground mt-0.5 max-w-[170px] sm:max-w-[320px] truncate" title={movement.notes}>
                                                         {movement.notes}
                                                     </p>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="py-3 text-muted-foreground text-sm hover:text-[#2DB8A0] transition-colors">
+                                            <TableCell className="py-3 text-muted-foreground text-sm hover:text-[#2DB8A0] transition-colors hidden sm:table-cell">
                                                 {movement.warehouse ? (
                                                     <Link href={`/inventory/warehouses/${movement.warehouse.id}`}>
                                                         {movement.warehouse.name}
                                                     </Link>
                                                 ) : '—'}
                                             </TableCell>
-                                            <TableCell className="py-3">
+                                            <TableCell className="py-3 hidden sm:table-cell">
                                                 <span className={`inline-flex items-center text-[11px] font-medium px-2 py-1 rounded-[4px] ${typeInfo.color}`}>
                                                     {typeInfo.label}
                                                 </span>
@@ -347,7 +430,7 @@ export default function InventoryDashboard() {
                                                         minute: '2-digit',
                                                     })}
                                                 </p>
-                                                {movement.user?.name && <p className="mt-0.5">{movement.user.name}</p>}
+                                                {movement.user?.name && <p className="mt-0.5 hidden sm:block">{movement.user.name}</p>}
                                             </TableCell>
                                         </TableRow>
                                     );
