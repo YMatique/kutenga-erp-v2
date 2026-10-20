@@ -195,7 +195,7 @@ export default function InventoryClosingsCreate({ warehouses, stockPreview, toda
                                                     <TableCell className="text-muted-foreground text-xs">{item.product_sku}</TableCell>
                                                     <TableCell className="text-sm">{item.warehouse_name}</TableCell>
                                                     <TableCell className="text-right font-mono text-sm">
-                                                        {Number(item.quantity_current).toFixed(2)}
+                                                        {Number(item.quantity_current).toLocaleString('pt-MZ', { maximumFractionDigits: 3 })}
                                                     </TableCell>
                                                     <TableCell className="text-right text-muted-foreground text-xs">{item.unit}</TableCell>
                                                 </TableRow>

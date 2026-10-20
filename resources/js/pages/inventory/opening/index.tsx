@@ -145,7 +145,7 @@ export default function Index({
                                     ref={quantityRef}
                                     type="number"
                                     min="0"
-                                    step="0.01"
+                                    step="0.001"
                                     value={form.quantity}
                                     onChange={(e) => setForm({ ...form, quantity: e.target.value })}
                                     required

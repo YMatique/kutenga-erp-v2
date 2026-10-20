@@ -51,6 +51,8 @@ type Item = {
     variance_class: 'positive' | 'negative' | 'zero';
 };
 
+const formatQty = (n: number) => n.toLocaleString('pt-MZ', { maximumFractionDigits: 3 });
+
 export default function InventoryClosingsShow({ closing, items, summary }: any) {
     const [counts, setCounts] = useState<Record<number, string>>(() => {
         const map: Record<number, string> = {};
@@ -244,13 +246,13 @@ return <ChevronDown className="h-3.5 w-3.5 text-red-500" />;
                                                 <TableCell className="text-xs text-muted-foreground">{item.product_sku}</TableCell>
                                                 <TableCell className="text-sm">{item.warehouse_name}</TableCell>
                                                 <TableCell className="text-right font-mono text-sm">
-                                                    {item.quantity_expected.toFixed(2)}{' '}
+                                                    {formatQty(item.quantity_expected)}{' '}
                                                     <span className="text-xs text-muted-foreground">{item.unit}</span>
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     {isCompleted ? (
                                                         <span className="font-mono text-sm">
-                                                            {item.quantity_counted !== null ? item.quantity_counted.toFixed(2) : '—'}
+                                                            {item.quantity_counted !== null ? formatQty(item.quantity_counted) : '—'}
                                                         </span>
                                                     ) : (
                                                         <Input
@@ -277,9 +279,9 @@ return <ChevronDown className="h-3.5 w-3.5 text-red-500" />;
                                                     >
                                                         {varianceIcon(varClass)}
                                                         {counted !== undefined
-                                                            ? Math.abs(variance).toFixed(2)
+                                                            ? formatQty(Math.abs(variance))
                                                             : item.quantity_counted !== null
-                                                                ? Math.abs(item.variance).toFixed(2)
+                                                                ? formatQty(Math.abs(item.variance))
                                                                 : '—'}
                                                     </span>
                                                 </TableCell>

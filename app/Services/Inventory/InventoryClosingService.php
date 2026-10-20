@@ -39,9 +39,9 @@ class InventoryClosingService
                     continue;
                 }
 
-                $difference = round($item->variance_value, 2);
+                $difference = round($item->variance_value, 3);
 
-                if (abs($difference) < 0.01) {
+                if (abs($difference) < 0.001) {
                     continue;
                 }
 

@@ -146,7 +146,7 @@ class StockIntegrityTest extends TestCase
         $this->stock->out($this->pen, $this->w1, 4);
 
         $this->assertTrue(
-            collect($queries)->contains(fn ($sql) => preg_match('/update "product_stocks" set "quantity" = "quantity" [+-]/', $sql) === 1),
+            collect($queries)->contains(fn ($sql) => preg_match('/update ["`]product_stocks["`] set ["`]quantity["`] = ["`]quantity["`] [+-]/', $sql) === 1),
             'O saldo devia ser atualizado com quantity = quantity ± delta.'
         );
     }
@@ -618,5 +618,43 @@ class StockIntegrityTest extends TestCase
 
         $this->delete("/products/{$this->pen->id}")->assertSessionHas('success');
         $this->assertNotNull(Product::withoutGlobalScopes()->withTrashed()->find($this->pen->id)->deleted_at);
+    }
+
+    // ── Precisão ────────────────────────────────────────────────────────────
+
+    public function test_fractional_quantities_keep_three_decimals_and_balance_matches_the_movements(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 1);
+        $this->stock->out($this->pen, $this->w1, 0.125);
+        $this->stock->out($this->pen, $this->w1, 0.125);
+        $this->stock->in($this->pen, $this->w1, 0.333);
+
+        $movements = DB::table('stock_movements')->where('product_id', $this->pen->id)->get();
+        $net = $movements->sum(fn ($m) => $m->type === 'out' ? -(float) $m->quantity : (float) $m->quantity);
+
+        $this->assertEqualsWithDelta(1.083, $this->qty($this->pen, $this->w1), 0.00001);
+        $this->assertEqualsWithDelta($net, $this->qty($this->pen, $this->w1), 0.00001);
+        $this->assertEquals(0.125, (float) $movements->firstWhere('type', 'out')->quantity);
+    }
+
+    public function test_fractional_adjustment_and_closing_difference_are_applied_exactly(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 2);
+        $this->stock->in($this->ink, $this->w1, 2);
+
+        $adjustment = StockAdjustment::create([
+            'company_id' => $this->company->id, 'warehouse_id' => $this->w1->id,
+            'reason' => 'physical_count', 'status' => 'draft', 'created_by' => $this->admin->id,
+        ]);
+        $adjustment->items()->create(['product_id' => $this->pen->id, 'old_quantity' => 2, 'new_quantity' => 1.875, 'difference' => -0.125]);
+        app(StockAdjustmentService::class)->complete($adjustment);
+
+        $this->assertEqualsWithDelta(1.875, $this->qty($this->pen, $this->w1), 0.00001);
+
+        $closing = $this->closing();
+        $closing->items()->where('product_id', $this->ink->id)->update(['quantity_counted' => 1.999]);
+        app(InventoryClosingService::class)->complete($closing);
+
+        $this->assertEqualsWithDelta(1.999, $this->qty($this->ink, $this->w1), 0.00001);
     }
 }

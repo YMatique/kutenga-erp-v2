@@ -153,9 +153,9 @@ class StockService
         return DB::transaction(function () use ($product, $warehouse, $targetQuantity, $sourceType, $sourceId, $notes) {
             $stock = $this->lockedStockRow($product, $warehouse);
 
-            $difference = round($targetQuantity - (float) $stock->quantity, 2);
+            $difference = round($targetQuantity - (float) $stock->quantity, 3);
 
-            if (abs($difference) < 0.01) {
+            if (abs($difference) < 0.001) {
                 return null;
             }
 

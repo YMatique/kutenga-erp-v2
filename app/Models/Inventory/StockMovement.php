@@ -28,7 +28,7 @@ class StockMovement extends Model
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:2',
+        'quantity' => 'decimal:3',
     ];
 
     public function product(): BelongsTo
