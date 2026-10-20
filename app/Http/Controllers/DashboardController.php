@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Billing\Document;
 use App\Models\Inventory\StockMovement;
 use App\Services\Inventory\StockAlerts;
+use App\Support\BusinessTime;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -60,7 +61,7 @@ class DashboardController extends Controller
 
         // "Hoje" e o mês a que cada documento pertence contam-se no fuso do negócio (a aplicação
         // guarda os instantes em UTC) e pela data de emissão, não pela de criação do registo.
-        $today = now(config('app.business_timezone'))->startOfDay();
+        $today = BusinessTime::today();
         $monthStart = $today->startOfMonth();
 
         $billed = $this->billed($companyId, $today, $monthStart);

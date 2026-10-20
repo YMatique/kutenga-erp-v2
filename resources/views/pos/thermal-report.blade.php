@@ -33,7 +33,7 @@
         @foreach($meta as $line)
             <div class="meta">{{ $line }}</div>
         @endforeach
-        <div class="meta">Impresso: {{ now()->format('d/m/Y H:i') }}</div>
+        <div class="meta">Impresso: {{ \App\Support\BusinessTime::now()->format('d/m/Y H:i') }}</div>
     </div>
 
     <div class="sep"></div>

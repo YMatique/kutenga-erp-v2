@@ -12,6 +12,7 @@ use App\Models\Billing\PaymentAllocation;
 use App\Models\Pos\CashRegister;
 use App\Models\Pos\PosShift;
 use App\Services\Billing\BillingService;
+use App\Support\BusinessTime;
 use App\Support\Tenant;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
@@ -99,8 +100,8 @@ class PosSaleController extends Controller
             'series_id' => $series->id,
             'branch_id' => $register->branch_id,
             // O dia da venda é o do negócio (Maputo), não o de UTC: à noite já seria "amanhã"
-            'issue_date' => now(config('app.business_timezone'))->toDateString(),
-            'due_date' => now(config('app.business_timezone'))->toDateString(),
+            'issue_date' => BusinessTime::date(),
+            'due_date' => BusinessTime::date(),
             'document_type' => 'FR',
             'source_module' => 'pos',
             'items' => $validated['items'],

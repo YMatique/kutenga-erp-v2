@@ -12,6 +12,8 @@ use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\Warehouse;
 use App\Services\Inventory\StockAlerts;
 use App\Services\Inventory\StockExporter;
+use App\Support\BusinessTime;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -160,7 +162,18 @@ class InventoryDashboardController extends Controller
      */
     private function activity(int $companyId): array
     {
-        $first = now()->subDays(self::ACTIVITY_DAYS - 1)->startOfDay();
+        // Os dias contam-se no fuso do negócio, mas os instantes estão gravados em UTC: um movimento
+        // das 23:30 UTC é já do dia seguinte em Maputo. A janela começa à meia-noite local (em UTC)
+        // e cada movimento passa ao dia certo conforme a hora a que foi gravado.
+        $first = BusinessTime::today()->subDays(self::ACTIVITY_DAYS - 1);
+        $offset = BusinessTime::now()->utcOffset(); // minutos em relação a UTC (Maputo: +120)
+
+        $time = 'TIME(stock_movements.created_at)';
+        [$shift, $direction] = match (true) {
+            $offset > 0 => ["CASE WHEN {$time} >= '".$this->clock(1440 - $offset)."' THEN 1 ELSE 0 END", 1],
+            $offset < 0 => ["CASE WHEN {$time} < '".$this->clock(-$offset)."' THEN 1 ELSE 0 END", -1],
+            default => ['0', 0],
+        };
 
         $entry = "stock_movements.type = 'in' OR (stock_movements.type = 'adjustment' AND stock_movements.quantity > 0)";
         $exit = "stock_movements.type = 'out' OR (stock_movements.type = 'adjustment' AND stock_movements.quantity < 0)";
@@ -170,25 +183,40 @@ class InventoryDashboardController extends Controller
             ->join('products', 'products.id', '=', 'stock_movements.product_id')
             ->where('stock_movements.company_id', $companyId)
             ->where('stock_movements.type', '!=', 'opening')
-            ->where('stock_movements.created_at', '>=', $first)
-            ->groupByRaw('DATE(stock_movements.created_at)')
-            ->selectRaw("DATE(stock_movements.created_at) as day, SUM(CASE WHEN {$entry} THEN {$value} ELSE 0 END) as entries, SUM(CASE WHEN {$exit} THEN {$value} ELSE 0 END) as exits, COUNT(*) as movements")
-            ->get()
-            ->keyBy('day');
+            ->where('stock_movements.created_at', '>=', $first->utc()->toDateTimeString())
+            ->groupByRaw("DATE(stock_movements.created_at), {$shift}")
+            ->selectRaw("DATE(stock_movements.created_at) as day, {$shift} as shifted, SUM(CASE WHEN {$entry} THEN {$value} ELSE 0 END) as entries, SUM(CASE WHEN {$exit} THEN {$value} ELSE 0 END) as exits, COUNT(*) as movements")
+            ->get();
+
+        // Passa cada grupo ao seu dia de negócio e soma os que caíram no mesmo
+        $byDay = [];
+        foreach ($perDay as $row) {
+            $day = CarbonImmutable::parse($row->day)->addDays($row->shifted * $direction)->toDateString();
+            $byDay[$day] ??= ['entries' => 0.0, 'exits' => 0.0, 'movements' => 0];
+            $byDay[$day]['entries'] += (float) $row->entries;
+            $byDay[$day]['exits'] += (float) $row->exits;
+            $byDay[$day]['movements'] += (int) $row->movements;
+        }
 
         // Todos os dias aparecem, mesmo os sem movimentos, para o eixo ser contínuo
         return collect(range(0, self::ACTIVITY_DAYS - 1))
-            ->map(function (int $offset) use ($first, $perDay) {
-                $date = $first->copy()->addDays($offset)->toDateString();
-                $row = $perDay->get($date);
+            ->map(function (int $ago) use ($first, $byDay) {
+                $date = $first->addDays($ago)->toDateString();
+                $row = $byDay[$date] ?? null;
 
                 return [
                     'date' => $date,
-                    'entries' => round((float) ($row->entries ?? 0), 2),
-                    'exits' => round((float) ($row->exits ?? 0), 2),
-                    'movements' => (int) ($row->movements ?? 0),
+                    'entries' => round($row['entries'] ?? 0, 2),
+                    'exits' => round($row['exits'] ?? 0, 2),
+                    'movements' => $row['movements'] ?? 0,
                 ];
             })
             ->all();
+    }
+
+    /** Minutos desde a meia-noite como "HH:MM:SS", para comparar com TIME(). */
+    private function clock(int $minutes): string
+    {
+        return sprintf('%02d:%02d:00', intdiv($minutes, 60), $minutes % 60);
     }
 }

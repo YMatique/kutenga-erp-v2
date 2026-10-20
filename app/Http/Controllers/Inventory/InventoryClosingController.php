@@ -8,6 +8,7 @@ use App\Models\Inventory\InventoryClosingItem;
 use App\Models\Inventory\ProductStock;
 use App\Models\Inventory\Warehouse;
 use App\Services\Inventory\InventoryClosingService;
+use App\Support\BusinessTime;
 use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -106,7 +107,7 @@ class InventoryClosingController extends Controller
         return Inertia::render('inventory/closings/create', [
             'warehouses' => $warehouses,
             'stockPreview' => $stockPreview,
-            'today' => now()->toDateString(),
+            'today' => BusinessTime::date(),
         ]);
     }
 
@@ -118,7 +119,7 @@ class InventoryClosingController extends Controller
         $companyId = Auth::user()->company_id;
 
         $validated = $request->validate([
-            'reference_date' => 'required|date|before_or_equal:today',
+            'reference_date' => 'required|date|before_or_equal:'.BusinessTime::date(),
             'warehouse_id' => ['nullable', Tenant::exists('warehouses')],
             'notes' => 'nullable|string|max:1000',
             'blocks_movements' => 'boolean',

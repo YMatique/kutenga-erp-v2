@@ -333,8 +333,8 @@
             Data:
 
             {{ $document->issue_date
-    ? $document->issue_date->format('d/m/Y H:i')
-    : now()->format('d/m/Y H:i')
+    ? $document->issue_date->format('d/m/Y').' '.\App\Support\BusinessTime::local($document->created_at ?? now())->format('H:i')
+    : \App\Support\BusinessTime::now()->format('d/m/Y H:i')
             }}
 
 

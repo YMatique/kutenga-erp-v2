@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\Pos\CashRegister;
 use App\Models\Pos\PosShift;
 use App\Models\User;
+use App\Support\BusinessTime;
 use App\Support\PrinterHost;
 use Illuminate\Support\Collection;
 use RuntimeException;
@@ -77,14 +78,15 @@ class PosPrintService
             Document::where('company_id', $user->company_id)
                 ->where('source_module', 'pos')
                 ->whereIn('pos_shift_id', $shiftIds)
-                ->whereDate('created_at', today())
+                ->where('issue_date', '>=', BusinessTime::date())
+                ->where('issue_date', '<', BusinessTime::today()->addDay()->toDateString())
         );
 
         return $this->report(
             $user->company,
             $register,
             'Vendas do Dia',
-            [now()->format('d/m/Y'), $allRegisters ? 'Todas as caixas' : 'Operador: '.$user->name],
+            [BusinessTime::now()->format('d/m/Y'), $allRegisters ? 'Todas as caixas' : 'Operador: '.$user->name],
             $this->methodSummary($rows),
             $rows
         );
@@ -134,7 +136,7 @@ class PosPrintService
             ->get()
             ->map(fn ($doc) => [
                 'number' => $doc->document_number ?? '—',
-                'time' => $doc->created_at->format('H:i'),
+                'time' => BusinessTime::local($doc->created_at)->format('H:i'),
                 'total' => (float) $doc->grand_total,
                 'method' => $doc->paymentAllocations->first()?->payment?->payment_method ?? 'cash',
             ]);
@@ -172,7 +174,7 @@ class PosPrintService
             $esc->centered($line);
         }
 
-        $esc->centered('Impresso: '.now()->format('d/m/Y H:i'))->separator();
+        $esc->centered('Impresso: '.BusinessTime::now()->format('d/m/Y H:i'))->separator();
 
         foreach ($data['summary'] as [$label, $value]) {
             $bold = ! str_starts_with($label, ' ');
@@ -223,7 +225,7 @@ class PosPrintService
         $esc->separator()
             ->centered(mb_strtoupper(self::documentTitle($document)), true)
             ->centered($document->document_number ?? 'RASCUNHO', true)
-            ->centered(($document->issue_date ?? now())->format('d/m/Y').' '.($document->created_at ?? now())->format('H:i'));
+            ->centered(($document->issue_date ?? BusinessTime::now())->format('d/m/Y').' '.BusinessTime::local($document->created_at ?? now())->format('H:i'));
 
         if ($document->status === 'cancelled') {
             $esc->centered('*** DOCUMENTO CANCELADO ***', true);

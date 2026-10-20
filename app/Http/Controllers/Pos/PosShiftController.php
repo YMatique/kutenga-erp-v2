@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Pos;
 use App\Http\Controllers\Controller;
 use App\Models\Pos\CashRegister;
 use App\Models\Pos\PosShift;
+use App\Support\BusinessTime;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,6 +48,9 @@ class PosShiftController extends Controller
             ];
         });
 
+        // O dia e o mês de uma venda são os da sua data de emissão, no fuso do negócio
+        $today = BusinessTime::today();
+
         $stats = [
             'total_shifts' => PosShift::where('company_id', $company)
                 ->when(! $canViewAll, fn ($q) => $q->where('user_id', $user->id))
@@ -61,7 +65,8 @@ class PosShiftController extends Controller
                 ->where('documents.source_module', 'pos')
                 ->where('documents.status', '!=', 'cancelled')
                 ->when(! $canViewAll, fn ($q) => $q->where('pos_shifts.user_id', $user->id))
-                ->whereDate('documents.created_at', today())
+                ->where('documents.issue_date', '>=', $today->toDateString())
+                ->where('documents.issue_date', '<', $today->addDay()->toDateString())
                 ->whereNull('documents.deleted_at')
                 ->sum('documents.grand_total'),
             'month_sales' => (float) DB::table('documents')
@@ -70,8 +75,8 @@ class PosShiftController extends Controller
                 ->where('documents.source_module', 'pos')
                 ->where('documents.status', '!=', 'cancelled')
                 ->when(! $canViewAll, fn ($q) => $q->where('pos_shifts.user_id', $user->id))
-                ->whereMonth('documents.created_at', now()->month)
-                ->whereYear('documents.created_at', now()->year)
+                ->where('documents.issue_date', '>=', $today->startOfMonth()->toDateString())
+                ->where('documents.issue_date', '<', $today->startOfMonth()->addMonthNoOverflow()->toDateString())
                 ->whereNull('documents.deleted_at')
                 ->sum('documents.grand_total'),
         ];

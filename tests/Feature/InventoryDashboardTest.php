@@ -11,6 +11,7 @@ use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\Warehouse;
 use App\Models\User;
 use App\Services\Inventory\StockService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Permission;
@@ -39,6 +40,13 @@ class InventoryDashboardTest extends TestCase
         $user = User::create(['company_id' => $this->company->id, 'name' => 'Operador', 'email' => 'u@x.test', 'password' => bcrypt('password')]);
         $user->givePermissionTo('inventory.view');
         $this->actingAs($user);
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
     }
 
     private function product(string $name, float $min = 5, float $cost = 0, array $extra = [], ?Company $company = null): Product
@@ -141,6 +149,8 @@ class InventoryDashboardTest extends TestCase
 
     public function test_activity_values_entries_and_exits_per_day_at_the_current_cost(): void
     {
+        Carbon::setTestNow('2026-10-20 12:00:00');
+
         $product = $this->product('Arroz', cost: 10);
         $stock = app(StockService::class);
 
@@ -171,6 +181,31 @@ class InventoryDashboardTest extends TestCase
             ->where('activity.29.exits', 40)
             ->where('activity.29.movements', 4)
             ->where('activity.15.movements', 0) // os dias sem movimentos também vêm, a zero
+        );
+    }
+
+    public function test_activity_days_are_business_days_not_utc_days(): void
+    {
+        Carbon::setTestNow('2026-10-31 23:30:00'); // já é 1 de novembro em Maputo
+
+        $product = $this->product('Arroz', cost: 10);
+        $stock = app(StockService::class);
+
+        $stock->in($product, $this->main, 3); // 23:30 UTC = 01:30 de 1/11 em Maputo: entrada de 30
+        $earlier = $stock->in($product, $this->main, 2); // 21:00 UTC = 23:00 de 31/10 em Maputo: entrada de 20
+        $earlier->forceFill(['created_at' => '2026-10-31 21:00:00'])->save();
+        $first = $stock->in($product, $this->main, 1); // 21:59 UTC = 23:59 de 3/10: primeiro dia da janela
+        $first->forceFill(['created_at' => '2026-10-03 21:59:00'])->save();
+
+        $this->get('/inventory')->assertInertia(fn (Assert $page) => $page
+            ->where('activity.0.date', '2026-10-03')
+            ->where('activity.0.entries', 10)
+            ->where('activity.28.date', '2026-10-31')
+            ->where('activity.28.entries', 20)
+            ->where('activity.28.movements', 1)
+            ->where('activity.29.date', '2026-11-01')
+            ->where('activity.29.entries', 30)
+            ->where('activity.29.movements', 1)
         );
     }
 

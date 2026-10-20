@@ -15,6 +15,7 @@ use App\Models\Inventory\StockMovement;
 use App\Models\Inventory\Warehouse;
 use App\Models\SystemNotification;
 use App\Services\Inventory\StockService;
+use App\Support\BusinessTime;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -28,7 +29,7 @@ class BillingService
     /** O dia de hoje no fuso do negócio (a aplicação corre em UTC e à noite já seria "amanhã"). */
     private function businessToday(): string
     {
-        return now(config('app.business_timezone'))->toDateString();
+        return BusinessTime::date();
     }
 
     /**

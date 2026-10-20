@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Mail\InvoiceOverdueMail;
 use App\Models\Billing\Document;
 use App\Models\SystemNotification;
-use Carbon\Carbon;
+use App\Support\BusinessTime;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -31,7 +31,8 @@ class CheckDocumentStatus extends Command
      */
     public function handle()
     {
-        $today = Carbon::today();
+        // "Hoje" é o dia do negócio (Maputo): uma fatura que vence hoje só está em atraso a partir de amanhã
+        $today = BusinessTime::today();
         $this->info("Iniciando verificação de documentos expirados para a data: {$today->toDateString()}");
 
         // 1. Verificar Faturas (FT) em atraso (vencidas)
