@@ -12,8 +12,11 @@ use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    /** Estados de um documento já emitido (rascunhos e cancelados não contam). */
-    private const ISSUED = ['confirmed', 'partial', 'paid'];
+    /**
+     * Estados de um documento já emitido (rascunhos e cancelados não contam). `overdue` é o estado
+     * em que o comando diário põe as faturas vencidas: continuam emitidas e por receber.
+     */
+    private const ISSUED = ['confirmed', 'partial', 'paid', 'overdue'];
 
     /** Meses do gráfico, o corrente incluído. */
     private const CHART_MONTHS = 6;
@@ -179,7 +182,7 @@ class DashboardController extends Controller
         $open = Document::query()
             ->where('documents.company_id', $companyId)
             ->where('documents.document_type', 'FT')
-            ->whereIn('documents.status', ['confirmed', 'partial'])
+            ->whereIn('documents.status', ['confirmed', 'partial', 'overdue'])
             ->whereIn('documents.payment_status', ['unpaid', 'partial'])
             ->leftJoinSub($allocated, 'alloc', 'alloc.document_id', '=', 'documents.id')
             ->leftJoinSub($credited, 'cred', 'cred.document_id', '=', 'documents.id')
@@ -262,6 +265,10 @@ class DashboardController extends Controller
     {
         if ($doc->document_type === 'FR' || $doc->payment_status === 'paid') {
             return 'paid';
+        }
+
+        if ($doc->status === 'overdue') {
+            return 'overdue';
         }
 
         if ($doc->payment_status === 'partial' || $doc->status === 'partial') {

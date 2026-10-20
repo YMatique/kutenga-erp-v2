@@ -104,6 +104,26 @@ class DashboardMetricsTest extends TestCase
         $this->assertSame('partial', $a->fresh()->status);
     }
 
+    public function test_invoices_flagged_overdue_by_the_daily_command_still_count(): void
+    {
+        $this->issue('FT', 1000, '2026-10-01', '2026-10-05'); // vencida
+        $this->issue('FT', 500, '2026-10-02', '2026-11-05'); // no prazo
+
+        // O comando agendado passa as faturas vencidas ao estado "overdue"
+        $this->artisan('app:check-document-status')->assertSuccessful();
+        $this->assertSame(1, Document::where('status', 'overdue')->count());
+
+        $props = $this->props();
+
+        $this->assertSame(1500.0, (float) $props['metrics']['billed_month']['value']);
+        $this->assertSame(1500.0, (float) $props['metrics']['receivables']['value']);
+        $this->assertSame(2, $props['metrics']['receivables']['invoices']);
+        $this->assertSame(1000.0, (float) $props['metrics']['overdue']['value']);
+        $this->assertSame(1, $props['metrics']['overdue']['invoices']);
+        $this->assertContains('overdue', collect($props['recent_sales'])->pluck('state')->all());
+        $this->assertEqualsCanonicalizing([['name' => 'Cliente A', 'value' => 1500.0]], $props['top_customers']);
+    }
+
     public function test_billed_month_is_net_of_credit_notes_and_compared_with_the_same_days_of_last_month(): void
     {
         $this->issue('FT', 100, '2026-09-05');
