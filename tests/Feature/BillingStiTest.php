@@ -10,6 +10,7 @@ use App\Models\Billing\Invoice;
 use App\Models\Billing\Quote;
 use App\Models\Catalog\Product;
 use App\Models\Company;
+use App\Models\Inventory\StockMovement;
 use App\Models\Inventory\Warehouse;
 use App\Models\User;
 use App\Services\Billing\BillingService;
@@ -401,5 +402,45 @@ class BillingStiTest extends TestCase
         Mail::assertQueued(InvoiceOverdueMail::class, function ($mail) use ($invoiceConfirmed) {
             return $mail->hasTo('client@example.com') && $mail->document->id === $invoiceConfirmed->id;
         });
+    }
+
+    private function emitInvoice(array $item, ?Warehouse $warehouse = null)
+    {
+        $draft = $this->billingService->createDraft([
+            'customer_id' => $this->customer->id,
+            'customer_name' => $this->customer->name,
+            'customer_nuit' => $this->customer->nuit,
+            'document_type' => 'FT',
+            'series_id' => $this->series->id,
+            'issue_date' => '2026-06-30',
+            'due_date' => '2026-07-30',
+            'items' => [$item + ['quantity' => 2, 'unit_price' => 100.00, 'tax_rate' => 16.00]],
+        ], $this->company->id);
+
+        return $this->billingService->confirmAndEmit($draft->id, $warehouse);
+    }
+
+    public function test_cancelling_an_invoice_returns_stock_to_the_warehouse_it_left(): void
+    {
+        $other = Warehouse::create(['company_id' => $this->company->id, 'name' => 'Outro', 'code' => 'OT', 'is_active' => true, 'is_default' => true]);
+        $this->stockService->opening($this->product, $other, 5.00);
+
+        $invoice = $this->emitInvoice(['product_id' => $this->product->id, 'product_name' => 'Test Product'], $this->warehouse);
+        $this->assertEquals(8, $this->stockService->getStock($this->product, $this->warehouse));
+
+        $this->billingService->cancel($invoice->id);
+
+        $this->assertEquals(10, $this->stockService->getStock($this->product, $this->warehouse));
+        $this->assertEquals(5, $this->stockService->getStock($this->product, $other));
+    }
+
+    public function test_cancelling_a_services_only_invoice_needs_no_warehouse(): void
+    {
+        $invoice = $this->emitInvoice(['product_name' => 'Consultoria']);
+
+        Warehouse::query()->delete();
+
+        $this->assertSame('cancelled', $this->billingService->cancel($invoice->id)->status);
+        $this->assertSame(0, StockMovement::where('source_type', 'document')->where('source_id', $invoice->id)->count());
     }
 }

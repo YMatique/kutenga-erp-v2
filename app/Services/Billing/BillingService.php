@@ -448,20 +448,14 @@ class BillingService
                 return $document;
             }
 
-            // Descobrir qual armazém foi usado para a movimentação
+            // O stock só se reverte no armazém onde este documento o movimentou. Sem movimentos
+            // (serviços, documentos sem itens físicos) não há nada a reverter, nem armazém a adivinhar.
             $warehouseId = StockMovement::where('source_type', 'document')
                 ->where('source_id', $document->id)
                 ->value('warehouse_id');
 
-            $warehouse = $warehouseId ? Warehouse::find($warehouseId) : Warehouse::where('company_id', $document->company_id)->where('is_active', true)->first();
-
-            if (! $warehouse && in_array($document->document_type, ['FT', 'FR', 'NC', 'GR'])) {
-                throw new BusinessRuleException('Não foi possível determinar o armazém para reverter os movimentos de stock.');
-            }
-
-            // Reverte a movimentação física de stock
-            if ($warehouse) {
-                $document->reverseStock($this->stockService, $warehouse);
+            if ($warehouseId) {
+                $document->reverseStock($this->stockService, Warehouse::withTrashed()->findOrFail($warehouseId));
             }
 
             // Reverte a atualização de saldos de conta corrente do cliente
