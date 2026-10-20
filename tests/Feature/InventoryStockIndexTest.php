@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Catalog\Product;
 use App\Models\Company;
 use App\Models\Inventory\ProductStock;
+use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\Warehouse;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -121,8 +122,8 @@ class InventoryStockIndexTest extends TestCase
         $this->assertSame('Produto', $rows[0][0]);
         $this->assertCount(2, $rows); // cabeçalho + Feijão
         $this->assertSame('Feijão', $rows[1][0]);
-        $this->assertSame('Stock baixo', $rows[1][6]);
-        $this->assertSame('3', $rows[1][4]);
+        $this->assertSame('Stock baixo', $rows[1][array_search('Estado', $rows[0])]);
+        $this->assertSame('3', $rows[1][array_search('Quantidade', $rows[0])]);
 
         $all = $this->csv('/inventory/stocks/export?format=csv');
         $this->assertCount(4, $all); // sem filtros: tudo, mesmo havendo mais de uma página de ecrã
@@ -171,6 +172,32 @@ class InventoryStockIndexTest extends TestCase
         $this->assertSame(['Produto', 'SKU', 'Categoria', 'Central', 'Loja', 'Total'], array_slice($rows[0], 0, 6));
         $this->assertSame(['Arroz'], array_slice($rows[1], 0, 1));
         $this->assertSame(['100', '20', '120'], array_slice($rows[1], 3, 3));
+    }
+
+    public function test_exports_include_reserved_and_available_stock(): void
+    {
+        $arroz = $this->stock('Arroz', 10);
+        ProductStock::create(['company_id' => $this->company->id, 'product_id' => $arroz->product_id, 'warehouse_id' => $this->store->id, 'quantity' => 5]);
+
+        // 4 unidades da Central prometidas a uma transferência aprovada
+        $transfer = StockTransfer::create(['company_id' => $this->company->id, 'from_warehouse_id' => $this->main->id, 'to_warehouse_id' => $this->store->id, 'status' => 'approved']);
+        $transfer->items()->create(['product_id' => $arroz->product_id, 'quantity' => 4]);
+        // Uma pendente não reserva
+        $pending = StockTransfer::create(['company_id' => $this->company->id, 'from_warehouse_id' => $this->main->id, 'to_warehouse_id' => $this->store->id, 'status' => 'pending']);
+        $pending->items()->create(['product_id' => $arroz->product_id, 'quantity' => 3]);
+
+        $rows = $this->csv('/inventory/stocks/export?format=csv&warehouse_id='.$this->main->id);
+        $header = $rows[0];
+        $this->assertSame(['10', '4', '6'], [
+            $rows[1][array_search('Quantidade', $header)],
+            $rows[1][array_search('Reservado', $header)],
+            $rows[1][array_search('Disponível', $header)],
+        ]);
+
+        // O relatório consolidado soma os armazéns: 15 em stock, 4 reservados, 11 disponíveis
+        $summary = $this->csv('/inventory/export?format=csv');
+        $this->assertSame(['Total', 'Reservado', 'Disponível'], array_slice($summary[0], 5, 3));
+        $this->assertSame(['15', '4', '11'], array_slice($summary[1], 5, 3));
     }
 
     public function test_export_requires_inventory_permission(): void

@@ -61,7 +61,7 @@ class StockExporter
     public function stocks(Request $request, int $companyId): StreamedResponse
     {
         return $this->download('stock_geral', $request, function (SimpleExcelWriter $writer) use ($request, $companyId) {
-            $writer->addRow(['Produto', 'SKU', 'Categoria', 'Armazém', 'Quantidade', 'Stock mínimo', 'Estado', 'Custo unitário', 'Valor em stock']);
+            $writer->addRow(['Produto', 'SKU', 'Categoria', 'Armazém', 'Quantidade', 'Reservado', 'Disponível', 'Stock mínimo', 'Estado', 'Custo unitário', 'Valor em stock']);
 
             foreach (self::filteredStocks($request, $companyId)->lazy(500) as $stock) {
                 $product = $stock->product;
@@ -74,6 +74,8 @@ class StockExporter
                     $product->category?->name,
                     $stock->warehouse?->name,
                     $quantity,
+                    (float) $stock->reserved,
+                    max(0, round($quantity - (float) $stock->reserved, 3)),
                     (float) $product->min_stock,
                     self::statusLabel($quantity, (float) $product->min_stock),
                     $cost,
@@ -90,17 +92,18 @@ class StockExporter
             $writer->addRow(array_merge(
                 ['Produto', 'SKU', 'Categoria'],
                 $warehouses->pluck('name')->all(),
-                ['Total', 'Stock mínimo', 'Estado', 'Custo unitário', 'Valor em stock'],
+                ['Total', 'Reservado', 'Disponível', 'Stock mínimo', 'Estado', 'Custo unitário', 'Valor em stock'],
             ));
 
             $products = Product::where('company_id', $companyId)
                 ->where('track_stock', true)
-                ->with(['category', 'stocks'])
+                ->with(['category', 'stocks' => fn ($q) => $q->withReserved()])
                 ->orderBy('name');
 
             foreach ($products->lazy(500) as $product) {
                 $byWarehouse = $product->stocks->groupBy('warehouse_id')->map->sum('quantity');
                 $total = (float) $product->stocks->sum('quantity');
+                $reserved = (float) $product->stocks->sum('reserved');
                 $cost = (float) ($product->cost ?? 0);
 
                 $writer->addRow(array_merge(
@@ -108,6 +111,8 @@ class StockExporter
                     $warehouses->map(fn ($w) => (float) ($byWarehouse[$w->id] ?? 0))->all(),
                     [
                         $total,
+                        $reserved,
+                        max(0, round($total - $reserved, 3)),
                         (float) $product->min_stock,
                         self::statusLabel($total, (float) $product->min_stock),
                         $cost,
