@@ -62,7 +62,7 @@ class StockIntegrityTest extends TestCase
             'name' => 'Admin', 'email' => 'admin@test.test', 'password' => bcrypt('password'),
         ]);
 
-        $permissions = ['inventory.view', 'inventory.adjust', 'inventory.transfer'];
+        $permissions = ['inventory.view', 'inventory.adjust', 'inventory.transfer', 'catalog.view', 'catalog.edit'];
         foreach ($permissions as $permission) {
             Permission::findOrCreate($permission, 'web');
         }
@@ -593,5 +593,30 @@ class StockIntegrityTest extends TestCase
             ->has('movements.data', 1)
             ->where('movements.data.0.product.name', 'Tinta')
         );
+    }
+
+    // ── Produtos com stock ──────────────────────────────────────────────────
+
+    public function test_product_with_stock_cannot_be_deleted_or_stop_tracking_stock(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 3);
+
+        $this->actingAs($this->admin)->delete("/products/{$this->pen->id}")->assertSessionHas('error');
+        $this->assertNull(Product::withoutGlobalScopes()->find($this->pen->id)->deleted_at);
+
+        $payload = [
+            'name' => 'Caneta', 'type' => 'product', 'track_stock' => false, 'min_stock' => 0,
+            'price' => 10, 'cost' => 5, 'tax_rate' => 16, 'tax_is_exempt' => false,
+        ];
+        $this->put("/products/{$this->pen->id}", $payload)->assertSessionHasErrors('track_stock');
+        $this->assertTrue((bool) $this->pen->fresh()->track_stock);
+
+        // Sem saldo, ambas as operações são permitidas
+        $this->stock->out($this->pen, $this->w1, 3);
+        $this->put("/products/{$this->pen->id}", $payload)->assertSessionHasNoErrors();
+        $this->assertFalse((bool) $this->pen->fresh()->track_stock);
+
+        $this->delete("/products/{$this->pen->id}")->assertSessionHas('success');
+        $this->assertNotNull(Product::withoutGlobalScopes()->withTrashed()->find($this->pen->id)->deleted_at);
     }
 }

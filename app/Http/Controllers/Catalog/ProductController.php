@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -180,6 +181,13 @@ class ProductController extends Controller
             'internal_notes' => 'nullable|string',
         ]);
 
+        // Desligar o controlo de stock com saldo deixaria esse stock fora de qualquer relatório ou alerta
+        if ($product->track_stock && ! $validated['track_stock'] && $this->hasStock($product)) {
+            throw ValidationException::withMessages([
+                'track_stock' => 'Este item tem stock. Ajuste o stock a zero antes de desligar o controlo de stock.',
+            ]);
+        }
+
         if ($request->hasFile('image')) {
             // Delete old image if it exists
             if ($product->image_path) {
@@ -201,8 +209,17 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        if ($this->hasStock($product)) {
+            return back()->with('error', 'Não é possível remover um item com stock. Ajuste o stock a zero primeiro.');
+        }
+
         $product->delete();
 
         return back()->with('success', 'Item removido com sucesso.');
+    }
+
+    private function hasStock(Product $product): bool
+    {
+        return $product->stocks()->where('quantity', '!=', 0)->exists();
     }
 }
