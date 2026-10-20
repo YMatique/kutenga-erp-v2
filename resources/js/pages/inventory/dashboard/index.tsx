@@ -1,13 +1,11 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
-    ArrowDownRight,
-    ArrowUpRight,
     Download,
     Package,
     PackageSearch,
     Plus,
-    RefreshCw,
+    Wallet,
     Warehouse,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -23,23 +21,39 @@ import {
 import AppLayout from '@/layouts/app-layout';
 
 const movementLabels: Record<string, { label: string; color: string }> = {
-    opening: { label: 'Stock Inicial', color: 'bg-slate-100 text-slate-600' },
+    opening: { label: 'Stock Inicial', color: 'bg-muted text-muted-foreground' },
     in: { label: 'Entrada', color: 'bg-[#2DB8A0]/10 text-[#2DB8A0]' },
-    out: { label: 'Saída', color: 'bg-red-50 text-red-600' },
+    out: { label: 'Saída', color: 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400' },
     adjustment: { label: 'Ajuste', color: 'bg-[#E8A020]/10 text-[#E8A020]' },
 };
 
+const headClass = 'text-[10px] font-semibold uppercase tracking-wider text-muted-foreground h-9';
+
+const formatQty = (n: number | string) => Number(n).toLocaleString('pt-MZ', { maximumFractionDigits: 3 });
+
+const formatCurrency = (val: number | string) =>
+    new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(Number(val));
+
+/** Sinal do efeito de um movimento no stock: entradas e stock inicial somam, saídas subtraem, ajustes têm o sinal da quantidade. */
+function movementDelta(movement: { type: string; quantity: number | string }): number {
+    const quantity = Number(movement.quantity);
+
+    if (movement.type === 'out') {
+        return -Math.abs(quantity);
+    }
+
+    if (movement.type === 'adjustment') {
+        return quantity;
+    }
+
+    return Math.abs(quantity);
+}
+
 export default function InventoryDashboard() {
-    const { stats, lowStockProducts, outOfStockProducts, warehouseSummary, recentMovements } =
-        usePage<any>().props;
+    const { stats, attentionProducts, warehouseSummary, recentMovements } = usePage<any>().props;
 
-    const attentionProducts = [
-        ...outOfStockProducts.map((p: any) => ({ ...p, alertStatus: 'out_of_stock' as const })),
-        ...lowStockProducts.map((p: any) => ({ ...p, alertStatus: 'low' as const })),
-    ];
-
-    const formatCurrency = (val: number | string) =>
-        new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(Number(val));
+    const alerts = Number(stats.low_stock) + Number(stats.out_of_stock);
+    const hidden = alerts - attentionProducts.length;
 
     return (
         <>
@@ -49,7 +63,7 @@ export default function InventoryDashboard() {
                 {/* Page Header */}
                 <PageHeader
                     title="Gestão de Inventário"
-                    subtitle="Visão geral e controle de estoque"
+                    subtitle="Visão geral e controlo de stock"
                     actions={
                         <>
                             <a href="/inventory/export?format=xlsx">
@@ -71,31 +85,31 @@ export default function InventoryDashboard() {
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                     <KpiCard
-                        label="Produtos Ativos"
+                        label="Produtos com Stock"
                         value={stats.products}
                         icon={<Package className="h-4 w-4" />}
                         accent="teal"
-                        description="no catálogo"
+                        description="com controlo de stock"
                     />
                     <KpiCard
                         label="Armazéns"
                         value={stats.warehouses}
                         icon={<Warehouse className="h-4 w-4" />}
                         accent="slate"
-                        description="operacionais"
+                        description="ativos"
                     />
                     <KpiCard
                         label="Valor do Inventário"
                         value={formatCurrency(stats.inventory_value)}
-                        icon={<ArrowUpRight className="h-4 w-4" />}
+                        icon={<Wallet className="h-4 w-4" />}
                         accent="gold"
-                        description="valor total em stock"
+                        description="custo × quantidade em stock"
                     />
                     <KpiCard
                         label="Alertas de Stock"
-                        value={Number(stats.low_stock) + Number(stats.out_of_stock)}
+                        value={alerts}
                         icon={<AlertTriangle className="h-4 w-4" />}
-                        accent={Number(stats.low_stock) + Number(stats.out_of_stock) > 0 ? 'orange' : 'teal'}
+                        accent={alerts > 0 ? 'orange' : 'teal'}
                         description={`${stats.low_stock} baixo · ${stats.out_of_stock} esgotado`}
                     />
                 </div>
@@ -106,52 +120,61 @@ export default function InventoryDashboard() {
                     {/* Produtos que requerem atenção */}
                     <div className="xl:col-span-3">
                         <TableCard>
-                            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                                 <div>
-                                    <h2 className="text-sm font-semibold text-slate-900">Produtos que Requerem Atenção</h2>
-                                    <p className="text-xs text-slate-500 mt-0.5">Stock baixo ou esgotado</p>
+                                    <h2 className="text-sm font-semibold text-foreground">Produtos que Requerem Atenção</h2>
+                                    <p className="text-xs text-muted-foreground mt-0.5">Os mais urgentes: esgotados e abaixo do stock mínimo</p>
                                 </div>
                                 <Link
                                     href="/inventory/stocks"
                                     className="text-xs text-[#2DB8A0] font-medium hover:underline"
                                 >
-                                    Ver todos
+                                    Ver stock
                                 </Link>
                             </div>
 
                             <Table>
                                 <TableHeader>
-                                    <TableRow className="bg-slate-50 hover:bg-slate-50 border-b border-slate-100">
-                                        <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9">PRODUTO</TableHead>
-                                        <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9">CATEGORIA</TableHead>
-                                        <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9">ESTADO</TableHead>
-                                        <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9 text-right">ACÇÕES</TableHead>
+                                    <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                                        <TableHead className={headClass}>Produto</TableHead>
+                                        <TableHead className={headClass}>Categoria</TableHead>
+                                        <TableHead className={`${headClass} text-right`}>Stock / Mínimo</TableHead>
+                                        <TableHead className={headClass}>Estado</TableHead>
+                                        <TableHead className={`${headClass} text-right`}>Ações</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {attentionProducts.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={4} className="h-32 text-center">
-                                                <div className="flex flex-col items-center gap-2 text-slate-400">
+                                            <TableCell colSpan={5} className="h-32 text-center">
+                                                <div className="flex flex-col items-center gap-2 text-muted-foreground">
                                                     <PackageSearch className="h-7 w-7" />
-                                                    <span className="text-sm">Nenhum produto requer atenção.</span>
+                                                    <span className="text-sm">Tudo em ordem: nenhum produto requer atenção.</span>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
                                     ) : (
                                         attentionProducts.map((product: any) => (
                                             <TableRow
-                                                key={`${product.alertStatus}-${product.id}`}
-                                                className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
+                                                key={product.id}
+                                                className="border-b border-border hover:bg-muted/50 transition-colors"
                                             >
-                                                <TableCell className="py-3 font-medium text-slate-900 text-sm">
+                                                <TableCell className="py-3 font-medium text-foreground text-sm">
                                                     {product.name}
                                                 </TableCell>
-                                                <TableCell className="py-3 text-slate-500 text-sm">
-                                                    {product.category?.name ?? '—'}
+                                                <TableCell className="py-3 text-muted-foreground text-sm">
+                                                    {product.category ?? '—'}
+                                                </TableCell>
+                                                <TableCell className="py-3 text-right font-mono text-sm">
+                                                    <span className={product.status === 'out_of_stock' ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-foreground font-semibold'}>
+                                                        {formatQty(product.total_stock)}
+                                                    </span>
+                                                    <span className="text-muted-foreground">
+                                                        {' / '}{formatQty(product.min_stock)}{product.unit ? ` ${product.unit}` : ''}
+                                                    </span>
                                                 </TableCell>
                                                 <TableCell className="py-3">
-                                                    <StockBadge status={product.alertStatus === 'out_of_stock' ? 'out_of_stock' : 'low'} />
+                                                    <StockBadge status={product.status} />
                                                 </TableCell>
                                                 <TableCell className="py-3 text-right">
                                                     <Link
@@ -166,43 +189,78 @@ export default function InventoryDashboard() {
                                     )}
                                 </TableBody>
                             </Table>
+
+                            {alerts > 0 && (
+                                <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 border-t border-border bg-muted/30 text-xs text-muted-foreground">
+                                    <span>
+                                        {hidden > 0 ? `A mostrar ${attentionProducts.length} de ${alerts} produtos em alerta` : `${alerts} produto${alerts !== 1 ? 's' : ''} em alerta`}
+                                    </span>
+                                    <span className="flex items-center gap-4">
+                                        {Number(stats.out_of_stock) > 0 && (
+                                            <Link href="/inventory/stocks?status=out_of_stock" className="text-[#2DB8A0] font-medium hover:underline">
+                                                Ver esgotados ({stats.out_of_stock})
+                                            </Link>
+                                        )}
+                                        {Number(stats.low_stock) > 0 && (
+                                            <Link href="/inventory/stocks?status=low" className="text-[#2DB8A0] font-medium hover:underline">
+                                                Ver stock baixo ({stats.low_stock})
+                                            </Link>
+                                        )}
+                                    </span>
+                                </div>
+                            )}
                         </TableCard>
                     </div>
 
-                    {/* Stock por Armazém */}
+                    {/* Valor por Armazém */}
                     <div className="xl:col-span-2 space-y-4">
-                        <TableCard className="overflow-visible">
+                        <TableCard>
                             <div className="px-5 py-4 border-b border-border">
                                 <h2 className="text-sm font-semibold text-foreground">Stock por Armazém</h2>
-                                <p className="text-xs text-slate-500 mt-0.5">Quantidade por unidade logística</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">Valor em stock e peso de cada armazém</p>
                             </div>
                             <div className="p-4 space-y-2">
                                 {warehouseSummary.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum armazém.</p>
+                                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum armazém ativo.</p>
                                 ) : (
                                     warehouseSummary.map((warehouse: any) => (
                                         <div
                                             key={warehouse.id}
-                                            className="flex items-center justify-between rounded-[4px] border border-border bg-muted/30 px-4 py-3 hover:border-[#2DB8A0]/40 transition-all"
+                                            className="rounded-[4px] border border-border bg-muted/30 px-4 py-3 hover:border-[#2DB8A0]/40 transition-all"
                                         >
-                                            <div className="min-w-0">
-                                                <Link
-                                                    href={`/inventory/warehouses/${warehouse.id}`}
-                                                    className="text-sm font-semibold text-foreground hover:text-[#2DB8A0] transition-colors truncate block"
-                                                >
-                                                    {warehouse.name}
-                                                </Link>
-                                                <div className="text-xs text-muted-foreground mt-0.5">
-                                                    {warehouse.products} produto{warehouse.products !== 1 ? 's' : ''}
+                                            <div className="flex items-center justify-between gap-4">
+                                                <div className="min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <Link
+                                                            href={`/inventory/warehouses/${warehouse.id}`}
+                                                            className="text-sm font-semibold text-foreground hover:text-[#2DB8A0] transition-colors truncate"
+                                                        >
+                                                            {warehouse.name}
+                                                        </Link>
+                                                        {warehouse.is_default && (
+                                                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium">
+                                                                Predefinido
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-xs text-muted-foreground mt-0.5">
+                                                        {warehouse.products} produto{warehouse.products !== 1 ? 's' : ''} com stock
+                                                    </div>
+                                                </div>
+                                                <div className="text-right flex-shrink-0">
+                                                    <div className="text-sm font-bold text-foreground">
+                                                        {formatCurrency(warehouse.value)}
+                                                    </div>
+                                                    <div className="text-[10px] text-muted-foreground">
+                                                        {Number(warehouse.share).toLocaleString('pt-MZ', { maximumFractionDigits: 1 })}% do valor
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="text-right flex-shrink-0 ml-4">
-                                                <div className="text-sm font-bold text-foreground">
-                                                    {Number(warehouse.quantity).toLocaleString()}
-                                                </div>
-                                                <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                                                    unidades
-                                                </div>
+                                            <div className="mt-2 h-1 rounded-full bg-border overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full bg-[#2DB8A0]"
+                                                    style={{ width: `${Math.min(100, Number(warehouse.share))}%` }}
+                                                />
                                             </div>
                                         </div>
                                     ))
@@ -214,10 +272,10 @@ export default function InventoryDashboard() {
 
                 {/* Movimentos Recentes */}
                 <TableCard>
-                    <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                         <div>
-                            <h2 className="text-sm font-semibold text-slate-900">Movimentos Recentes</h2>
-                            <p className="text-xs text-slate-500 mt-0.5">Últimas entradas e saídas de stock</p>
+                            <h2 className="text-sm font-semibold text-foreground">Movimentos Recentes</h2>
+                            <p className="text-xs text-muted-foreground mt-0.5">Últimas entradas, saídas e ajustes de stock</p>
                         </div>
                         <Link
                             href="/inventory/movements"
@@ -229,33 +287,40 @@ export default function InventoryDashboard() {
 
                     <Table>
                         <TableHeader>
-                            <TableRow className="bg-slate-50 hover:bg-slate-50 border-b border-slate-100">
-                                <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9">PRODUTO</TableHead>
-                                <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9">ARMAZÉM</TableHead>
-                                <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9">TIPO</TableHead>
-                                <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 h-9 text-right">QUANTIDADE</TableHead>
+                            <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                                <TableHead className={headClass}>Produto</TableHead>
+                                <TableHead className={headClass}>Armazém</TableHead>
+                                <TableHead className={headClass}>Tipo</TableHead>
+                                <TableHead className={`${headClass} text-right`}>Quantidade</TableHead>
+                                <TableHead className={`${headClass} text-right`}>Quando</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {recentMovements.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center text-slate-400 text-sm">
+                                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground text-sm">
                                         Nenhum movimento registado.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 recentMovements.map((movement: any) => {
-                                    const typeInfo = movementLabels[movement.type] ?? { label: movement.type, color: 'bg-slate-100 text-slate-600' };
+                                    const typeInfo = movementLabels[movement.type] ?? { label: movement.type, color: 'bg-muted text-muted-foreground' };
+                                    const delta = movementDelta(movement);
 
                                     return (
                                         <TableRow
                                             key={movement.id}
-                                            className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
+                                            className="border-b border-border hover:bg-muted/50 transition-colors"
                                         >
-                                            <TableCell className="py-3 font-medium text-slate-900 text-sm">
-                                                {movement.product?.name ?? '—'}
+                                            <TableCell className="py-3 text-sm">
+                                                <p className="font-medium text-foreground">{movement.product?.name ?? '—'}</p>
+                                                {movement.notes && (
+                                                    <p className="text-xs text-muted-foreground mt-0.5 max-w-[320px] truncate" title={movement.notes}>
+                                                        {movement.notes}
+                                                    </p>
+                                                )}
                                             </TableCell>
-                                            <TableCell className="py-3 text-slate-500 text-sm hover:text-[#2DB8A0] transition-colors">
+                                            <TableCell className="py-3 text-muted-foreground text-sm hover:text-[#2DB8A0] transition-colors">
                                                 {movement.warehouse ? (
                                                     <Link href={`/inventory/warehouses/${movement.warehouse.id}`}>
                                                         {movement.warehouse.name}
@@ -268,10 +333,21 @@ export default function InventoryDashboard() {
                                                 </span>
                                             </TableCell>
                                             <TableCell className="py-3 text-right">
-                                                <span className={`text-sm font-bold ${movement.type === 'out' ? 'text-red-600' : movement.type === 'in' ? 'text-[#2DB8A0]' : 'text-slate-700'}`}>
-                                                    {movement.type === 'out' ? '−' : movement.type === 'in' ? '+' : ''}
-                                                    {Number(movement.quantity).toLocaleString()}
+                                                <span className={`text-sm font-bold ${delta < 0 ? 'text-red-600 dark:text-red-400' : 'text-[#2DB8A0]'}`}>
+                                                    {delta < 0 ? '−' : '+'}
+                                                    {formatQty(Math.abs(delta))}
                                                 </span>
+                                            </TableCell>
+                                            <TableCell className="py-3 text-right text-xs text-muted-foreground">
+                                                <p>
+                                                    {new Date(movement.created_at).toLocaleString('pt-MZ', {
+                                                        day: '2-digit',
+                                                        month: '2-digit',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                    })}
+                                                </p>
+                                                {movement.user?.name && <p className="mt-0.5">{movement.user.name}</p>}
                                             </TableCell>
                                         </TableRow>
                                     );
