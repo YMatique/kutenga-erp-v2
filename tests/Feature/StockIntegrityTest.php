@@ -462,4 +462,45 @@ class StockIntegrityTest extends TestCase
         $this->stock->out($this->pen, $this->w1, 1);
         $this->assertSame(9.0, $this->qty($this->pen, $this->w1));
     }
+
+    // ── Armazéns ────────────────────────────────────────────────────────────
+
+    public function test_warehouse_update_ignores_company_id_from_the_request(): void
+    {
+        $foreign = Company::create(['name' => 'Outra', 'nuit' => '987654321', 'address' => 'Beira', 'phone' => '850000000']);
+
+        $this->actingAs($this->admin)
+            ->put("/inventory/warehouses/{$this->w1->id}", ['name' => 'Renomeado', 'company_id' => $foreign->id])
+            ->assertSessionHasNoErrors();
+
+        $warehouse = Warehouse::withoutGlobalScopes()->find($this->w1->id);
+        $this->assertSame('Renomeado', $warehouse->name);
+        $this->assertSame($this->company->id, $warehouse->company_id);
+    }
+
+    public function test_only_one_warehouse_is_the_default(): void
+    {
+        $this->actingAs($this->admin)->put("/inventory/warehouses/{$this->w1->id}", ['name' => 'W1', 'is_default' => true]);
+        $this->put("/inventory/warehouses/{$this->w2->id}", ['name' => 'W2', 'is_default' => true]);
+        $this->post('/inventory/warehouses', ['name' => 'W3']);
+
+        $defaults = Warehouse::withoutGlobalScopes()->where('is_default', true)->pluck('id')->all();
+        $this->assertSame([$this->w2->id], $defaults);
+    }
+
+    public function test_warehouse_with_stock_or_pending_documents_cannot_be_deleted(): void
+    {
+        $this->stock->in($this->pen, $this->w1, 3);
+
+        $this->actingAs($this->admin)->delete("/inventory/warehouses/{$this->w1->id}")->assertSessionHas('error');
+        $this->assertNull(Warehouse::withoutGlobalScopes()->find($this->w1->id)->deleted_at);
+
+        $this->stock->out($this->pen, $this->w1, 3);
+        $this->transfer('pending', [$this->pen->id => 1]);
+        $this->delete("/inventory/warehouses/{$this->w1->id}")->assertSessionHas('error');
+
+        StockTransfer::withoutGlobalScopes()->update(['status' => 'cancelled']);
+        $this->delete("/inventory/warehouses/{$this->w1->id}")->assertSessionHas('success');
+        $this->assertNotNull(Warehouse::withoutGlobalScopes()->withTrashed()->find($this->w1->id)->deleted_at);
+    }
 }
