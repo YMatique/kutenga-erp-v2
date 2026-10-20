@@ -539,4 +539,32 @@ class StockIntegrityTest extends TestCase
 
         $this->assertSame(0, DB::table('stock_movements')->count());
     }
+
+    public function test_adjustment_creation_is_validated(): void
+    {
+        $inactive = Warehouse::create(['company_id' => $this->company->id, 'name' => 'Inativo', 'code' => 'X', 'is_active' => false]);
+        $service = Product::create([
+            'company_id' => $this->company->id, 'name' => 'Serviço', 'slug' => 'servico', 'sku' => 'SRV',
+            'price' => '10.00', 'tax_rate' => '16.00', 'type' => 'service', 'track_stock' => false, 'status' => 'active',
+        ]);
+
+        $item = ['product_id' => $this->pen->id, 'new_quantity' => 5];
+        $valid = ['warehouse_id' => $this->w1->id, 'reason' => 'correction', 'items' => [$item]];
+
+        $cases = [
+            'motivo desconhecido' => [['reason' => 'porque sim'], 'reason'],
+            'armazém inativo' => [['warehouse_id' => $inactive->id], 'warehouse_id'],
+            'produto sem controlo de stock' => [['items' => [['product_id' => $service->id, 'new_quantity' => 1]]], 'items.0.product_id'],
+            'produto repetido' => [['items' => [$item, $item]], 'items.0.product_id'],
+        ];
+
+        foreach ($cases as [$override, $errorKey]) {
+            $this->actingAs($this->admin)->post('/inventory/adjustments', array_merge($valid, $override))->assertSessionHasErrors($errorKey);
+        }
+
+        $this->assertSame(0, StockAdjustment::withoutGlobalScopes()->count());
+
+        $this->post('/inventory/adjustments', $valid)->assertSessionHasNoErrors();
+        $this->assertSame(1, StockAdjustment::withoutGlobalScopes()->count());
+    }
 }

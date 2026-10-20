@@ -11,6 +11,7 @@ use App\Services\Inventory\StockService;
 use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -48,7 +49,7 @@ class StockAdjustmentController extends Controller
             'warehouses' => Warehouse::where(
                 'company_id',
                 $companyId
-            )->get(),
+            )->where('is_active', true)->get(),
 
             'products' => Product::where(
                 'company_id',
@@ -68,15 +69,16 @@ class StockAdjustmentController extends Controller
     public function store(Request $request, StockService $stockService)
     {
         $data = $request->validate([
-            'warehouse_id' => ['required', Tenant::exists('warehouses')],
-            'reason' => ['required', 'string'],
+            'warehouse_id' => ['required', Tenant::exists('warehouses')->where('is_active', true)->whereNull('deleted_at')],
+            'reason' => ['required', Rule::in(['physical_count', 'damaged', 'loss', 'correction', 'other'])],
             'notes' => ['nullable', 'string'],
 
             'items' => ['required', 'array', 'min:1'],
 
             'items.*.product_id' => [
                 'required',
-                Tenant::exists('products'),
+                'distinct',
+                Tenant::exists('products')->where('track_stock', true)->whereNull('deleted_at'),
             ],
 
             'items.*.new_quantity' => [
