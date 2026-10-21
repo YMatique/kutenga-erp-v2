@@ -36,6 +36,8 @@ interface Transfer {
     to_warehouse: Warehouse
     status: 'pending' | 'approved' | 'in_transit' | 'completed' | 'cancelled'
     items_count?: number
+    /** Em trânsito mas já com alguma coisa recebida ou resolvida. */
+    is_partial?: boolean
 }
 
 interface PaginatedTransfers {
@@ -95,13 +97,13 @@ const statusConfig: Record<
     },
 }
 
-function TransferStatusBadge({ status }: { status: Transfer['status'] }) {
+function TransferStatusBadge({ status, partial = false }: { status: Transfer['status']; partial?: boolean }) {
     const cfg = statusConfig[status] ?? statusConfig.pending
 
     return (
         <span className={cn('inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px]', cfg.cls)}>
             <span className={cn('h-1.5 w-1.5 rounded-full flex-shrink-0', cfg.dot)} />
-            {cfg.label}
+            {status === 'in_transit' && partial ? 'Parcialmente recebida' : cfg.label}
         </span>
     )
 }
@@ -306,7 +308,7 @@ return
 
                                         {/* ESTADO */}
                                         <td className="px-4 py-3">
-                                            <TransferStatusBadge status={t.status} />
+                                            <TransferStatusBadge status={t.status} partial={!!t.is_partial} />
                                         </td>
 
                                         {/* TOTAL ITENS */}
