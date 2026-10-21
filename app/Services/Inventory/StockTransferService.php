@@ -69,6 +69,13 @@ class StockTransferService
 
             $locked->load(['items.product', 'fromWarehouse', 'toWarehouse']);
 
+            // Depois de uma receção parcial, o que falta resolve-se ao receber (perda ou devolução), não ao cancelar
+            if ($locked->items->contains(fn ($item) => (float) ($item->received_quantity ?? 0) > 0 || $item->shortage_action !== null)) {
+                throw ValidationException::withMessages([
+                    'status' => 'Esta transferência já foi recebida em parte. Receba o que falta e escolha a perda ou a devolução à origem.',
+                ]);
+            }
+
             $note = "Transferência #{$locked->id} para {$locked->toWarehouse->name} devolvida a {$locked->fromWarehouse->name}";
 
             foreach ($locked->items->sortBy('product_id') as $item) {
@@ -133,13 +140,17 @@ class StockTransferService
     }
 
     /**
-     * Recebe uma transferência em trânsito: a mercadoria entra no armazém de destino. A quantidade
-     * recebida de cada produto pode ser menor do que a enviada (por omissão, é a enviada). O que
-     * falta fica registado e avisa-se o utilizador; para cada produto escolhe-se o seu destino:
-     * "loss" (perda em trânsito, o stock já tinha saído da origem) ou "return" (volta à origem).
+     * Recebe (parte de) uma transferência em trânsito: a mercadoria entra no armazém de destino.
      *
-     * @param  array<int|string, float|int|string>  $received  quantidade recebida por id do item
-     * @param  array<int|string, string>  $shortage  destino da diferença por id do item ("loss" por omissão)
+     * A quantidade indicada de cada produto é a que chegou *agora* (por omissão, tudo o que ainda falta
+     * receber), e soma-se ao que já tinha chegado antes. O que continua em falta tem, para cada produto,
+     * um destino à escolha: "pending" (o resto ainda vem a caminho: a transferência continua em trânsito
+     * e pode receber-se mais tarde), "loss" (perda em trânsito, o stock já tinha saído da origem) ou
+     * "return" (volta à origem). Sem escolha, a diferença é uma perda. A transferência fica concluída
+     * quando já não há nada a caminho de nenhum produto.
+     *
+     * @param  array<int|string, float|int|string>  $received  quantidade chegada agora, por id do item
+     * @param  array<int|string, string>  $shortage  destino do que continua em falta, por id do item
      */
     public function receive(StockTransfer $transfer, array $received = [], array $shortage = []): void
     {
@@ -156,69 +167,91 @@ class StockTransferService
 
             $locked->load(['items.product', 'fromWarehouse', 'toWarehouse']);
 
-            $note = "Transferência #{$locked->id} recebida de {$locked->fromWarehouse->name} em {$locked->toWarehouse->name}";
-            $shortages = [];
+            $closed = [];
+            $stillOnTheWay = false;
+            $changed = false;
 
             foreach ($locked->items->sortBy('product_id') as $item) {
                 $sent = (float) $item->quantity;
-                $got = round((float) ($received[$item->id] ?? $sent), 3);
+                $remaining = $item->remaining;
+                $got = round((float) ($received[$item->id] ?? $remaining), 3);
 
-                if ($got < 0 || $got > $sent) {
+                if ($got < 0 || $got > $remaining) {
                     throw ValidationException::withMessages([
-                        'received' => "A quantidade recebida de {$item->product->name} tem de estar entre 0 e {$sent}.",
+                        'received' => "A quantidade recebida de {$item->product->name} tem de estar entre 0 e {$remaining}.",
                     ]);
                 }
 
                 if ($got > 0) {
+                    $total = round((float) ($item->received_quantity ?? 0) + $got, 3);
+
                     $this->stockService->in(
                         product: $item->product,
                         warehouse: $locked->toWarehouse,
                         quantity: $got,
                         sourceType: StockTransfer::class,
                         sourceId: $locked->id,
-                        notes: $note
+                        notes: "Transferência #{$locked->id} recebida de {$locked->fromWarehouse->name} em {$locked->toWarehouse->name}".($total < $sent ? ' (receção parcial)' : '')
                     );
+
+                    $item->received_quantity = $total;
+                    $changed = true;
                 }
 
-                $action = null;
+                // O que ainda falta deste produto, se já não estava resolvido
+                $missing = round($sent - (float) ($item->received_quantity ?? 0), 3);
 
-                if ($got < $sent) {
-                    $missing = round($sent - $got, 3);
+                if ($item->shortage_action === null && $missing > 0) {
                     $action = $shortage[$item->id] ?? 'loss';
 
-                    if (! in_array($action, ['loss', 'return'], true)) {
+                    if (! in_array($action, ['loss', 'return', 'pending'], true)) {
                         throw ValidationException::withMessages([
-                            'shortage' => "O destino da diferença de {$item->product->name} tem de ser perda ou devolução à origem.",
+                            'shortage' => "O destino da diferença de {$item->product->name} tem de ser perda, devolução à origem ou ainda a caminho.",
                         ]);
                     }
 
-                    if ($action === 'return') {
-                        $this->stockService->in(
-                            product: $item->product,
-                            warehouse: $locked->fromWarehouse,
-                            quantity: $missing,
-                            sourceType: StockTransfer::class,
-                            sourceId: $locked->id,
-                            notes: "Diferença da transferência #{$locked->id} devolvida a {$locked->fromWarehouse->name}"
-                        );
-                    }
+                    if ($action === 'pending') {
+                        $stillOnTheWay = true;
+                    } else {
+                        if ($action === 'return') {
+                            $this->stockService->in(
+                                product: $item->product,
+                                warehouse: $locked->fromWarehouse,
+                                quantity: $missing,
+                                sourceType: StockTransfer::class,
+                                sourceId: $locked->id,
+                                notes: "Diferença da transferência #{$locked->id} devolvida a {$locked->fromWarehouse->name}"
+                            );
+                        }
 
-                    $shortages[] = "{$item->product->name}: enviadas {$sent}, recebidas {$got}, ".($action === 'return'
-                        ? "{$missing} devolvidas à origem"
-                        : "perda de {$missing}");
+                        $item->shortage_action = $action;
+                        $changed = true;
+                        $closed[] = "{$item->product->name}: enviadas {$sent}, recebidas ".(float) ($item->received_quantity ?? 0).', '.($action === 'return'
+                            ? "{$missing} devolvidas à origem"
+                            : "perda de {$missing}");
+                    }
                 }
 
-                $item->update(['received_quantity' => $got, 'shortage_action' => $action]);
+                $item->save();
             }
 
-            $locked->update(['status' => 'completed', 'received_at' => now(), 'received_by' => Auth::id()]);
+            // Uma receção que não recebe nada nem resolve nada não faria mais do que deixar um registo vazio
+            if (! $changed) {
+                throw ValidationException::withMessages([
+                    'received' => 'Indique o que chegou, ou o que fazer ao que falta (perda ou devolução).',
+                ]);
+            }
 
-            if ($shortages) {
+            if (! $stillOnTheWay) {
+                $locked->update(['status' => 'completed', 'received_at' => now(), 'received_by' => Auth::id()]);
+            }
+
+            if ($closed) {
                 SystemNotification::create([
                     'company_id' => $locked->company_id,
                     'type' => 'transfer_discrepancy',
                     'title' => 'Diferença numa transferência',
-                    'message' => "A transferência #{$locked->id} chegou a {$locked->toWarehouse->name} com diferenças: ".implode('; ', $shortages).'.',
+                    'message' => "A transferência #{$locked->id} chegou a {$locked->toWarehouse->name} com diferenças: ".implode('; ', $closed).'.',
                     'link' => "/inventory/transfers/{$locked->id}",
                     'is_read' => false,
                 ]);

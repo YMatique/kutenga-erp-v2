@@ -29,6 +29,8 @@ class StockTransferController extends Controller
 
         $query = StockTransfer::with(['fromWarehouse', 'toWarehouse'])
             ->withCount('items')
+            // Em trânsito e já com alguma coisa recebida ou resolvida: "parcialmente recebida"
+            ->withExists(['items as is_partial' => fn ($q) => $q->where(fn ($q) => $q->where('received_quantity', '>', 0)->orWhereNotNull('shortage_action'))])
             ->where('company_id', $companyId);
 
         // filtro por status
@@ -124,7 +126,7 @@ class StockTransferController extends Controller
             'received' => ['nullable', 'array'],
             'received.*' => ['numeric', 'min:0'],
             'shortage' => ['nullable', 'array'],
-            'shortage.*' => ['in:loss,return'],
+            'shortage.*' => ['in:loss,return,pending'],
         ]);
 
         return $this->run(
@@ -136,6 +138,9 @@ class StockTransferController extends Controller
     public function show(StockTransfer $transfer, StockService $stockService)
     {
         $transfer->load(['items.product', 'fromWarehouse', 'toWarehouse']);
+
+        // O que ainda falta receber de cada produto, para o ecrã de receção
+        $transfer->items->each->append('remaining');
 
         // Enquanto está em curso, mostra quanto há disponível na origem para cada produto
         // (sem contar a reserva da própria transferência, que é dela)

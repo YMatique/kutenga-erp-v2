@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Catalog\Product;
 use App\Models\Inventory\ProductStock;
 use App\Models\Inventory\StockMovement;
+use App\Models\Inventory\StockTransferItem;
 use App\Models\Inventory\Warehouse;
 use App\Services\Inventory\StockExporter;
 use Illuminate\Http\Request;
@@ -57,20 +58,21 @@ class ProductStockController extends Controller
             ->where('stock_transfers.company_id', $product->company_id)
             ->where('stock_transfers.status', 'in_transit')
             ->where('stock_transfer_items.product_id', $product->id)
+            ->whereRaw('('.StockTransferItem::REMAINING_SQL.') > 0')
             ->orderBy('stock_transfers.shipped_at')
             ->get([
                 'stock_transfers.id as transfer_id',
                 'origin.name as from',
                 'destination.name as to',
                 'stock_transfers.shipped_at',
-                'stock_transfer_items.quantity',
+                DB::raw('('.StockTransferItem::REMAINING_SQL.') as remaining'),
             ])
             ->map(fn ($row) => [
                 'transfer_id' => $row->transfer_id,
                 'from' => $row->from,
                 'to' => $row->to,
                 'shipped_at' => $row->shipped_at,
-                'quantity' => (float) $row->quantity,
+                'quantity' => (float) $row->remaining,
             ]);
 
         $movements = StockMovement::with(['warehouse', 'user'])

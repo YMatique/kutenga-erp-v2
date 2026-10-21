@@ -61,7 +61,7 @@ class ProductStock extends Model
 
         $incoming = DB::table('stock_transfer_items')
             ->join('stock_transfers', 'stock_transfers.id', '=', 'stock_transfer_items.stock_transfer_id')
-            ->selectRaw('coalesce(sum(stock_transfer_items.quantity), 0)')
+            ->selectRaw('coalesce(sum('.StockTransferItem::REMAINING_SQL.'), 0)')
             ->where('stock_transfers.status', 'in_transit')
             ->whereColumn('stock_transfers.company_id', 'product_stocks.company_id')
             ->whereColumn('stock_transfers.to_warehouse_id', 'product_stocks.warehouse_id')

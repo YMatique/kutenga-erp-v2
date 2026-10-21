@@ -9,6 +9,7 @@ use App\Models\Inventory\ProductStock;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockMovement;
 use App\Models\Inventory\StockTransfer;
+use App\Models\Inventory\StockTransferItem;
 use App\Models\Inventory\Warehouse;
 use App\Services\Inventory\StockAlerts;
 use App\Services\Inventory\StockExporter;
@@ -143,7 +144,7 @@ class InventoryDashboardController extends Controller
             ->where('stock_transfers.company_id', $companyId)
             ->where('stock_transfers.status', 'in_transit')
             ->when($warehouseId, fn ($q) => $q->where(fn ($q) => $q->where('stock_transfers.from_warehouse_id', $warehouseId)->orWhere('stock_transfers.to_warehouse_id', $warehouseId)))
-            ->sum(DB::raw('stock_transfer_items.quantity * COALESCE(products.cost, 0)'));
+            ->sum(DB::raw('('.StockTransferItem::REMAINING_SQL.') * COALESCE(products.cost, 0)'));
 
         // O trabalho por tratar também se filtra: transferências que saem ou chegam ao armazém,
         // ajustes dele e fechos dele ou de todos os armazéns
