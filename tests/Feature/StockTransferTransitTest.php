@@ -44,11 +44,11 @@ class StockTransferTransitTest extends TestCase
         $this->origin = Warehouse::create(['company_id' => $this->company->id, 'name' => 'Maputo', 'code' => 'MP', 'is_active' => true]);
         $this->destination = Warehouse::create(['company_id' => $this->company->id, 'name' => 'Beira', 'code' => 'BR', 'is_active' => true]);
 
-        foreach (['inventory.view', 'inventory.transfer'] as $permission) {
+        foreach (['inventory.view', 'inventory.transfer', 'inventory.receive'] as $permission) {
             Permission::findOrCreate($permission, 'web');
         }
         $user = User::create(['company_id' => $this->company->id, 'name' => 'Operador', 'email' => 'o@x.test', 'password' => bcrypt('password')]);
-        $user->givePermissionTo(['inventory.view', 'inventory.transfer']);
+        $user->givePermissionTo(['inventory.view', 'inventory.transfer', 'inventory.receive']);
         $this->actingAs($user);
 
         $product = fn (string $name) => Product::create([

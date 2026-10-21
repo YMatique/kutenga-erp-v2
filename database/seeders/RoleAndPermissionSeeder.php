@@ -24,6 +24,7 @@ class RoleAndPermissionSeeder extends Seeder
             'sales.view',
             'sales.cancel',
             'inventory.transfer',
+            'inventory.receive',
             'inventory.view',
             'inventory.adjust',
             'invoice.create',

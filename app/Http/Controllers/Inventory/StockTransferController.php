@@ -55,6 +55,7 @@ class StockTransferController extends Controller
         return inertia('inventory/transfers/index', [
             'transfers' => $transfers,
             'filters' => $request->only(['status', 'search']),
+            'can' => $this->abilities(),
         ]);
     }
 
@@ -147,6 +148,7 @@ class StockTransferController extends Controller
 
         return Inertia::render('inventory/transfers/show', [
             'transfer' => $transfer,
+            'can' => $this->abilities(),
         ]);
     }
 
@@ -161,6 +163,17 @@ class StockTransferController extends Controller
     public function approve(StockTransfer $transfer)
     {
         return $this->run(fn () => $this->service->approve($transfer), 'Transferência aprovada.');
+    }
+
+    /** O que o utilizador pode fazer, para o ecrã só mostrar as ações que não acabariam num 403. */
+    private function abilities(): array
+    {
+        $user = auth()->user();
+
+        return [
+            'transfer' => $user->can('inventory.transfer'),
+            'receive' => $user->can('inventory.receive'),
+        ];
     }
 
     /** Executa a ação e mostra as recusas de regra de negócio como aviso, não como erro 500. */

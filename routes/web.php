@@ -154,6 +154,10 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
             Route::post('/transfers', [StockTransferController::class, 'store']);
             Route::post('/transfers/{transfer}/complete', [StockTransferController::class, 'complete']);
             Route::post('/transfers/{transfer}/ship', [StockTransferController::class, 'ship'])->name('inventory.transfers.ship');
+        });
+
+        // Inventory Receive: quem recebe no destino pode não ser quem cria ou envia a transferência
+        Route::middleware('can:inventory.receive')->group(function () {
             Route::post('/transfers/{transfer}/receive', [StockTransferController::class, 'receive'])->name('inventory.transfers.receive');
         });
     });

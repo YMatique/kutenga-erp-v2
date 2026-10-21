@@ -48,6 +48,7 @@ interface Transfer {
 
 interface ShowProps {
     transfer: Transfer
+    can: { transfer: boolean; receive: boolean }
 }
 
 function StatusBadge({ status }: { status: Transfer['status'] }) {
@@ -71,7 +72,7 @@ function StatusBadge({ status }: { status: Transfer['status'] }) {
 const formatMoment = (value?: string | null) =>
     value ? new Date(value).toLocaleString('pt-MZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null
 
-export default function Show({ transfer }: ShowProps) {
+export default function Show({ transfer, can }: ShowProps) {
     const inProgress = ['pending', 'approved'].includes(transfer.status)
     const inTransit = transfer.status === 'in_transit'
     const hasReceipt = transfer.items?.some((i) => i.received_quantity !== null && i.received_quantity !== undefined)
@@ -229,7 +230,9 @@ export default function Show({ transfer }: ShowProps) {
                                         </TableCell>
                                         {(inTransit || hasReceipt) && (
                                             <TableCell className="text-right">
-                                                {inTransit ? (
+                                                {inTransit && !can.receive ? (
+                                                    <span className="text-xs text-muted-foreground">aguarda receção</span>
+                                                ) : inTransit ? (
                                                     <div className="flex flex-col items-end gap-1">
                                                         <Input
                                                             type="number"
@@ -282,7 +285,7 @@ export default function Show({ transfer }: ShowProps) {
                 <div className="flex justify-end gap-3 pt-2">
                     
                     {/* CANCELAR */}
-                    {['pending', 'approved', 'in_transit'].includes(transfer.status) && (
+                    {can.transfer && ['pending', 'approved', 'in_transit'].includes(transfer.status) && (
                         <Button variant="destructive" className="gap-2" asChild>
                             <Link
                                 href={`/inventory/transfers/${transfer.id}/cancel`}
@@ -297,7 +300,7 @@ export default function Show({ transfer }: ShowProps) {
                     )}
 
                     {/* APROVAR */}
-                    {transfer.status === 'pending' && (
+                    {can.transfer && transfer.status === 'pending' && (
                         <Button variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900/50 dark:hover:bg-blue-950/20 gap-2" asChild>
                             <Link 
                                 href={`/inventory/transfers/${transfer.id}/approve`} 
@@ -311,7 +314,7 @@ export default function Show({ transfer }: ShowProps) {
                     )}
 
                     {/* ENVIAR: a mercadoria sai da origem e fica em trânsito até ser recebida */}
-                    {transfer.status === 'approved' && (
+                    {can.transfer && transfer.status === 'approved' && (
                         <Button variant="outline" className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 dark:text-indigo-400 dark:border-indigo-900/50 dark:hover:bg-indigo-950/20 gap-2" asChild>
                             <Link
                                 href={`/inventory/transfers/${transfer.id}/ship`}
@@ -326,7 +329,7 @@ export default function Show({ transfer }: ShowProps) {
                     )}
 
                     {/* CONCLUIR DE IMEDIATO: para armazéns no mesmo local, sai e entra no mesmo momento */}
-                    {transfer.status === 'approved' && (
+                    {can.transfer && transfer.status === 'approved' && (
                         <Button className="bg-green-600 hover:bg-green-700 gap-2" asChild>
                             <Link
                                 href={`/inventory/transfers/${transfer.id}/complete`}
@@ -341,7 +344,7 @@ export default function Show({ transfer }: ShowProps) {
                     )}
 
                     {/* RECEBER: confirma o que chegou ao destino (por omissão, tudo o que foi enviado) */}
-                    {inTransit && (
+                    {inTransit && can.receive && (
                         <Button className="bg-green-600 hover:bg-green-700 gap-2" onClick={confirmReceipt} disabled={receiving}>
                             <Check className="h-4 w-4" />
                             {receiving ? 'A registar...' : 'Confirmar receção'}

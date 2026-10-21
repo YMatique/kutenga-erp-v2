@@ -54,6 +54,7 @@ interface Filters {
 interface IndexProps {
     transfers: PaginatedTransfers
     filters: Filters
+    can: { transfer: boolean; receive: boolean }
 }
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
@@ -107,7 +108,7 @@ function TransferStatusBadge({ status }: { status: Transfer['status'] }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function Index({ transfers, filters }: IndexProps) {
+export default function Index({ transfers, filters, can }: IndexProps) {
     const [search, setSearch] = useState(filters?.search || '')
     const [status, setStatus] = useState(filters?.status || 'all')
 
@@ -149,12 +150,14 @@ return
                     title="Transferências de Stock"
                     subtitle="Gestão de movimentação de stock entre armazéns"
                     actions={
-                        <Link href="/inventory/transfers/create">
-                            <PrimaryButton>
-                                <Plus className="h-4 w-4" />
-                                Nova Transferência
-                            </PrimaryButton>
-                        </Link>
+                        can.transfer && (
+                            <Link href="/inventory/transfers/create">
+                                <PrimaryButton>
+                                    <Plus className="h-4 w-4" />
+                                    Nova Transferência
+                                </PrimaryButton>
+                            </Link>
+                        )
                     }
                 />
 
@@ -322,7 +325,7 @@ return
                                                     Ver
                                                 </Link>
 
-                                                {t.status === 'pending' && (
+                                                {can.transfer && t.status === 'pending' && (
                                                     <Link
                                                         href={`/inventory/transfers/${t.id}/approve`}
                                                         method="post"
@@ -333,7 +336,7 @@ return
                                                     </Link>
                                                 )}
 
-                                                {t.status === 'approved' && (
+                                                {can.transfer && t.status === 'approved' && (
                                                     <Link
                                                         href={`/inventory/transfers/${t.id}/ship`}
                                                         method="post"
@@ -345,7 +348,7 @@ return
                                                     </Link>
                                                 )}
 
-                                                {t.status === 'approved' && (
+                                                {can.transfer && t.status === 'approved' && (
                                                     <Link
                                                         href={`/inventory/transfers/${t.id}/complete`}
                                                         method="post"
