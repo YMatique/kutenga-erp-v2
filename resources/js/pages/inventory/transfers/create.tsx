@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 
 import { CameraScanButton } from '@/components/camera-scanner'
+import { ProductPicker } from '@/components/product-picker'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -11,12 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useBarcodeScanner } from '@/hooks/use-barcode-scanner'
 import AppLayout from '@/layouts/app-layout';
-import { matchesCode } from '@/lib/product-lookup'
+import { findProductByCode } from '@/lib/product-search'
+import type { PickedProduct } from '@/lib/product-search'
 import { beepError, beepSuccess } from '@/lib/scan-feedback'
 
 export default function CreateTransfer() {
 
-const { warehouses = [], products = [] }: any = usePage().props
+    // Os produtos não vêm com a página: o seletor pesquisa-os no servidor, com o stock da origem
+    const { warehouses = [] }: any = usePage().props
 
     const { data, setData, post, processing } = useForm({
         from_warehouse_id: '',
@@ -25,50 +28,62 @@ const { warehouses = [], products = [] }: any = usePage().props
         notes: '',
     })
 
-    const [productId, setProductId] = useState('')
+    const [picked, setPicked] = useState<PickedProduct | null>(null)
     const [quantity, setQuantity] = useState(1)
 
     function addItem() {
-        if (!productId || quantity <= 0) {
-return
-}
+        if (!picked || quantity <= 0) {
+            return
+        }
 
-        const product = products.find((p: any) => p.id == productId)
-
-        setData('items', [
-            ...data.items,
-            {
-                product_id: product.id,
-                name: product.name,
-                quantity: Number(quantity),
-            }
-        ])
-
-        setProductId('')
+        addOrIncrease(picked, Number(quantity))
+        setPicked(null)
         setQuantity(1)
     }
 
-    // Cada leitura adiciona 1 unidade do produto à transferência
-    const handleScan = (code: string) => {
-        const product = products.find((p: any) => matchesCode(p, code))
+    // Soma à linha do produto, se já estiver na transferência, em vez de repetir o produto
+    function addOrIncrease(product: PickedProduct, amount: number) {
+        setData((previous: any) => {
+            const index = previous.items.findIndex((i: any) => i.product_id === product.id)
 
-        if (!product) {
+            if (index >= 0) {
+                const items = [...previous.items]
+                items[index] = { ...items[index], quantity: Number(items[index].quantity) + amount }
+
+                return { ...previous, items }
+            }
+
+            return { ...previous, items: [...previous.items, { product_id: product.id, name: product.name, quantity: amount }] }
+        })
+    }
+
+    // Cada leitura adiciona 1 unidade do produto à transferência
+    const handleScan = async (code: string) => {
+        if (!data.from_warehouse_id) {
             beepError()
-            toast.error(`Código ${code} não encontrado entre os produtos com stock.`)
+            toast.error('Escolha primeiro o armazém de origem.')
 
             return
         }
 
-        const existing = data.items.findIndex((i: any) => i.product_id === product.id)
+        let product: PickedProduct | null = null
 
-        if (existing >= 0) {
-            const items = [...data.items] as any[]
-            items[existing] = { ...items[existing], quantity: items[existing].quantity + 1 }
-            setData('items', items as any)
-        } else {
-            setData('items', [...data.items, { product_id: product.id, name: product.name, quantity: 1 }] as any)
+        try {
+            product = await findProductByCode(code, { warehouseId: data.from_warehouse_id, inStock: true })
+        } catch {
+            toast.error('Falha ao consultar o código. Verifique a ligação.')
+
+            return
         }
 
+        if (!product) {
+            beepError()
+            toast.error(`Código ${code} não encontrado entre os produtos com stock na origem.`)
+
+            return
+        }
+
+        addOrIncrease(product, 1)
         beepSuccess()
         toast.success(product.name, { duration: 1200 })
     }
@@ -112,9 +127,11 @@ return
                         <div className="space-y-2">
                             <Label>Origem</Label>
                             <Select
-                                onValueChange={(v) =>
+                                onValueChange={(v) => {
                                     setData('from_warehouse_id', v)
-                                }
+                                    // O stock mostrado era o da origem anterior
+                                    setPicked(null)
+                                }}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Selecionar origem" />
@@ -163,22 +180,20 @@ return
                         {/* ADD ITEM */}
                         <div className="flex gap-2">
 
-                            <Select value={productId} onValueChange={setProductId}>
-                                <SelectTrigger className="w-[300px]">
-                                    <SelectValue placeholder="Produto" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {products.map((p: any) => (
-                                        <SelectItem key={p.id} value={String(p.id)}>
-                                            {p.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <ProductPicker
+                                className="w-[320px]"
+                                value={picked}
+                                onSelect={setPicked}
+                                warehouseId={data.from_warehouse_id}
+                                inStock
+                                disabled={!data.from_warehouse_id}
+                                placeholder={data.from_warehouse_id ? 'Pesquisar produto com stock...' : 'Escolha primeiro a origem'}
+                            />
 
                             <Input
                                 type="number"
-                                min={1}
+                                min={picked && !picked.allow_decimals ? 1 : 0.001}
+                                step={picked && !picked.allow_decimals ? '1' : '0.001'}
                                 value={quantity}
                                 onChange={(e) => setQuantity(Number(e.target.value))}
                                 className="w-[120px]"

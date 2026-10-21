@@ -50,19 +50,6 @@ class StockAdjustmentController extends Controller
                 'company_id',
                 $companyId
             )->where('is_active', true)->get(),
-
-            'products' => Product::where(
-                'company_id',
-                $companyId
-            )
-                ->where('track_stock', true)
-                ->orderBy('name')
-                ->get([
-                    'id',
-                    'name',
-                    'sku',
-                    'barcode',
-                ]),
         ]);
     }
 

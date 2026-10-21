@@ -61,20 +61,10 @@ class StockTransferController extends Controller
     public function create()
     {
         $companyId = Auth::user()->company_id;
-        $products = Product::query()
-            ->where('company_id', $companyId)
-            ->where('track_stock', true)
-            ->whereHas('stocks', function ($q) {
-                $q->where('quantity', '>', 0);
-            })
-            ->with(['stocks' => function ($q) {
-                $q->select('product_id', 'quantity');
-            }])
-            ->get();
 
+        // Os produtos não vêm aqui: o formulário pesquisa-os no servidor, já com o stock da origem
         return Inertia::render('inventory/transfers/create', [
             'warehouses' => Warehouse::where('company_id', $companyId)->get(),
-            'products' => $products,
         ]);
     }
 

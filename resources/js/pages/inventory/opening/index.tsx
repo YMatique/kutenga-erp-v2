@@ -4,19 +4,14 @@ import { Package2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { CameraScanButton } from '@/components/camera-scanner';
+import { ProductPicker } from '@/components/product-picker';
 import { PageHeader } from '@/components/ui/brand';
 import { Label } from '@/components/ui/label';
 import { useBarcodeScanner } from '@/hooks/use-barcode-scanner';
 import AppLayout from '@/layouts/app-layout';
-import { matchesCode } from '@/lib/product-lookup';
+import { findProductByCode } from '@/lib/product-search';
+import type { PickedProduct } from '@/lib/product-search';
 import { beepError, beepSuccess } from '@/lib/scan-feedback';
-
-interface Product {
-    id: number;
-    name: string;
-    sku?: string | null;
-    barcode?: string | null;
-}
 
 interface Warehouse {
     id: number;
@@ -31,10 +26,8 @@ interface OpeningForm {
 }
 
 export default function Index({
-    products,
     warehouses,
 }: {
-    products: Product[];
     warehouses: Warehouse[];
 }) {
     const [form, setForm] = useState<OpeningForm>({
@@ -43,24 +36,39 @@ export default function Index({
         quantity: 0,
         notes: '',
     });
+    // O produto escolhido (o servidor pesquisa-os à medida que se escreve)
+    const [product, setProduct] = useState<PickedProduct | null>(null);
 
     const [loading, setLoading] = useState(false);
     const quantityRef = useRef<HTMLInputElement>(null);
 
-    // Ler um código seleciona o produto e passa para a quantidade
-    const handleScan = (code: string) => {
-        const product = products.find((p) => matchesCode(p, code));
+    const pick = (picked: PickedProduct) => {
+        setProduct(picked);
+        setForm((f) => ({ ...f, product_id: String(picked.id) }));
+    };
 
-        if (!product) {
+    // Ler um código seleciona o produto e passa para a quantidade
+    const handleScan = async (code: string) => {
+        let found: PickedProduct | null = null;
+
+        try {
+            found = await findProductByCode(code);
+        } catch {
+            toast.error('Falha ao consultar o código. Verifique a ligação.');
+
+            return;
+        }
+
+        if (!found) {
             beepError();
             toast.error(`Código ${code} não encontrado entre os produtos com controlo de stock.`);
 
             return;
         }
 
-        setForm((f) => ({ ...f, product_id: String(product.id) }));
+        pick(found);
         beepSuccess();
-        toast.success(product.name, { duration: 1200 });
+        toast.success(found.name, { duration: 1200 });
         quantityRef.current?.focus();
         quantityRef.current?.select();
     };
@@ -69,11 +77,19 @@ export default function Index({
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
+
+        if (!product) {
+            toast.error('Escolha o produto.');
+
+            return;
+        }
+
         setLoading(true);
         router.post('/inventory/opening', form as any, {
             preserveScroll: true,
             onSuccess: () => {
                 setForm({ product_id: '', warehouse_id: '', quantity: 0, notes: '' });
+                setProduct(null);
             },
             onFinish: () => setLoading(false),
         });
@@ -109,17 +125,17 @@ export default function Index({
                                     <Label className="text-sm font-medium text-slate-700">Produto *</Label>
                                     <CameraScanButton onScan={handleScan} size="sm" className="h-7 gap-1 px-2 text-xs" />
                                 </div>
-                                <select
-                                    value={form.product_id}
-                                    onChange={(e) => setForm({ ...form, product_id: e.target.value })}
-                                    required
-                                    className="w-full h-9 border border-slate-200 rounded-[4px] px-3 text-sm text-slate-900 bg-white focus:outline-none focus:ring-1 focus:ring-[#2DB8A0] focus:border-[#2DB8A0] transition-colors"
-                                >
-                                    <option value="">Selecione um produto</option>
-                                    {products.map((p) => (
-                                        <option key={p.id} value={p.id}>{p.name}</option>
-                                    ))}
-                                </select>
+                                <ProductPicker
+                                    value={product}
+                                    onSelect={pick}
+                                    placeholder="Pesquisar por nome, SKU ou código..."
+                                />
+                                {product && (
+                                    <p className="text-xs text-slate-500">
+                                        {product.unit ? 'Unidade: ' + product.unit + ' · ' : ''}
+                                        {product.allow_decimals ? 'aceita quantidades fracionadas' : 'só quantidades inteiras'}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Armazém */}
@@ -145,7 +161,7 @@ export default function Index({
                                     ref={quantityRef}
                                     type="number"
                                     min="0"
-                                    step="0.001"
+                                    step={product && !product.allow_decimals ? '1' : '0.001'}
                                     value={form.quantity}
                                     onChange={(e) => setForm({ ...form, quantity: e.target.value })}
                                     required

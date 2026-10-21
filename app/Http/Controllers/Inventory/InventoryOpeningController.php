@@ -15,16 +15,9 @@ class InventoryOpeningController extends Controller
     //
     public function index()
     {
-        $products = Product::with('category')
-            ->where('track_stock', true)
-            ->get();
-
-        $warehouses = Warehouse::where('is_active', true)->get();
-
-        // C:\Users\LENOVO\Herd\kutenga-erp-v2\resources\js\pages\inventory\opening\index.tsx
+        // Os produtos não vêm aqui: o formulário pesquisa-os no servidor, à medida que se escreve
         return Inertia::render('inventory/opening/index', [
-            'products' => $products,
-            'warehouses' => $warehouses,
+            'warehouses' => Warehouse::where('is_active', true)->get(),
         ]);
     }
 

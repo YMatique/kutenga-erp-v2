@@ -10,6 +10,7 @@ use App\Models\Inventory\Warehouse;
 use App\Models\User;
 use App\Services\Inventory\StockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -169,5 +170,15 @@ class ProductPickerTest extends TestCase
         $this->actingAs($this->userWith(['inventory.view']))->getJson('/inventory/products/search')->assertForbidden();
         $this->actingAs($this->userWith(['inventory.transfer']))->getJson('/inventory/products/search')->assertOk();
         $this->actingAs($this->userWith(['inventory.adjust']))->getJson('/inventory/products/search')->assertOk();
+    }
+
+    public function test_the_forms_no_longer_receive_the_whole_catalog(): void
+    {
+        $this->actingAs($this->userWith(['inventory.view', 'inventory.adjust', 'inventory.transfer']));
+        $this->stock->in($this->product('Caneta'), $this->main, 5);
+
+        foreach (['/inventory/opening', '/inventory/adjustments/create', '/inventory/transfers/create'] as $url) {
+            $this->get($url)->assertOk()->assertInertia(fn (Assert $page) => $page->has('warehouses')->missing('products'));
+        }
     }
 }
