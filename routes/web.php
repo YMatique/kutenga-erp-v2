@@ -22,6 +22,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Inventory\InventoryClosingController;
 use App\Http\Controllers\Inventory\InventoryDashboardController;
 use App\Http\Controllers\Inventory\InventoryOpeningController;
+use App\Http\Controllers\Inventory\ProductPickerController;
 use App\Http\Controllers\Inventory\ProductStockController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Inventory\StockMovementController;
@@ -106,6 +107,9 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
 
     // Inventory
     Route::prefix('/inventory')->group(function () {
+        // Pesquisa de produtos dos formulários de stock; a permissão (ajustar ou transferir) é verificada no controlador
+        Route::get('products/search', [ProductPickerController::class, 'search'])->name('inventory.products.search');
+
         // Inventory View
         Route::middleware('can:inventory.view')->group(function () {
             // Só consulta: criar, editar e apagar armazéns exige inventory.adjust (mais abaixo).
