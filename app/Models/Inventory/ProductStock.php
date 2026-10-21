@@ -24,6 +24,7 @@ class ProductStock extends Model
     protected $casts = [
         'quantity' => 'float',
         'reserved' => 'float',
+        'incoming' => 'float',
     ];
 
     /**
@@ -45,6 +46,28 @@ class ProductStock extends Model
             ->whereColumn('stock_transfer_items.product_id', 'product_stocks.product_id');
 
         return $query->selectSub($reserved, 'reserved');
+    }
+
+    /**
+     * Junta `incoming` (o que vai a caminho deste armazém, de transferências em trânsito) a cada linha.
+     * Só conta para linhas que já existem: um produto que ainda nunca teve stock no destino
+     * aparece na página do produto, onde se listam as transferências em trânsito.
+     */
+    public function scopeWithIncoming(Builder $query): Builder
+    {
+        if ($query->getQuery()->columns === null) {
+            $query->select('product_stocks.*');
+        }
+
+        $incoming = DB::table('stock_transfer_items')
+            ->join('stock_transfers', 'stock_transfers.id', '=', 'stock_transfer_items.stock_transfer_id')
+            ->selectRaw('coalesce(sum(stock_transfer_items.quantity), 0)')
+            ->where('stock_transfers.status', 'in_transit')
+            ->whereColumn('stock_transfers.company_id', 'product_stocks.company_id')
+            ->whereColumn('stock_transfers.to_warehouse_id', 'product_stocks.warehouse_id')
+            ->whereColumn('stock_transfer_items.product_id', 'product_stocks.product_id');
+
+        return $query->selectSub($incoming, 'incoming');
     }
 
     /** Saldo menos o reservado (nunca negativo); só existe se a linha foi lida com `withReserved`. */

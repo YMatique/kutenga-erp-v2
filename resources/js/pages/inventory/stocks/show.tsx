@@ -14,7 +14,8 @@ import {
     AlertCircle,
     Info,
     Warehouse as WarehouseIcon,
-    Pencil
+    Pencil,
+    Truck
 } from 'lucide-react'
 import {
     PageHeader,
@@ -37,7 +38,16 @@ interface Stock {
     quantity: number
     reserved?: number
     available?: number
+    incoming?: number
     warehouse: Warehouse
+}
+
+interface InTransit {
+    transfer_id: number
+    from: string
+    to: string
+    shipped_at: string | null
+    quantity: number
 }
 
 interface Product {
@@ -74,6 +84,7 @@ interface Movement {
 interface Props {
     product: Product
     stocks: Stock[]
+    in_transit: InTransit[]
     movements: Movement[]
 }
 
@@ -92,7 +103,7 @@ return 'low'
     return 'in_stock'
 }
 
-export default function Show({ product, stocks, movements }: Props) {
+export default function Show({ product, stocks, in_transit, movements }: Props) {
     const totalStock = stocks.reduce((sum, s) => sum + Number(s.quantity), 0)
     const minStockVal = product.min_stock ?? 5
     const status = resolveStockStatus(totalStock, minStockVal)
@@ -317,6 +328,11 @@ export default function Show({ product, stocks, movements }: Props) {
                                                     </td>
                                                     <td className="px-4 py-3 text-right font-mono font-semibold text-slate-900 text-base">
                                                         {Number(stock.quantity).toLocaleString('pt-MZ')} {product.unit?.name || 'un'}
+                                                        {Number(stock.incoming ?? 0) > 0 && (
+                                                            <span className="block text-[11px] font-normal text-indigo-600">
+                                                                +{Number(stock.incoming).toLocaleString('pt-MZ')} a chegar
+                                                            </span>
+                                                        )}
                                                     </td>
                                                     <td className="px-4 py-3 text-right font-mono text-sm text-slate-500">
                                                         {Number(stock.reserved ?? 0).toLocaleString('pt-MZ')}
@@ -339,6 +355,47 @@ export default function Show({ product, stocks, movements }: Props) {
                                 </table>
                             </TableCard>
                         </div>
+
+                        {/* EM TRÂNSITO: a caminho entre armazéns, ainda não conta em nenhum */}
+                        {in_transit.length > 0 && (
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                    <Truck className="h-5 w-5 text-indigo-600" />
+                                    <h2 className="text-base font-semibold text-slate-800">Em Trânsito</h2>
+                                </div>
+
+                                <TableCard>
+                                    <table className="w-full text-sm">
+                                        <thead className="bg-slate-50 border-b border-slate-100">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">Transferência</th>
+                                                <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">Origem → Destino</th>
+                                                <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">Enviada em</th>
+                                                <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400">Quantidade</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {in_transit.map((row) => (
+                                                <tr key={row.transfer_id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                                                    <td className="px-4 py-3">
+                                                        <Link href={'/inventory/transfers/' + row.transfer_id} className="font-mono text-xs text-[#2DB8A0] hover:underline">
+                                                            #{String(row.transfer_id).padStart(5, '0')}
+                                                        </Link>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-slate-700">{row.from} → {row.to}</td>
+                                                    <td className="px-4 py-3 text-xs text-slate-500">
+                                                        {row.shipped_at ? new Date(row.shipped_at).toLocaleString('pt-MZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right font-mono font-semibold text-slate-900">
+                                                        {Number(row.quantity).toLocaleString('pt-MZ')} {product.unit?.name || 'un'}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </TableCard>
+                            </div>
+                        )}
 
                         {/* RECENT MOVEMENTS TABLE */}
                         <div className="space-y-3">

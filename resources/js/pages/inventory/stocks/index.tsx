@@ -32,6 +32,7 @@ interface Stock {
     quantity: number
     reserved?: number
     available?: number
+    incoming?: number
     product: Product
     warehouse: Warehouse
 }
@@ -281,6 +282,11 @@ export default function Index() {
                                             {/* QUANTIDADE */}
                                             <td className="px-4 py-3 text-right font-mono font-semibold text-slate-900">
                                                 {stock.quantity.toLocaleString('pt-MZ')}
+                                                {(stock.incoming ?? 0) > 0 && (
+                                                    <span className="block text-[11px] font-normal text-indigo-600">
+                                                        +{(stock.incoming as number).toLocaleString('pt-MZ')} a chegar
+                                                    </span>
+                                                )}
                                             </td>
 
                                             {/* RESERVADO */}

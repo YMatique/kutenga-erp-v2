@@ -15,6 +15,7 @@ use App\Services\Inventory\StockExporter;
 use App\Support\BusinessTime;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class InventoryDashboardController extends Controller
@@ -134,6 +135,16 @@ class InventoryDashboardController extends Controller
 
         $user = auth()->user();
 
+        // O que vai a caminho não está em nenhum armazém e por isso fica fora do valor do inventário:
+        // mostra-se à parte (ao custo atual), com as transferências que saem ou chegam ao armazém filtrado
+        $inTransitValue = (float) DB::table('stock_transfer_items')
+            ->join('stock_transfers', 'stock_transfers.id', '=', 'stock_transfer_items.stock_transfer_id')
+            ->join('products', 'products.id', '=', 'stock_transfer_items.product_id')
+            ->where('stock_transfers.company_id', $companyId)
+            ->where('stock_transfers.status', 'in_transit')
+            ->when($warehouseId, fn ($q) => $q->where(fn ($q) => $q->where('stock_transfers.from_warehouse_id', $warehouseId)->orWhere('stock_transfers.to_warehouse_id', $warehouseId)))
+            ->sum(DB::raw('stock_transfer_items.quantity * COALESCE(products.cost, 0)'));
+
         // O trabalho por tratar também se filtra: transferências que saem ou chegam ao armazém,
         // ajustes dele e fechos dele ou de todos os armazéns
         $transfers = fn (string $status) => StockTransfer::where('company_id', $companyId)->where('status', $status)
@@ -145,6 +156,7 @@ class InventoryDashboardController extends Controller
                 'warehouses' => $warehouseSummary->count(),
                 'total_stock' => (float) $figures->quantity,
                 'inventory_value' => (float) $figures->value,
+                'in_transit_value' => round($inTransitValue, 2),
                 'low_stock' => $lowStockCount,
                 'out_of_stock' => $outOfStockCount,
             ],

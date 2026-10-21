@@ -422,6 +422,78 @@ class StockTransferTransitTest extends TestCase
         $this->post("/inventory/transfers/{$second->id}/cancel")->assertSessionHas('success', 'Transferência cancelada: a mercadoria voltou à origem.');
     }
 
+    public function test_the_product_page_lists_what_is_on_its_way_and_the_destination_line_shows_it_incoming(): void
+    {
+        $this->stock->in($this->pen, $this->origin, 25);
+        $this->stock->in($this->pen, $this->destination, 3); // o destino já tinha uma linha de stock
+        $transfer = $this->transfer();
+        $this->service->ship($transfer);
+
+        $this->get("/inventory/stocks/{$this->pen->id}")->assertInertia(fn (Assert $page) => $page
+            ->has('in_transit', 1)
+            ->where('in_transit.0.transfer_id', $transfer->id)
+            ->where('in_transit.0.from', 'Maputo')
+            ->where('in_transit.0.to', 'Beira')
+            ->where('in_transit.0.quantity', 10)
+            ->where('stocks', fn ($stocks) => collect($stocks)->every(
+                fn ($line) => (float) $line['incoming'] === ($line['warehouse_id'] === $this->destination->id ? 10.0 : 0.0)
+            ))
+        );
+
+        // Outro produto não herda o que vai a caminho
+        $this->get("/inventory/stocks/{$this->ink->id}")->assertInertia(fn (Assert $page) => $page->has('in_transit', 0));
+
+        // Recebida, deixa de estar a caminho
+        $this->service->receive($transfer);
+
+        $this->get("/inventory/stocks/{$this->pen->id}")->assertInertia(fn (Assert $page) => $page
+            ->has('in_transit', 0)
+            ->where('stocks', fn ($stocks) => collect($stocks)->every(fn ($line) => (float) $line['incoming'] === 0.0))
+        );
+    }
+
+    public function test_the_stock_list_shows_what_is_coming_to_each_warehouse(): void
+    {
+        $this->stock->in($this->pen, $this->origin, 25);
+        $this->stock->in($this->pen, $this->destination, 3);
+        $this->service->ship($this->transfer());
+
+        $this->get('/inventory/stocks')->assertInertia(fn (Assert $page) => $page
+            ->has('stocks.data', 2)
+            ->where('stocks.data', fn ($lines) => collect($lines)->every(
+                fn ($line) => (float) $line['incoming'] === ($line['warehouse_id'] === $this->destination->id ? 10.0 : 0.0)
+            ))
+        );
+    }
+
+    public function test_the_dashboard_values_what_is_in_transit_apart_from_the_inventory_value(): void
+    {
+        $this->pen->update(['cost' => 10]);
+        $third = Warehouse::create(['company_id' => $this->company->id, 'name' => 'Nampula', 'code' => 'NP', 'is_active' => true]);
+        $this->stock->in($this->pen, $this->origin, 25);
+        $transfer = $this->transfer();
+        $this->service->ship($transfer);
+
+        $this->get('/inventory')->assertInertia(fn (Assert $page) => $page
+            ->where('stats.inventory_value', 150) // 15 nos armazéns
+            ->where('stats.in_transit_value', 100) // 10 a caminho, à parte
+        );
+
+        // Com um armazém filtrado, só as transferências que saem ou chegam a ele
+        foreach ([$this->origin, $this->destination] as $warehouse) {
+            $this->get("/inventory?warehouse_id={$warehouse->id}")->assertInertia(fn (Assert $page) => $page->where('stats.in_transit_value', 100));
+        }
+        $this->get("/inventory?warehouse_id={$third->id}")->assertInertia(fn (Assert $page) => $page->where('stats.in_transit_value', 0));
+
+        // Recebida, passa a stock do destino
+        $this->service->receive($transfer);
+
+        $this->get('/inventory')->assertInertia(fn (Assert $page) => $page
+            ->where('stats.inventory_value', 250)
+            ->where('stats.in_transit_value', 0)
+        );
+    }
+
     public function test_the_list_filters_in_transit_and_the_dashboard_counts_them(): void
     {
         $this->stock->in($this->pen, $this->origin, 25);

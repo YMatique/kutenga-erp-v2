@@ -29,6 +29,7 @@ class StockExporter
     public static function filteredStocks(Request $request, int $companyId): Builder
     {
         $query = ProductStock::withReserved()
+            ->withIncoming()
             ->with(['product.category', 'warehouse'])
             ->where('company_id', $companyId);
 

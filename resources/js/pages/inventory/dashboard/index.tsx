@@ -180,7 +180,12 @@ export default function InventoryDashboard() {
                         value={formatCurrency(Math.round(Number(stats.inventory_value))).replace(/[,.]00(?=\s)/, '')}
                         icon={<Wallet className="h-4 w-4" />}
                         accent="gold"
-                        description={selectedId === 'all' ? 'custo × quantidade em stock' : 'custo × quantidade neste armazém'}
+                        description={
+                            (selectedId === 'all' ? 'custo × quantidade em stock' : 'custo × quantidade neste armazém')
+                            + (Number(stats.in_transit_value) > 0
+                                ? ' · mais ' + formatCurrency(Math.round(Number(stats.in_transit_value))).replace(/[,.]00(?=\s)/, '') + ' em trânsito'
+                                : '')
+                        }
                     />
                     <KpiCard
                         label="Alertas de Stock"
