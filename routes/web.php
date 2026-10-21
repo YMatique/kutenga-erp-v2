@@ -153,6 +153,8 @@ Route::middleware(['auth', 'verified', SetCompanyContext::class])->group(functio
             Route::post('/transfers/{transfer}/approve', [StockTransferController::class, 'approve'])->name('inventory.transfers.approve');
             Route::post('/transfers', [StockTransferController::class, 'store']);
             Route::post('/transfers/{transfer}/complete', [StockTransferController::class, 'complete']);
+            Route::post('/transfers/{transfer}/ship', [StockTransferController::class, 'ship'])->name('inventory.transfers.ship');
+            Route::post('/transfers/{transfer}/receive', [StockTransferController::class, 'receive'])->name('inventory.transfers.receive');
         });
     });
 

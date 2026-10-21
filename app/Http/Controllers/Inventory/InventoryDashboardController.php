@@ -154,6 +154,7 @@ class InventoryDashboardController extends Controller
             'queue' => [
                 'transfers_pending' => $transfers('pending')->count(),
                 'transfers_approved' => $transfers('approved')->count(),
+                'transfers_in_transit' => $transfers('in_transit')->count(),
                 'adjustments_draft' => StockAdjustment::where('company_id', $companyId)->where('status', 'draft')
                     ->when($warehouseId, fn ($q) => $q->where('warehouse_id', $warehouseId))->count(),
                 'closings_open' => InventoryClosing::where('company_id', $companyId)->where('status', 'draft')

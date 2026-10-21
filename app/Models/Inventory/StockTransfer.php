@@ -29,6 +29,15 @@ class StockTransfer extends Model
         'status',
         'notes',
         'created_by',
+        'shipped_at',
+        'shipped_by',
+        'received_at',
+        'received_by',
+    ];
+
+    protected $casts = [
+        'shipped_at' => 'datetime',
+        'received_at' => 'datetime',
     ];
 
     public function items(): HasMany

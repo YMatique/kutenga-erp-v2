@@ -155,7 +155,7 @@ class WarehouseController extends Controller
             return 'Não é possível remover um armazém com stock. Transfira ou ajuste o stock primeiro.';
         }
 
-        $pendingTransfers = StockTransfer::whereIn('status', ['pending', 'approved'])
+        $pendingTransfers = StockTransfer::whereIn('status', ['pending', 'approved', 'in_transit'])
             ->where(fn ($q) => $q->where('from_warehouse_id', $warehouse->id)->orWhere('to_warehouse_id', $warehouse->id))
             ->exists();
 

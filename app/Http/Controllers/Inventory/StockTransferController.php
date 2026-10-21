@@ -112,6 +112,21 @@ class StockTransferController extends Controller
         return $this->run(fn () => $this->service->complete($transfer), 'Transferência concluída.');
     }
 
+    public function ship(StockTransfer $transfer)
+    {
+        return $this->run(fn () => $this->service->ship($transfer), 'Transferência enviada: a mercadoria está em trânsito.');
+    }
+
+    public function receive(Request $request, StockTransfer $transfer)
+    {
+        $data = $request->validate([
+            'received' => ['nullable', 'array'],
+            'received.*' => ['numeric', 'min:0'],
+        ]);
+
+        return $this->run(fn () => $this->service->receive($transfer, $data['received'] ?? []), 'Transferência recebida.');
+    }
+
     public function show(StockTransfer $transfer, StockService $stockService)
     {
         $transfer->load(['items.product', 'fromWarehouse', 'toWarehouse']);
@@ -132,7 +147,10 @@ class StockTransferController extends Controller
 
     public function cancel(StockTransfer $transfer)
     {
-        return $this->run(fn () => $this->service->cancel($transfer), 'Transferência cancelada.');
+        return $this->run(
+            fn () => $this->service->cancel($transfer),
+            $transfer->status === 'in_transit' ? 'Transferência cancelada: a mercadoria voltou à origem.' : 'Transferência cancelada.'
+        );
     }
 
     public function approve(StockTransfer $transfer)

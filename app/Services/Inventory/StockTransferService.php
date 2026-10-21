@@ -4,6 +4,8 @@ namespace App\Services\Inventory;
 
 use App\Exceptions\InsufficientStockException;
 use App\Models\Inventory\StockTransfer;
+use App\Models\SystemNotification;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -44,9 +46,155 @@ class StockTransferService
         });
     }
 
+    /**
+     * Cancela uma transferência. Pendente ou aprovada ainda não moveu stock (cancelar liberta a reserva).
+     * Em trânsito já saiu da origem: cancelar devolve a mercadoria à origem.
+     */
     public function cancel(StockTransfer $transfer): void
     {
-        $this->transition($transfer, from: ['pending', 'approved'], to: 'cancelled', error: 'Só é possível cancelar transferências pendentes ou aprovadas.');
+        DB::transaction(function () use ($transfer) {
+            $locked = StockTransfer::lockForUpdate()->findOrFail($transfer->id);
+
+            if (in_array($locked->status, ['pending', 'approved'], true)) {
+                $locked->update(['status' => 'cancelled']);
+
+                return;
+            }
+
+            if ($locked->status !== 'in_transit') {
+                throw ValidationException::withMessages([
+                    'status' => 'Só é possível cancelar transferências pendentes, aprovadas ou em trânsito.',
+                ]);
+            }
+
+            $locked->load(['items.product', 'fromWarehouse', 'toWarehouse']);
+
+            $note = "Transferência #{$locked->id} para {$locked->toWarehouse->name} devolvida a {$locked->fromWarehouse->name}";
+
+            foreach ($locked->items->sortBy('product_id') as $item) {
+                $this->stockService->in(
+                    product: $item->product,
+                    warehouse: $locked->fromWarehouse,
+                    quantity: (float) $item->quantity,
+                    sourceType: StockTransfer::class,
+                    sourceId: $locked->id,
+                    notes: $note
+                );
+            }
+
+            $locked->update(['status' => 'cancelled']);
+        });
+    }
+
+    /**
+     * Envia uma transferência aprovada: a mercadoria sai da origem e fica em trânsito (não está em
+     * nenhum armazém) até ser recebida. A reserva acaba, porque o stock já saiu.
+     */
+    public function ship(StockTransfer $transfer): void
+    {
+        DB::transaction(function () use ($transfer) {
+            $locked = StockTransfer::lockForUpdate()->findOrFail($transfer->id);
+
+            if ($locked->status !== 'approved') {
+                throw ValidationException::withMessages([
+                    'status' => $locked->status === 'in_transit'
+                        ? 'A transferência já está em trânsito.'
+                        : 'Só é possível enviar transferências aprovadas.',
+                ]);
+            }
+
+            $locked->load(['items.product', 'fromWarehouse', 'toWarehouse']);
+
+            $note = "Transferência #{$locked->id} enviada de {$locked->fromWarehouse->name} para {$locked->toWarehouse->name} (em trânsito)";
+
+            // Mesma ordem de produtos que nas outras operações: duas transferências em sentidos opostos não se bloqueiam
+            foreach ($locked->items->sortBy('product_id') as $item) {
+                try {
+                    $this->stockService->out(
+                        product: $item->product,
+                        warehouse: $locked->fromWarehouse,
+                        quantity: (float) $item->quantity,
+                        sourceType: StockTransfer::class,
+                        sourceId: $locked->id,
+                        notes: $note
+                    );
+                } catch (InsufficientStockException $e) {
+                    throw ValidationException::withMessages([
+                        'stock' => "Stock insuficiente para {$item->product->name}. Disponível: {$e->available}",
+                    ]);
+                }
+            }
+
+            $locked->update(['status' => 'in_transit', 'shipped_at' => now(), 'shipped_by' => Auth::id()]);
+        });
+    }
+
+    /**
+     * Recebe uma transferência em trânsito: a mercadoria entra no armazém de destino. A quantidade
+     * recebida de cada produto pode ser menor do que a enviada (por omissão, é a enviada); o que
+     * falta fica registado como diferença e avisa-se o utilizador, mas não volta a entrar em stock.
+     *
+     * @param  array<int|string, float|int|string>  $received  quantidade recebida por id do item
+     */
+    public function receive(StockTransfer $transfer, array $received = []): void
+    {
+        DB::transaction(function () use ($transfer, $received) {
+            $locked = StockTransfer::lockForUpdate()->findOrFail($transfer->id);
+
+            if ($locked->status !== 'in_transit') {
+                throw ValidationException::withMessages([
+                    'status' => $locked->status === 'completed'
+                        ? 'A transferência já foi recebida.'
+                        : 'Só é possível receber transferências em trânsito.',
+                ]);
+            }
+
+            $locked->load(['items.product', 'fromWarehouse', 'toWarehouse']);
+
+            $note = "Transferência #{$locked->id} recebida de {$locked->fromWarehouse->name} em {$locked->toWarehouse->name}";
+            $shortages = [];
+
+            foreach ($locked->items->sortBy('product_id') as $item) {
+                $sent = (float) $item->quantity;
+                $got = round((float) ($received[$item->id] ?? $sent), 3);
+
+                if ($got < 0 || $got > $sent) {
+                    throw ValidationException::withMessages([
+                        'received' => "A quantidade recebida de {$item->product->name} tem de estar entre 0 e {$sent}.",
+                    ]);
+                }
+
+                if ($got > 0) {
+                    $this->stockService->in(
+                        product: $item->product,
+                        warehouse: $locked->toWarehouse,
+                        quantity: $got,
+                        sourceType: StockTransfer::class,
+                        sourceId: $locked->id,
+                        notes: $note
+                    );
+                }
+
+                $item->update(['received_quantity' => $got]);
+
+                if ($got < $sent) {
+                    $shortages[] = "{$item->product->name} (enviadas {$sent}, recebidas {$got})";
+                }
+            }
+
+            $locked->update(['status' => 'completed', 'received_at' => now(), 'received_by' => Auth::id()]);
+
+            if ($shortages) {
+                SystemNotification::create([
+                    'company_id' => $locked->company_id,
+                    'type' => 'transfer_discrepancy',
+                    'title' => 'Diferença numa transferência',
+                    'message' => "A transferência #{$locked->id} chegou a {$locked->toWarehouse->name} com diferenças: ".implode('; ', $shortages).'.',
+                    'link' => "/inventory/transfers/{$locked->id}",
+                    'is_read' => false,
+                ]);
+            }
+        });
     }
 
     /**
