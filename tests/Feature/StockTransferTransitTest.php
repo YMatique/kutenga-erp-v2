@@ -183,9 +183,82 @@ class StockTransferTransitTest extends TestCase
         $this->assertEquals(7, $penItem->fresh()->received_quantity);
 
         $warning = SystemNotification::where('type', 'transfer_discrepancy')->sole();
-        $this->assertStringContainsString('Caneta (enviadas 10, recebidas 7)', $warning->message);
+        $this->assertStringContainsString('Caneta: enviadas 10, recebidas 7, perda de 3', $warning->message);
+        $this->assertSame('loss', $penItem->fresh()->shortage_action); // por omissão, a falta é uma perda
+        $this->assertNull($inkItem->fresh()->shortage_action); // a tinta chegou toda
         $this->assertStringNotContainsString('Tinta', $warning->message);
         $this->assertSame("/inventory/transfers/{$transfer->id}", $warning->link);
+    }
+
+    public function test_a_shortage_can_be_returned_to_the_origin(): void
+    {
+        $this->stock->in($this->pen, $this->origin, 25);
+        $transfer = $this->transfer();
+        $this->service->ship($transfer);
+        $item = $transfer->items->first();
+
+        $this->service->receive($transfer, [$item->id => 7], [$item->id => 'return']);
+
+        $this->assertSame(7.0, $this->qty($this->pen, $this->destination)); // o que chegou
+        $this->assertSame(18.0, $this->qty($this->pen, $this->origin)); // 15 que ficaram + 3 devolvidas
+        $this->assertSame(25.0, $this->qty($this->pen, $this->origin) + $this->qty($this->pen, $this->destination)); // nada se perdeu
+        $this->assertSame('return', $item->fresh()->shortage_action);
+        $this->assertStringContainsString('3 devolvidas à origem', SystemNotification::where('type', 'transfer_discrepancy')->sole()->message);
+        $this->assertSame(1, DB::table('stock_movements')->where('source_id', $transfer->id)->where('type', 'in')->where('warehouse_id', $this->origin->id)->count());
+    }
+
+    public function test_each_product_can_have_its_own_destination_for_the_difference(): void
+    {
+        $this->stock->in($this->pen, $this->origin, 25);
+        $this->stock->in($this->ink, $this->origin, 10);
+        $transfer = $this->transfer('approved', withInk: true);
+        $this->service->ship($transfer);
+        $pen = $transfer->items->firstWhere('product_id', $this->pen->id);
+        $ink = $transfer->items->firstWhere('product_id', $this->ink->id);
+
+        $this->service->receive($transfer, [$pen->id => 8, $ink->id => 1], [$pen->id => 'return', $ink->id => 'loss']);
+
+        $this->assertSame(17.0, $this->qty($this->pen, $this->origin)); // 15 + 2 devolvidas
+        $this->assertSame(6.0, $this->qty($this->ink, $this->origin)); // 10 − 4 enviadas; as 3 em falta são perda
+        $this->assertSame(1.0, $this->qty($this->ink, $this->destination));
+        $this->assertSame('return', $pen->fresh()->shortage_action);
+        $this->assertSame('loss', $ink->fresh()->shortage_action);
+    }
+
+    public function test_an_unknown_destination_for_the_difference_is_refused_and_nothing_moves(): void
+    {
+        $this->stock->in($this->pen, $this->origin, 25);
+        $transfer = $this->transfer();
+        $this->service->ship($transfer);
+        $item = $transfer->items->first();
+
+        try {
+            $this->service->receive($transfer, [$item->id => 5], [$item->id => 'esquecer']);
+            $this->fail('Um destino desconhecido devia ser recusado.');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('shortage', $e->errors());
+        }
+
+        $this->assertSame('in_transit', $transfer->fresh()->status);
+        $this->assertSame(0.0, $this->qty($this->pen, $this->destination));
+        $this->assertSame(15.0, $this->qty($this->pen, $this->origin));
+
+        // E no pedido HTTP o valor é validado antes de chegar ao serviço
+        $this->post("/inventory/transfers/{$transfer->id}/receive", ['received' => [$item->id => 5], 'shortage' => [$item->id => 'esquecer']])
+            ->assertSessionHasErrors('shortage.'.$item->id);
+    }
+
+    public function test_a_destination_chosen_for_something_that_did_not_come_short_is_ignored(): void
+    {
+        $this->stock->in($this->pen, $this->origin, 25);
+        $transfer = $this->transfer();
+        $this->service->ship($transfer);
+        $item = $transfer->items->first();
+
+        $this->service->receive($transfer, [$item->id => 10], [$item->id => 'return']);
+
+        $this->assertSame(15.0, $this->qty($this->pen, $this->origin)); // nada a devolver
+        $this->assertNull($item->fresh()->shortage_action);
     }
 
     public function test_the_received_quantity_cannot_exceed_what_was_sent_or_be_negative(): void

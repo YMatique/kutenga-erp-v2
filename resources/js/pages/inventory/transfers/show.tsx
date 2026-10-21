@@ -31,6 +31,7 @@ interface TransferItem {
     id: number
     quantity: number
     received_quantity?: number | null
+    shortage_action?: 'loss' | 'return' | null
     available?: number
     product: Product
 }
@@ -79,13 +80,23 @@ export default function Show({ transfer }: ShowProps) {
     const [received, setReceived] = useState<Record<number, string>>(
         () => Object.fromEntries(transfer.items.map((i) => [i.id, String(i.quantity)])),
     )
+    // O destino do que faltar de cada produto: perda em trânsito (por omissão) ou devolução à origem
+    const [shortage, setShortage] = useState<Record<number, 'loss' | 'return'>>({})
     const [receiving, setReceiving] = useState(false)
+
+    const missing = (item: TransferItem) => Number(item.quantity) - (Number(received[item.id]) || 0)
 
     const confirmReceipt = () => {
         setReceiving(true)
         router.post(
             '/inventory/transfers/' + transfer.id + '/receive',
-            { received: Object.fromEntries(Object.entries(received).map(([id, value]) => [id, Number(value) || 0])) },
+            {
+                received: Object.fromEntries(Object.entries(received).map(([id, value]) => [id, Number(value) || 0])),
+                // Só dos produtos que chegaram a menos
+                shortage: Object.fromEntries(
+                    transfer.items.filter((i) => missing(i) > 0).map((i) => [i.id, shortage[i.id] ?? 'loss']),
+                ),
+            },
             { preserveScroll: true, onFinish: () => setReceiving(false) },
         )
     }
@@ -219,16 +230,30 @@ export default function Show({ transfer }: ShowProps) {
                                         {(inTransit || hasReceipt) && (
                                             <TableCell className="text-right">
                                                 {inTransit ? (
-                                                    <Input
-                                                        type="number"
-                                                        min="0"
-                                                        max={i.quantity}
-                                                        step="any"
-                                                        value={received[i.id] ?? ''}
-                                                        onChange={(e) => setReceived((previous) => ({ ...previous, [i.id]: e.target.value }))}
-                                                        className="ml-auto h-8 w-28 text-right"
-                                                        aria-label={'Quantidade recebida de ' + i.product.name}
-                                                    />
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <Input
+                                                            type="number"
+                                                            min="0"
+                                                            max={i.quantity}
+                                                            step="any"
+                                                            value={received[i.id] ?? ''}
+                                                            onChange={(e) => setReceived((previous) => ({ ...previous, [i.id]: e.target.value }))}
+                                                            className="h-8 w-28 text-right"
+                                                            aria-label={'Quantidade recebida de ' + i.product.name}
+                                                        />
+                                                        {/* O que fazer ao que faltar: só aparece quando chega menos do que foi enviado */}
+                                                        {missing(i) > 0 && (
+                                                            <select
+                                                                value={shortage[i.id] ?? 'loss'}
+                                                                onChange={(e) => setShortage((previous) => ({ ...previous, [i.id]: e.target.value as 'loss' | 'return' }))}
+                                                                aria-label={'Destino da diferença de ' + i.product.name}
+                                                                className="h-7 rounded-[4px] border border-border bg-background px-1.5 text-xs text-foreground"
+                                                            >
+                                                                <option value="loss">Falta {missing(i)}: perda</option>
+                                                                <option value="return">Falta {missing(i)}: devolver à origem</option>
+                                                            </select>
+                                                        )}
+                                                    </div>
                                                 ) : (
                                                     <span
                                                         className={Number(i.received_quantity ?? 0) < Number(i.quantity)
@@ -238,7 +263,8 @@ export default function Show({ transfer }: ShowProps) {
                                                         {i.received_quantity ?? '—'}
                                                         {Number(i.received_quantity ?? 0) < Number(i.quantity) && (
                                                             <span className="ml-1 text-xs font-normal">
-                                                                (falta {Number(i.quantity) - Number(i.received_quantity ?? 0)})
+                                                                (falta {Number(i.quantity) - Number(i.received_quantity ?? 0)}
+                                                                {i.shortage_action === 'return' ? ' · devolvida à origem' : i.shortage_action === 'loss' ? ' · perda' : ''})
                                                             </span>
                                                         )}
                                                     </span>

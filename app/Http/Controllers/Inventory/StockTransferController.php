@@ -122,9 +122,14 @@ class StockTransferController extends Controller
         $data = $request->validate([
             'received' => ['nullable', 'array'],
             'received.*' => ['numeric', 'min:0'],
+            'shortage' => ['nullable', 'array'],
+            'shortage.*' => ['in:loss,return'],
         ]);
 
-        return $this->run(fn () => $this->service->receive($transfer, $data['received'] ?? []), 'Transferência recebida.');
+        return $this->run(
+            fn () => $this->service->receive($transfer, $data['received'] ?? [], $data['shortage'] ?? []),
+            'Transferência recebida.'
+        );
     }
 
     public function show(StockTransfer $transfer, StockService $stockService)

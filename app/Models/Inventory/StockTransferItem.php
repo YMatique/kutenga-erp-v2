@@ -12,7 +12,7 @@ class StockTransferItem extends Model
     // use BelongsToCompany /* , HasAudit */;
 
     //
-    protected $fillable = ['stock_transfer_id', 'product_id', 'quantity', 'received_quantity'];
+    protected $fillable = ['stock_transfer_id', 'product_id', 'quantity', 'received_quantity', 'shortage_action'];
 
     protected $casts = [
         'quantity' => 'float',

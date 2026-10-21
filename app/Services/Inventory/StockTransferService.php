@@ -131,14 +131,16 @@ class StockTransferService
 
     /**
      * Recebe uma transferência em trânsito: a mercadoria entra no armazém de destino. A quantidade
-     * recebida de cada produto pode ser menor do que a enviada (por omissão, é a enviada); o que
-     * falta fica registado como diferença e avisa-se o utilizador, mas não volta a entrar em stock.
+     * recebida de cada produto pode ser menor do que a enviada (por omissão, é a enviada). O que
+     * falta fica registado e avisa-se o utilizador; para cada produto escolhe-se o seu destino:
+     * "loss" (perda em trânsito, o stock já tinha saído da origem) ou "return" (volta à origem).
      *
      * @param  array<int|string, float|int|string>  $received  quantidade recebida por id do item
+     * @param  array<int|string, string>  $shortage  destino da diferença por id do item ("loss" por omissão)
      */
-    public function receive(StockTransfer $transfer, array $received = []): void
+    public function receive(StockTransfer $transfer, array $received = [], array $shortage = []): void
     {
-        DB::transaction(function () use ($transfer, $received) {
+        DB::transaction(function () use ($transfer, $received, $shortage) {
             $locked = StockTransfer::lockForUpdate()->findOrFail($transfer->id);
 
             if ($locked->status !== 'in_transit') {
@@ -175,11 +177,35 @@ class StockTransferService
                     );
                 }
 
-                $item->update(['received_quantity' => $got]);
+                $action = null;
 
                 if ($got < $sent) {
-                    $shortages[] = "{$item->product->name} (enviadas {$sent}, recebidas {$got})";
+                    $missing = round($sent - $got, 3);
+                    $action = $shortage[$item->id] ?? 'loss';
+
+                    if (! in_array($action, ['loss', 'return'], true)) {
+                        throw ValidationException::withMessages([
+                            'shortage' => "O destino da diferença de {$item->product->name} tem de ser perda ou devolução à origem.",
+                        ]);
+                    }
+
+                    if ($action === 'return') {
+                        $this->stockService->in(
+                            product: $item->product,
+                            warehouse: $locked->fromWarehouse,
+                            quantity: $missing,
+                            sourceType: StockTransfer::class,
+                            sourceId: $locked->id,
+                            notes: "Diferença da transferência #{$locked->id} devolvida a {$locked->fromWarehouse->name}"
+                        );
+                    }
+
+                    $shortages[] = "{$item->product->name}: enviadas {$sent}, recebidas {$got}, ".($action === 'return'
+                        ? "{$missing} devolvidas à origem"
+                        : "perda de {$missing}");
                 }
+
+                $item->update(['received_quantity' => $got, 'shortage_action' => $action]);
             }
 
             $locked->update(['status' => 'completed', 'received_at' => now(), 'received_by' => Auth::id()]);
