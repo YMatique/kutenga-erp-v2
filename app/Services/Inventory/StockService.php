@@ -310,6 +310,19 @@ class StockService
     */
 
     /**
+     * Garante que o produto tem linha de stock no armazém (a zero, se for nova) sem mexer no saldo.
+     * Serve para uma transferência em trânsito aparecer como "a chegar" no destino antes de lá estar.
+     */
+    public function ensureLine(Product $product, Warehouse $warehouse): void
+    {
+        ProductStock::withoutGlobalScopes()->createOrFirst([
+            'company_id' => $product->company_id,
+            'product_id' => $product->id,
+            'warehouse_id' => $warehouse->id,
+        ], ['quantity' => 0]);
+    }
+
+    /**
      * Linha de stock produto/armazém bloqueada para escrita (SELECT ... FOR UPDATE).
      * Tem de ser chamada dentro de uma transação. `createOrFirst` apoia-se no índice único
      * (produto, armazém, empresa), por isso duas criações simultâneas não duplicam a linha.

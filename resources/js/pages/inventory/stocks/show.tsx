@@ -104,6 +104,9 @@ return 'low'
 }
 
 export default function Show({ product, stocks, in_transit, movements }: Props) {
+    // O que vai a caminho não conta nos armazéns, por isso mostra-se à parte do total
+    const inTransitTotal = in_transit.reduce((sum, row) => sum + Number(row.quantity), 0)
+
     const totalStock = stocks.reduce((sum, s) => sum + Number(s.quantity), 0)
     const minStockVal = product.min_stock ?? 5
     const status = resolveStockStatus(totalStock, minStockVal)
@@ -260,7 +263,9 @@ export default function Show({ product, stocks, in_transit, movements }: Props) 
                                 value={`${totalStock} ${product.unit?.name || 'un'}`}
                                 icon={<PackageCheck className="h-5 w-5" />}
                                 accent={status === 'out_of_stock' ? 'red' : status === 'low' ? 'orange' : 'teal'}
-                                description="Soma de todos os armazéns"
+                                description={inTransitTotal > 0
+                                    ? 'Soma dos armazéns · mais ' + inTransitTotal.toLocaleString('pt-MZ') + ' em trânsito'
+                                    : 'Soma de todos os armazéns'}
                             />
                             <div className="bg-white border border-slate-200 rounded-[4px] px-5 py-4 shadow-xs flex items-center justify-between">
                                 <div>

@@ -123,6 +123,9 @@ class StockTransferService
                         'stock' => "Stock insuficiente para {$item->product->name}. Disponível: {$e->available}",
                     ]);
                 }
+
+                // O destino passa a ter a linha (a zero) para a mercadoria a caminho aparecer lá como "a chegar"
+                $this->stockService->ensureLine($item->product, $locked->toWarehouse);
             }
 
             $locked->update(['status' => 'in_transit', 'shipped_at' => now(), 'shipped_by' => Auth::id()]);

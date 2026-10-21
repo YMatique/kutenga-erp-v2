@@ -304,7 +304,15 @@ export default function Index() {
 
                                             {/* STATUS */}
                                             <td className="px-4 py-3">
-                                                <StockBadge status={status} />
+                                                {/* Sem stock mas com mercadoria a chegar: não está esgotado, está à espera */}
+                                                {status === 'out_of_stock' && (stock.incoming ?? 0) > 0 ? (
+                                                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-[4px] bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                                                        <span className="h-1.5 w-1.5 rounded-full flex-shrink-0 bg-indigo-500" />
+                                                        A chegar
+                                                    </span>
+                                                ) : (
+                                                    <StockBadge status={status} />
+                                                )}
                                             </td>
 
                                             {/* AÇÕES */}

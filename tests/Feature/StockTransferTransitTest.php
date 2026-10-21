@@ -466,6 +466,28 @@ class StockTransferTransitTest extends TestCase
         );
     }
 
+    public function test_shipping_creates_the_destination_line_so_the_goods_show_as_coming_before_they_arrive(): void
+    {
+        $this->stock->in($this->pen, $this->origin, 25); // o destino nunca teve esta caneta
+        $this->assertSame(0, DB::table('product_stocks')->where('warehouse_id', $this->destination->id)->count());
+
+        $this->service->ship($this->transfer());
+
+        $this->assertSame(0.0, $this->qty($this->pen, $this->destination)); // linha a zero: o stock não mudou
+        $this->assertSame(1, DB::table('product_stocks')->where('warehouse_id', $this->destination->id)->count());
+
+        $this->get('/inventory/stocks?warehouse_id='.$this->destination->id)->assertInertia(fn (Assert $page) => $page
+            ->has('stocks.data', 1)
+            ->where('stocks.data.0.quantity', 0)
+            ->where('stocks.data.0.incoming', 10)
+        );
+
+        // Enviar duas vezes para o mesmo destino não duplica a linha
+        $this->stock->in($this->pen, $this->origin, 10);
+        $this->service->ship($this->transfer());
+        $this->assertSame(1, DB::table('product_stocks')->where('warehouse_id', $this->destination->id)->count());
+    }
+
     public function test_the_dashboard_values_what_is_in_transit_apart_from_the_inventory_value(): void
     {
         $this->pen->update(['cost' => 10]);
