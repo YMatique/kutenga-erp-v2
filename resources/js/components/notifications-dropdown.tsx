@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Bell, Check, Clock, PackageOpen, Receipt, User, PlusCircle, ArrowDownCircle, Ban } from 'lucide-react';
+import { Bell, Check, Clock, PackageOpen, Receipt, User, PlusCircle, ArrowDownCircle, Ban, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -52,6 +52,8 @@ export function NotificationsDropdown({ notifications }: { notifications: Notifi
                 return <ArrowDownCircle className="h-4 w-4 text-[#2DB8A0]" />;
             case 'document_cancelled':
                 return <Ban className="h-4 w-4 text-red-500" />;
+            case 'transfer_discrepancy':
+                return <Truck className="h-4 w-4 text-amber-500" />;
             default:
                 return <Bell className="h-4 w-4 text-blue-500" />;
         }

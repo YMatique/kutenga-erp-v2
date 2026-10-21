@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
     Bell, Check, Clock, PackageOpen, Receipt, User,
-    PlusCircle, ArrowDownCircle, Ban, CheckSquare, Inbox, ExternalLink
+    PlusCircle, ArrowDownCircle, Ban, CheckSquare, Inbox, ExternalLink, Truck
 } from 'lucide-react';
 import React from 'react';
 import { toast } from 'sonner';
@@ -74,6 +74,8 @@ export default function NotificationsIndex({ systemNotifications, filter }: Prop
                 return <ArrowDownCircle className="h-5 w-5 text-[#2DB8A0]" />;
             case 'document_cancelled':
                 return <Ban className="h-5 w-5 text-red-500" />;
+            case 'transfer_discrepancy':
+                return <Truck className="h-5 w-5 text-amber-500" />;
             default:
                 return <Bell className="h-5 w-5 text-blue-500" />;
         }
