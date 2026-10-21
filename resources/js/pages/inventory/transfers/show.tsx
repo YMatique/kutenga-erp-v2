@@ -1,8 +1,10 @@
-import { Head, Link } from '@inertiajs/react'
-import { ArrowRight, Package, Landmark, Boxes, Ban, Check, ShieldCheck } from 'lucide-react'
+import { Head, Link, router } from '@inertiajs/react'
+import { ArrowRight, Package, Landmark, Boxes, Ban, Check, ShieldCheck, Truck, Undo2 } from 'lucide-react'
+import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import {
     Table,
     TableBody,
@@ -28,13 +30,16 @@ interface Product {
 interface TransferItem {
     id: number
     quantity: number
+    received_quantity?: number | null
     available?: number
     product: Product
 }
 
 interface Transfer {
     id: number
-    status: 'pending' | 'approved' | 'completed' | 'cancelled'
+    status: 'pending' | 'approved' | 'in_transit' | 'completed' | 'cancelled'
+    shipped_at?: string | null
+    received_at?: string | null
     from_warehouse: Warehouse
     to_warehouse: Warehouse
     items: TransferItem[]
@@ -48,6 +53,7 @@ function StatusBadge({ status }: { status: Transfer['status'] }) {
     const map: Record<Transfer['status'], { label: string; className: string }> = {
         pending: { label: 'Pendente', className: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-200/30' },
         approved: { label: 'Aprovado', className: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200/30' },
+        in_transit: { label: 'Em trânsito', className: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-200/30' },
         completed: { label: 'Concluído', className: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-200/30' },
         cancelled: { label: 'Cancelado', className: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-200/30' },
     }
@@ -61,8 +67,31 @@ function StatusBadge({ status }: { status: Transfer['status'] }) {
     )
 }
 
+const formatMoment = (value?: string | null) =>
+    value ? new Date(value).toLocaleString('pt-MZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null
+
 export default function Show({ transfer }: ShowProps) {
     const inProgress = ['pending', 'approved'].includes(transfer.status)
+    const inTransit = transfer.status === 'in_transit'
+    const hasReceipt = transfer.items?.some((i) => i.received_quantity !== null && i.received_quantity !== undefined)
+
+    // O que chegou de cada produto (por omissão, tudo o que foi enviado)
+    const [received, setReceived] = useState<Record<number, string>>(
+        () => Object.fromEntries(transfer.items.map((i) => [i.id, String(i.quantity)])),
+    )
+    const [receiving, setReceiving] = useState(false)
+
+    const confirmReceipt = () => {
+        setReceiving(true)
+        router.post(
+            '/inventory/transfers/' + transfer.id + '/receive',
+            { received: Object.fromEntries(Object.entries(received).map(([id, value]) => [id, Number(value) || 0])) },
+            { preserveScroll: true, onFinish: () => setReceiving(false) },
+        )
+    }
+
+    const shippedAt = formatMoment(transfer.shipped_at)
+    const receivedAt = formatMoment(transfer.received_at)
     const totalItems = transfer.items?.length || 0
     const totalQty = transfer.items?.reduce(
         (sum: number, i) => sum + Number(i.quantity),
@@ -87,9 +116,17 @@ export default function Show({ transfer }: ShowProps) {
 
                         <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
                             {transfer.from_warehouse.name} 
-                            <ArrowRight className="h-3 w-3 text-muted-foreground" /> 
+                            <ArrowRight className="h-3 w-3 text-muted-foreground" />
                             {transfer.to_warehouse.name}
                         </p>
+
+                        {(shippedAt || receivedAt) && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {shippedAt && <>Enviada em {shippedAt}</>}
+                                {shippedAt && receivedAt && ' · '}
+                                {receivedAt && <>Recebida em {receivedAt}</>}
+                            </p>
+                        )}
                     </div>
 
                     <Button variant="outline" size="sm" asChild>
@@ -148,14 +185,15 @@ export default function Show({ transfer }: ShowProps) {
                                 <TableHead className="w-[80px]">#</TableHead>
                                 <TableHead>Produto</TableHead>
                                 {inProgress && <TableHead className="text-right w-[170px]">Disponível na origem</TableHead>}
-                                <TableHead className="text-right w-[150px]">Quantidade</TableHead>
+                                <TableHead className="text-right w-[150px]">{inTransit || hasReceipt ? 'Enviada' : 'Quantidade'}</TableHead>
+                                {(inTransit || hasReceipt) && <TableHead className="text-right w-[170px]">Recebida</TableHead>}
                             </TableRow>
                         </TableHeader>
 
                         <TableBody>
                             {transfer.items.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={inProgress ? 4 : 3} className="h-24 text-center text-muted-foreground">
+                                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                                         Nenhum produto adicionado nesta transferência.
                                     </TableCell>
                                 </TableRow>
@@ -178,6 +216,35 @@ export default function Show({ transfer }: ShowProps) {
                                         <TableCell className="text-right font-semibold text-foreground">
                                             {i.quantity}
                                         </TableCell>
+                                        {(inTransit || hasReceipt) && (
+                                            <TableCell className="text-right">
+                                                {inTransit ? (
+                                                    <Input
+                                                        type="number"
+                                                        min="0"
+                                                        max={i.quantity}
+                                                        step="any"
+                                                        value={received[i.id] ?? ''}
+                                                        onChange={(e) => setReceived((previous) => ({ ...previous, [i.id]: e.target.value }))}
+                                                        className="ml-auto h-8 w-28 text-right"
+                                                        aria-label={'Quantidade recebida de ' + i.product.name}
+                                                    />
+                                                ) : (
+                                                    <span
+                                                        className={Number(i.received_quantity ?? 0) < Number(i.quantity)
+                                                            ? 'font-semibold text-red-600 dark:text-red-400'
+                                                            : 'font-semibold text-foreground'}
+                                                    >
+                                                        {i.received_quantity ?? '—'}
+                                                        {Number(i.received_quantity ?? 0) < Number(i.quantity) && (
+                                                            <span className="ml-1 text-xs font-normal">
+                                                                (falta {Number(i.quantity) - Number(i.received_quantity ?? 0)})
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                )}
+                                            </TableCell>
+                                        )}
                                     </TableRow>
                                 ))
                             )}
@@ -189,15 +256,16 @@ export default function Show({ transfer }: ShowProps) {
                 <div className="flex justify-end gap-3 pt-2">
                     
                     {/* CANCELAR */}
-                    {['pending', 'approved'].includes(transfer.status) && (
+                    {['pending', 'approved', 'in_transit'].includes(transfer.status) && (
                         <Button variant="destructive" className="gap-2" asChild>
-                            <Link 
-                                href={`/inventory/transfers/${transfer.id}/cancel`} 
-                                method="post" 
+                            <Link
+                                href={`/inventory/transfers/${transfer.id}/cancel`}
+                                method="post"
                                 as="button"
+                                title={inTransit ? 'Cancela a transferência e devolve a mercadoria à origem' : undefined}
                             >
-                                <Ban className="h-4 w-4" />
-                                Cancelar Operação
+                                {inTransit ? <Undo2 className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
+                                {inTransit ? 'Devolver à origem' : 'Cancelar Operação'}
                             </Link>
                         </Button>
                     )}
@@ -216,17 +284,41 @@ export default function Show({ transfer }: ShowProps) {
                         </Button>
                     )}
 
-                    {/* FINALIZAR */}
+                    {/* ENVIAR: a mercadoria sai da origem e fica em trânsito até ser recebida */}
+                    {transfer.status === 'approved' && (
+                        <Button variant="outline" className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 dark:text-indigo-400 dark:border-indigo-900/50 dark:hover:bg-indigo-950/20 gap-2" asChild>
+                            <Link
+                                href={`/inventory/transfers/${transfer.id}/ship`}
+                                method="post"
+                                as="button"
+                                title="A mercadoria sai da origem e fica em trânsito até ser recebida no destino"
+                            >
+                                <Truck className="h-4 w-4" />
+                                Enviar (em trânsito)
+                            </Link>
+                        </Button>
+                    )}
+
+                    {/* CONCLUIR DE IMEDIATO: para armazéns no mesmo local, sai e entra no mesmo momento */}
                     {transfer.status === 'approved' && (
                         <Button className="bg-green-600 hover:bg-green-700 gap-2" asChild>
-                            <Link 
-                                href={`/inventory/transfers/${transfer.id}/complete`} 
-                                method="post" 
+                            <Link
+                                href={`/inventory/transfers/${transfer.id}/complete`}
+                                method="post"
                                 as="button"
+                                title="Sai da origem e entra no destino no mesmo momento"
                             >
                                 <Check className="h-4 w-4" />
-                                Finalizar e Baixar Estoque
+                                Concluir de imediato
                             </Link>
+                        </Button>
+                    )}
+
+                    {/* RECEBER: confirma o que chegou ao destino (por omissão, tudo o que foi enviado) */}
+                    {inTransit && (
+                        <Button className="bg-green-600 hover:bg-green-700 gap-2" onClick={confirmReceipt} disabled={receiving}>
+                            <Check className="h-4 w-4" />
+                            {receiving ? 'A registar...' : 'Confirmar receção'}
                         </Button>
                     )}
                 </div>

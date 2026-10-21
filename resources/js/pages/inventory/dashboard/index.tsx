@@ -65,6 +65,7 @@ export default function InventoryDashboard() {
     const workQueue = [
         { count: queue.transfers_pending, label: 'Transferências por aprovar', hint: 'pendentes', href: '/inventory/transfers?status=pending' },
         { count: queue.transfers_approved, label: 'Transferências por concluir', hint: 'com stock reservado', href: '/inventory/transfers?status=approved' },
+        { count: queue.transfers_in_transit, label: 'Transferências em trânsito', hint: 'a caminho do destino', href: '/inventory/transfers?status=in_transit' },
         { count: queue.adjustments_draft, label: 'Ajustes por concluir', hint: 'em rascunho', href: '/inventory/adjustments?status=draft' },
         { count: queue.closings_open, label: 'Fechos em contagem', hint: 'inventário em curso', href: '/inventory/closings?status=draft' },
     ].filter((item) => Number(item.count) > 0);

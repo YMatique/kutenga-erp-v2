@@ -9,6 +9,7 @@ import {
     XCircle,
     PackageCheck,
     FilterX,
+    Truck,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import {
@@ -33,7 +34,7 @@ interface Transfer {
     created_at?: string
     from_warehouse: Warehouse
     to_warehouse: Warehouse
-    status: 'pending' | 'approved' | 'completed' | 'cancelled'
+    status: 'pending' | 'approved' | 'in_transit' | 'completed' | 'cancelled'
     items_count?: number
 }
 
@@ -72,6 +73,12 @@ const statusConfig: Record<
         dot: 'bg-blue-500',
         cls: 'bg-blue-50 text-blue-600',
         icon: <CheckCircle2 className="h-3 w-3" />,
+    },
+    in_transit: {
+        label: 'Em trânsito',
+        dot: 'bg-indigo-500',
+        cls: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400',
+        icon: <Truck className="h-3 w-3" />,
     },
     completed: {
         label: 'Concluído',
@@ -167,7 +174,7 @@ return
 
                     {/* Status filter */}
                     <div className="flex items-center gap-1.5 flex-wrap">
-                        {(['all', 'pending', 'approved', 'completed', 'cancelled'] as const).map((s) => {
+                        {(['all', 'pending', 'approved', 'in_transit', 'completed', 'cancelled'] as const).map((s) => {
                             const isAll = s === 'all'
                             const active = status === s
                             const cfg = isAll ? null : statusConfig[s as Transfer['status']]
@@ -323,6 +330,18 @@ return
                                                         className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-medium bg-blue-50 border border-blue-200 text-blue-600 rounded-[4px] hover:bg-blue-100 transition-colors"
                                                     >
                                                         Aprovar
+                                                    </Link>
+                                                )}
+
+                                                {t.status === 'approved' && (
+                                                    <Link
+                                                        href={`/inventory/transfers/${t.id}/ship`}
+                                                        method="post"
+                                                        as="button"
+                                                        className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-medium bg-indigo-50 border border-indigo-200 text-indigo-600 rounded-[4px] hover:bg-indigo-100 transition-colors dark:bg-indigo-500/10 dark:border-indigo-500/30 dark:text-indigo-400"
+                                                    >
+                                                        <Truck className="h-3 w-3" />
+                                                        Enviar
                                                     </Link>
                                                 )}
 
